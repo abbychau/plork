@@ -1,0 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ActivityPub Models
+
+model User {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  username      String    @unique
+  displayName   String?
+  summary       String?
+  email         String?   @unique
+  passwordHash  String
+  privateKey    String
+  publicKey     String
+  profileImage  String?
+
+  // ActivityPub fields
+  actorUrl      String    @unique
+  inboxUrl      String    @unique
+  outboxUrl     String    @unique
+  followersUrl  String    @unique
+  followingUrl  String    @unique
+
+  // Relationships
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  followers     Follow[]  @relation("Follower")
+  following     Follow[]  @relation("Following")
+  inboxItems    InboxItem[]
+  outboxItems   OutboxItem[]
+  notifications Notification[] @relation("NotificationUser")
+  actions       Notification[] @relation("NotificationActor")
+}
+
+model Post {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  content       String
+  activityId    String    @unique // ActivityPub ID
+
+  // Relationships
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes         Like[]
+  comments      Comment[]
+  notifications Notification[]
+
+  @@index([authorId])
+}
+
+model Comment {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  content       String
+  activityId    String    @unique // ActivityPub ID
+
+  // Relationships
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId        String
+  post          Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([authorId])
+  @@index([postId])
+}
+
+model Like {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  activityId    String    @unique // ActivityPub ID
+
+  // Relationships
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId        String
+  post          Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@index([postId])
+}
+
+model Follow {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  activityId    String    @unique // ActivityPub ID
+  accepted      Boolean   @default(false)
+
+  // Relationships
+  followerId    String
+  follower      User      @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId   String
+  following     User      @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model InboxItem {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  activityId    String    @unique // ActivityPub ID
+  activityType  String    // e.g., Create, Like, Follow, etc.
+  activityJson  String    // The full JSON of the activity
+  processed     Boolean   @default(false)
+
+  // Relationships
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([processed])
+}
+
+model OutboxItem {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  activityId    String    @unique // ActivityPub ID
+  activityType  String    // e.g., Create, Like, Follow, etc.
+  activityJson  String    // The full JSON of the activity
+
+  // Relationships
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Notification {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  type          String    // like, comment, follow, mention, share
+  message       String
+  read          Boolean   @default(false)
+
+  // Relationships
+  userId        String    // recipient
+  user          User      @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+  actorId       String    // who performed the action
+  actor         User      @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  postId        String?   // optional related post
+  post          Post?     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId     String?   // optional related comment
+  comment       Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([actorId])
+  @@index([postId])
+  @@index([commentId])
+  @@index([read])
+}

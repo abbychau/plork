@@ -1,36 +1,170 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Plork ActivityPub
+
+A social networking application built with Next.js that implements the ActivityPub protocol for federated social networking.
+
+## Prerequisites
+
+- Node.js 18.x or higher
+- npm 9.x or higher
 
 ## Getting Started
 
-First, run the development server:
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/plork-activitypub.git
+cd plork-activitypub
+
+# Install dependencies
+npm install --legacy-peer-deps
+```
+
+### Database Setup
+
+The application uses SQLite with Prisma ORM. To set up the database:
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Create and apply migrations to development database
+npx prisma migrate dev --name init
+```
+
+### Development Server
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:8090](http://localhost:8090) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database Management
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Creating Migrations
 
-## Learn More
+After making changes to the Prisma schema (prisma/schema.prisma), create a new migration:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx prisma migrate dev --name your_migration_name
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Viewing Database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+To explore the database with Prisma Studio:
 
-## Deploy on Vercel
+```bash
+npx prisma studio
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Production
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Building for Production
+
+```bash
+# Build the application
+npm run build
+```
+
+#### Handling Type Errors
+
+The project is configured to ignore TypeScript type errors and ESLint warnings during build via `next.config.js`. This allows you to build and deploy even when there are type issues that need to be addressed.
+
+If you want to enforce type checking during build, modify `next.config.js` to set:
+
+```javascript
+typescript: {
+  ignoreBuildErrors: false,
+},
+eslint: {
+  ignoreDuringBuilds: false,
+},
+```
+
+### Database Setup for Production
+
+```bash
+# Set the DATABASE_URL environment variable to point to the production database
+# On Windows PowerShell:
+$env:DATABASE_URL="file:./prod.db"
+
+# On Linux/macOS:
+# export DATABASE_URL="file:./prod.db"
+
+# Apply migrations to production database
+npx prisma migrate deploy
+```
+
+### Running Production Server
+
+```bash
+# On Windows PowerShell:
+$env:DATABASE_URL="file:./prod.db"; npx next start -p 8090
+
+# On Linux/macOS:
+# export DATABASE_URL="file:./prod.db" && npx next start -p 8090
+```
+
+The production server will be available at [http://localhost:8090](http://localhost:8090).
+
+## Project Structure
+
+- `src/app`: Next.js app router pages and API routes
+- `src/components`: React components
+- `src/lib`: Utility functions and services
+- `prisma`: Database schema and migrations
+
+## Features
+
+- User authentication (register, login, logout)
+- Create, edit, and delete posts
+- Like and comment on posts
+- Follow other users
+- ActivityPub protocol implementation for federation
+- Notifications for social interactions
+- Hashtag support
+- User profiles with avatars
+- Tag cloud for popular topics
+
+## Troubleshooting
+
+### Common Issues
+
+#### React Version Compatibility
+
+If you encounter dependency conflicts with React 19, use the `--legacy-peer-deps` flag when installing:
+
+```bash
+npm install --legacy-peer-deps
+```
+
+#### Database Table Missing
+
+If you see errors like `The table 'main.Notification' does not exist in the current database`, ensure you've run the migrations for the correct database:
+
+```bash
+# For development
+npx prisma migrate dev
+
+# For production
+$env:DATABASE_URL="file:./prod.db"; npx prisma migrate deploy
+```
+
+#### Port Already in Use
+
+If port 8090 is already in use, you can specify a different port:
+
+```bash
+# For development
+npm run dev -- -p 3000
+
+# For production
+npx next start -p 3000
+```
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
