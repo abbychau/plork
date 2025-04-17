@@ -3,6 +3,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import HashtagText from './hashtag-text';
+import ImageLightbox from './image-lightbox';
 
 interface MarkdownContentProps {
   content: string;
@@ -25,10 +26,9 @@ export default function MarkdownContent({ content, className = '' }: MarkdownCon
             />
           ),
           img: ({ node, ...props }) => (
-            <img
-              {...props}
-              className="rounded-md max-w-full h-auto my-4"
-              loading="lazy"
+            <ImageLightbox
+              src={props.src || ''}
+              alt={props.alt || 'Image'}
             />
           ),
           p: ({ node, children, ...props }) => {
