@@ -13,8 +13,8 @@ A social networking application built with Next.js that implements the ActivityP
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/plork-activitypub.git
-cd plork-activitypub
+git clone https://github.com/abbychau/plork.git
+cd plork
 
 # Install dependencies
 npm install --legacy-peer-deps
@@ -25,6 +25,10 @@ npm install --legacy-peer-deps
 The application uses SQLite with Prisma ORM. To set up the database:
 
 ```bash
+# set the DATABASE_URL environment variable to point to the development database
+# echo to .env (optional, you can also set it in your shell)
+echo DATABASE_URL="file:./dev.db" >> .env
+
 # Generate Prisma client
 npx prisma generate
 

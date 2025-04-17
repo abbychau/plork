@@ -34,7 +34,7 @@ import {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -50,7 +50,8 @@ export default function SettingsPage() {
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!user) {
+    // Only redirect if we're not in a loading state and user is null
+    if (!loading && !user) {
       router.push('/login');
       return;
     }
@@ -64,7 +65,7 @@ export default function SettingsPage() {
         email: user.email || '',
       }));
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -169,8 +170,21 @@ export default function SettingsPage() {
     }
   };
 
-  if (!user) {
-    return null; // Will redirect in useEffect
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="container max-w-4xl mx-auto px-4 py-8 text-center">
+        <div className="inline-block p-3 bg-muted/30 rounded-lg animate-pulse">
+          <div className="h-5 w-28 bg-muted rounded mb-2"></div>
+          <div className="h-4 w-40 bg-muted/70 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // If not loading and no user, we'll redirect in useEffect
+  if (!loading && !user) {
+    return null;
   }
 
   return (

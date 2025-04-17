@@ -222,7 +222,7 @@ export default function PostDetailPage() {
               {isEditing ? (
                 <div className="mt-4">
                   <textarea
-                    className="w-full p-3 border rounded-md text-sm min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full p-3 border rounded-md text-sm min-h-[150px] outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
                   />

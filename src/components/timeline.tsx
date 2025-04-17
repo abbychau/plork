@@ -243,7 +243,7 @@ export default function Timeline() {
                     {editingPostId === post.id ? (
                       <div className="mt-2">
                         <textarea
-                          className="w-full p-2 border rounded-md text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary"
+                          className="w-full p-2 border rounded-md text-sm min-h-[100px] outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
                           value={editContent}
                           onChange={(e) => setEditContent(e.target.value)}
                         />

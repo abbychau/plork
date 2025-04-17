@@ -7,16 +7,17 @@ import PostEditor from '@/components/post-editor';
 
 export default function ComposePage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!user) {
+    // Only redirect if we're not in a loading state and user is null
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   const handleSubmit = async (content: string) => {
     setError('');
@@ -48,13 +49,21 @@ export default function ComposePage() {
     }
   };
 
-  // Show loading state if user is not available yet
-  if (!user) {
+  // Show loading state while checking authentication
+  if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-2xl flex justify-center items-center">
-        <p>Loading...</p>
+        <div className="inline-block p-3 bg-muted/30 rounded-lg animate-pulse">
+          <div className="h-5 w-28 bg-muted rounded mb-2"></div>
+          <div className="h-4 w-40 bg-muted/70 rounded"></div>
+        </div>
       </div>
     );
+  }
+
+  // If not loading and no user, we'll redirect in useEffect
+  if (!loading && !user) {
+    return null;
   }
 
   return (

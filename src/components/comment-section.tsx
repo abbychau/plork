@@ -148,7 +148,7 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
                 {editingCommentId === comment.id ? (
                   <div className="mt-2">
                     <textarea
-                      className="w-full p-2 border rounded-md text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full p-2 border rounded-md text-sm min-h-[80px] outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
                     />

@@ -407,23 +407,9 @@ function ExplorePageContent() {
 
         <div className="hidden md:block">
           <div className="sticky top-20">
-            <TagCloud posts={[...hotPosts, ...newPosts]} />
-
-            <div className="bg-muted/30 rounded-lg p-4 mt-4">
-              <h3 className="font-medium mb-3">Popular Topics</h3>
-              <div className="flex flex-wrap gap-2">
-                {['technology', 'art', 'music', 'science', 'books', 'travel'].map(topic => (
-                  <Badge
-                    key={topic}
-                    variant="outline"
-                    className="hover:bg-primary/10 transition-colors cursor-pointer"
-                    onClick={() => setSearchTerm(topic)}
-                  >
-                    {topic}
-                  </Badge>
-                ))}
-              </div>
-            </div>
+            <TagCloud posts={[...hotPosts, ...newPosts].filter((post, index, self) =>
+              index === self.findIndex((p) => p.id === post.id)
+            )} />
           </div>
         </div>
       </div>
