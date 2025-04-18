@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense, KeyboardEvent } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,15 +48,17 @@ interface Post {
 
 function ExplorePageContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const tagParam = searchParams.get('tag');
+  const searchParam = searchParams.get('search');
 
   const [hotPosts, setHotPosts] = useState<Post[]>([]);
   const [newPosts, setNewPosts] = useState<Post[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState(tagParam ? `#${tagParam}` : '');
+  const [searchTerm, setSearchTerm] = useState(searchParam || (tagParam ? `#${tagParam}` : ''));
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState('hot');
 
@@ -210,18 +212,8 @@ function ExplorePageContent() {
   if (isLoading && !filteredPosts.length) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold">Explore</h1>
-          <div className="w-full max-w-md">
-            <Input
-              type="search"
-              placeholder="Search users, posts, or 'my posts'"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-              disabled
-            />
-          </div>
         </div>
         <div className="text-center py-8">
           <div className="inline-block p-3 bg-muted/30 rounded-lg animate-pulse">
@@ -237,15 +229,22 @@ function ExplorePageContent() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold">Explore</h1>
-        <div className="w-full md:w-auto flex-1 md:max-w-md">
-          <Input
-            type="search"
-            placeholder="Search users, posts, or 'my posts'"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
-          />
-        </div>
+        {searchTerm && (
+          <div className="w-full md:w-auto flex-1 md:max-w-md">
+            <Input
+              type="search"
+              placeholder="Search posts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === 'Enter') {
+                  router.push(`/explore?search=${encodeURIComponent(searchTerm)}`);
+                }
+              }}
+              className="w-full"
+            />
+          </div>
+        )}
       </div>
 
       {searchTerm ? (
@@ -310,7 +309,9 @@ function ExplorePageContent() {
               {filteredPosts.map((post) => (
                 <Card
                   key={post.id}
-                  className="border border-border/40 hover:border-primary/20 transition-all duration-200"
+                  className="
+                  p-1
+                  border border-border/40 hover:border-primary/20 transition-all duration-200"
                 >
                   <CardContent className="p-3">
                     <div className="flex items-start gap-3">

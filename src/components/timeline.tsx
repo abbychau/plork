@@ -201,7 +201,7 @@ export default function Timeline() {
       <div className="md:col-span-3">
         <div className="flex justify-between items-center mb-4 sticky top-0 bg-background/80 backdrop-blur-sm py-3 z-10">
           <h2 className="text-xl font-bold">
-            Your Timeline
+            Timeline
           </h2>
           <Link href="/compose">
             <Button size="sm" className="shadow-sm hover:shadow-md transition-all duration-200">

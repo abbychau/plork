@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,9 +13,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/components/theme-toggle';
 import NotificationDropdown from '@/components/notification-dropdown';
+import UserSearchBar from '@/components/user-search-bar';
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
 
   return (
     <header className="border-b">
@@ -24,16 +27,25 @@ export default function Header() {
             Plork
           </Link>
           <nav className="hidden md:flex space-x-4">
-            <Link href="/" className="hover:text-primary">
+            <Link
+              href="/"
+              className={`transition-colors ${pathname === '/' ? 'text-primary font-medium' : 'hover:text-primary'}`}
+            >
               Home
             </Link>
-            <Link href="/explore" className="hover:text-primary">
+            <Link
+              href="/explore"
+              className={`transition-colors ${pathname === '/explore' ? 'text-primary font-medium' : 'hover:text-primary'}`}
+            >
               Explore
             </Link>
           </nav>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center space-x-3">
+          <div className="hidden md:block w-64">
+            <UserSearchBar />
+          </div>
           <ThemeToggle />
 
           <div className="ml-2">
