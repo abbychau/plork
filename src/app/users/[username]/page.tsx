@@ -330,8 +330,8 @@ export default function UserProfilePage() {
           <p className="text-muted-foreground">No posts yet.</p>
         ) : (
           posts.map((post) => (
-            <Card key={post.id}>
-              <CardContent className="pt-6">
+            <Card key={post.id} className="py-4">
+              <CardContent>
                 <div className="flex items-start gap-4">
                   <Avatar>
                     <AvatarImage src={post.author.profileImage} alt={post.author.username} />

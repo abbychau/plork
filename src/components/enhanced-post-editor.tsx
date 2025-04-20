@@ -192,7 +192,7 @@ export default function EnhancedPostEditor({
   };
 
   return (
-    <Card className='pb-0'>
+    <Card className='py-0'>
       <form onSubmit={handleSubmit}>
         <div {...getRootProps()} className="relative">
           <CardContent className={`p-4 ${isDragActive ? 'bg-muted/50' : ''}`}>
@@ -228,7 +228,7 @@ export default function EnhancedPostEditor({
             )}
           </CardContent>
 
-          <CardFooter className="flex justify-between px-4 py-3 border-t">
+          <CardFooter className="flex justify-between px-4 pb-3">
             <div className="flex space-x-2">
               <Button
                 type="button"
