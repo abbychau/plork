@@ -1,38 +1,90 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 import MarkdownContent from '@/components/markdown-content';
+import PortalEmojiPicker from '@/components/portal-emoji-picker';
+import { useCompactMode } from '@/hooks/use-compact-mode';
 
-interface PostEditorProps {
-  onSubmit: (content: string) => Promise<void>;
-  placeholder?: string;
-  submitLabel?: string;
+// Import Lucide icons
+import { Eye, Image, Save, X, Send, Edit } from 'lucide-react';
+
+interface EnhancedPostEditorProps {
+  // Common props
   initialContent?: string;
+  placeholder?: string;
   isLoading?: boolean;
+  compact?: boolean; // Optional override for compact display
+
+  // Mode-specific props
+  mode: 'create' | 'edit';
+
+  // For create mode
+  onCreateSubmit?: (content: string) => Promise<void>;
+  submitLabel?: string;
+
+  // For edit mode
+  onEditSubmit?: (content: string) => Promise<void>;
+  onCancel?: () => void;
 }
 
-export default function PostEditor({
-  onSubmit,
+export default function EnhancedPostEditor({
+  initialContent = '',
   placeholder = "What's on your mind?",
-  submitLabel = "Post",
-  initialContent = "",
   isLoading = false,
-}: PostEditorProps) {
+  compact, // No default value, will be determined by useCompactMode
+  mode = 'create',
+  onCreateSubmit,
+  submitLabel = 'Post',
+  onEditSubmit,
+  onCancel,
+}: EnhancedPostEditorProps) {
+  // Determine if compact mode should be used based on screen width
+  // If compact prop is provided, it will override the screen width detection
+  const isCompact = useCompactMode(compact);
+  const { toast } = useToast();
   const [content, setContent] = useState(initialContent);
   const [isUploading, setIsUploading] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Handle emoji selection
+  const handleEmojiClick = useCallback((emojiData: { emoji: string }) => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const cursorPos = textarea.selectionStart;
+      const textBefore = content.substring(0, cursorPos);
+      const textAfter = content.substring(cursorPos);
+
+      const newContent = `${textBefore}${emojiData.emoji}${textAfter}`;
+      setContent(newContent);
+
+      // Focus and set cursor position after the inserted emoji
+      setTimeout(() => {
+        textarea.focus();
+        const newCursorPos = cursorPos + emojiData.emoji.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    } else {
+      // Fallback if textarea ref is not available
+      setContent((prev) => `${prev}${emojiData.emoji}`);
+    }
+  }, [content, setContent]);
+
+  // Update content when initialContent changes (for edit mode)
+  useEffect(() => {
+    setContent(initialContent);
+  }, [initialContent]);
 
   // Handle file drop
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
 
     await uploadAndInsertImage(acceptedFiles[0]);
-  }, [content]);
+  }, []);
 
   // Setup dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -68,9 +120,11 @@ export default function PostEditor({
     setIsUploading(true);
 
     try {
+      // Create form data
       const formData = new FormData();
       formData.append('file', file);
 
+      // Upload the image
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
@@ -106,11 +160,17 @@ export default function PostEditor({
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsUploading(false);
     }
   };
+
+  // Emoji handling moved to useEmojiPicker hook
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,16 +179,20 @@ export default function PostEditor({
     if (!content.trim()) return;
 
     try {
-      await onSubmit(content);
-      setContent('');
-      setIsPreview(false);
+      if (mode === 'create' && onCreateSubmit) {
+        await onCreateSubmit(content);
+        setContent('');
+        setIsPreview(false);
+      } else if (mode === 'edit' && onEditSubmit) {
+        await onEditSubmit(content);
+      }
     } catch (error) {
       console.error('Error submitting post:', error);
     }
   };
 
   return (
-    <Card>
+    <Card className='pb-0'>
       <form onSubmit={handleSubmit}>
         <div {...getRootProps()} className="relative">
           <CardContent className={`p-4 ${isDragActive ? 'bg-muted/50' : ''}`}>
@@ -172,8 +236,17 @@ export default function PostEditor({
                 size="sm"
                 onClick={() => setIsPreview(!isPreview)}
                 disabled={isLoading || isUploading}
+                title={isPreview ? 'Edit' : 'Preview'}
               >
-                {isPreview ? 'Edit' : 'Preview'}
+                {isPreview ? (
+                  <>
+                    {!isCompact ? <><Edit className="h-4 w-4" />Edit</> : <Edit className="h-4 w-4" />}
+                  </>
+                ) : (
+                  <>
+                    {!isCompact ? <><Eye className="h-4 w-4" />Preview</> : <Eye className="h-4 w-4" />}
+                  </>
+                )}
               </Button>
 
               <Button
@@ -182,8 +255,9 @@ export default function PostEditor({
                 size="sm"
                 onClick={() => document.getElementById('file-upload')?.click()}
                 disabled={isLoading || isUploading}
+                title="Upload Image"
               >
-                Upload Image
+                {isCompact ? <Image className="h-4 w-4" aria-hidden="true" /> : <><Image className="h-4 w-4" aria-hidden="true" /> Upload Image</>}
               </Button>
               <input
                 id="file-upload"
@@ -198,14 +272,43 @@ export default function PostEditor({
                   }
                 }}
               />
+
+              <PortalEmojiPicker
+                onEmojiClick={handleEmojiClick}
+                compact={isCompact}
+                disabled={isLoading || isUploading}
+              />
             </div>
 
-            <Button
-              type="submit"
-              disabled={!content.trim() || isLoading || isUploading}
-            >
-              {isLoading ? 'Posting...' : submitLabel}
-            </Button>
+            <div className="flex space-x-2">
+              {mode === 'edit' && onCancel && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onCancel}
+                  disabled={isLoading || isUploading}
+                  title="Cancel"
+                >
+                  {isCompact ? <X className="h-4 w-4" /> : 'Cancel'}
+                </Button>
+              )}
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isLoading || isUploading || !content.trim()}
+              >
+                {isLoading ? (
+                  isCompact ? <span className="animate-pulse">...</span> : 'Submitting...'
+                ) : (
+                  mode === 'create' ? (
+                    isCompact ? <Send className="h-4 w-4" /> : submitLabel
+                  ) : (
+                    isCompact ? <Save className="h-4 w-4" /> : 'Save'
+                  )
+                )}
+              </Button>
+            </div>
           </CardFooter>
         </div>
       </form>

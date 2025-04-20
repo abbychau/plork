@@ -44,18 +44,22 @@ export default function NotificationDropdown() {
 
   const fetchNotifications = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch('/api/notifications');
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch notifications');
       }
-      
+
       const data = await response.json();
       setNotifications(data);
-      setUnreadCount(data.filter((n: Notification) => !n.read).length);
+      const newCount = data.filter((n: Notification) => !n.read).length;
+      setUnreadCount(newCount);
+
+      // Dispatch event for the DynamicTitle component
+      document.dispatchEvent(new CustomEvent('notificationCountUpdated', { detail: { count: newCount } }));
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -65,28 +69,31 @@ export default function NotificationDropdown() {
 
   useEffect(() => {
     fetchNotifications();
-    
+
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
-    
+
     return () => clearInterval(interval);
   }, [user]);
 
   const markAllAsRead = async () => {
     if (!user || notifications.length === 0) return;
-    
+
     try {
       const response = await fetch('/api/notifications', {
         method: 'PUT',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to mark notifications as read');
       }
-      
+
       // Update local state
       setNotifications(notifications.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
+
+      // Force a refresh of the document title
+      document.dispatchEvent(new CustomEvent('notificationCountUpdated', { detail: { count: 0 } }));
     } catch (error) {
       console.error('Error marking notifications as read:', error);
     }
@@ -94,21 +101,25 @@ export default function NotificationDropdown() {
 
   const markAsRead = async (id: string) => {
     if (!user) return;
-    
+
     try {
       const response = await fetch(`/api/notifications/${id}`, {
         method: 'PUT',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to mark notification as read');
       }
-      
+
       // Update local state
-      setNotifications(notifications.map(n => 
+      setNotifications(notifications.map(n =>
         n.id === id ? { ...n, read: true } : n
       ));
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      const newCount = Math.max(0, unreadCount - 1);
+      setUnreadCount(newCount);
+
+      // Force a refresh of the document title
+      document.dispatchEvent(new CustomEvent('notificationCountUpdated', { detail: { count: newCount } }));
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -147,9 +158,9 @@ export default function NotificationDropdown() {
         <div className="flex items-center justify-between px-4 py-2 border-b">
           <h3 className="font-medium">Notifications</h3>
           {unreadCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={markAllAsRead}
               className="text-xs"
             >
@@ -157,7 +168,7 @@ export default function NotificationDropdown() {
             </Button>
           )}
         </div>
-        
+
         <div className="max-h-[400px] overflow-y-auto">
           {isLoading ? (
             <div className="p-4 text-center text-muted-foreground">
@@ -174,7 +185,7 @@ export default function NotificationDropdown() {
                 className={`p-3 cursor-default ${!notification.read ? 'bg-muted/50' : ''}`}
                 onClick={() => markAsRead(notification.id)}
               >
-                <Link 
+                <Link
                   href={getNotificationLink(notification)}
                   className="flex items-start gap-3 w-full"
                   onClick={() => markAsRead(notification.id)}
@@ -185,7 +196,7 @@ export default function NotificationDropdown() {
                       {notification.actor.displayName?.[0] || notification.actor.username[0]}
                     </AvatarFallback>
                   </Avatar>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1 text-sm">
                       <span className="font-medium truncate">
@@ -193,13 +204,13 @@ export default function NotificationDropdown() {
                       </span>
                       <span>{notification.message}</span>
                     </div>
-                    
+
                     {notification.post && (
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                         {notification.post.content}
                       </p>
                     )}
-                    
+
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatDistanceToNow(new Date(notification.createdAt))}
                     </p>
@@ -209,7 +220,7 @@ export default function NotificationDropdown() {
             ))
           )}
         </div>
-        
+
         <div className="p-2 border-t text-center">
           <Link href="/notifications" className="text-xs text-primary hover:underline">
             View all notifications

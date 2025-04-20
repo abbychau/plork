@@ -6,16 +6,12 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/auth-context';
 import MarkdownContent from '@/components/markdown-content';
-
-// Import Mynaui icons
-import {
-  Heart,
-  HeartSolid,
-  MessageDots,
-  Share
-} from '@mynaui/icons-react';
+import CommentSidebar from '@/components/comment-sidebar';
+import { copyToClipboard } from '@/lib/clipboard';
+import PostInteractionButtons from '@/components/post-interaction-buttons';
 
 interface Post {
   id: string;
@@ -45,7 +41,10 @@ interface User {
 export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const { user: currentUser } = useAuth();
+  const [commentSidebarOpen, setCommentSidebarOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -187,6 +186,13 @@ export default function UserProfilePage() {
             setIsFollowing(true);
             // Refresh user data to update follower count
             fetchUserProfile();
+
+            // Show toast notification
+            toast({
+              title: "Following",
+              description: `You are now following ${user?.displayName || username}. They will be notified.`,
+              duration: 3000
+            });
           } else {
             console.error('Follow error:', data.error);
           }
@@ -242,12 +248,23 @@ export default function UserProfilePage() {
     }
   };
 
-  const handleShare = (postId: string) => {
-    // For now, just copy the URL to clipboard
+  const handleShare = async (postId: string) => {
+    // Copy the post permalink to clipboard
     const url = `${window.location.origin}/posts/${postId}`;
-    navigator.clipboard.writeText(url)
-      .then(() => alert('Post URL copied to clipboard!'))
-      .catch(err => console.error('Failed to copy URL:', err));
+    const success = await copyToClipboard(url);
+
+    if (success) {
+      toast({
+        title: "Link copied!",
+        description: "Post link has been copied to clipboard"
+      });
+    } else {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy the link to clipboard",
+        variant: "destructive"
+      });
+    }
   };
 
   if (isLoading) {
@@ -335,41 +352,23 @@ export default function UserProfilePage() {
 
                     <div className="mt-2">
                       <MarkdownContent content={post.content} />
-                      <Link
-                        href={`/posts/${post.id}`}
-                        className="block mt-2 text-xs text-muted-foreground hover:text-primary transition-colors duration-200"
-                      >
-                        View full post
-                      </Link>
                     </div>
 
                     {/* Hashtags are now rendered directly in the MarkdownContent component */}
 
                     <div className="flex gap-4 mt-4 text-sm">
-                      <Link
-                        href={`/posts/${post.id}`}
-                        className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors duration-200"
-                      >
-                        <MessageDots className="w-4 h-4" />
-                        <span>{post.comments?.length || 0}</span>
-                      </Link>
-                      <button
-                        className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors duration-200"
-                        onClick={() => handleShare(post.id)}
-                      >
-                        <Share className="w-4 h-4" />
-                        <span>{0}</span>
-                      </button>
-                      <button
-                        className={`flex items-center gap-1 transition-colors duration-200 ${likedPosts.has(post.id) ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'}`}
-                        onClick={() => handleLike(post.id)}
-                      >
-                        {likedPosts.has(post.id) ?
-                          <HeartSolid className="w-4 h-4" /> :
-                          <Heart className="w-4 h-4" />
-                        }
-                        <span>{post.likes?.length || 0}</span>
-                      </button>
+                      <PostInteractionButtons
+                        postId={post.id}
+                        authorId={post.author.username === currentUser?.username ? currentUser?.id : ''}
+                        isLiked={likedPosts.has(post.id)}
+                        likesCount={post.likes?.length || 0}
+                        commentsCount={post.comments?.length || 0}
+                        onLike={() => handleLike(post.id)}
+                        onComment={() => {
+                          setSelectedPostId(post.id);
+                          setCommentSidebarOpen(true);
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -378,6 +377,13 @@ export default function UserProfilePage() {
           ))
         )}
       </div>
+
+      {/* Comment Sidebar */}
+      <CommentSidebar
+        isOpen={commentSidebarOpen}
+        onClose={() => setCommentSidebarOpen(false)}
+        postId={selectedPostId}
+      />
     </div>
   );
 }

@@ -17,58 +17,7 @@ export default function AvatarUpload({ onAvatarChange }: AvatarUploadProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Function to convert image to square and return as a File object
-  const processImageToSquare = useCallback((file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      // Create an image element to load the file
-      const img = new Image();
-      img.onload = () => {
-        // Determine the size of the square (use the smaller dimension)
-        const size = Math.min(img.width, img.height);
-
-        // Create a canvas element to draw the square image
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-
-        // Calculate the position to crop from center
-        const offsetX = (img.width - size) / 2;
-        const offsetY = (img.height - size) / 2;
-
-        // Draw the image on the canvas, cropping to a square
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Could not get canvas context'));
-          return;
-        }
-
-        ctx.drawImage(img, offsetX, offsetY, size, size, 0, 0, size, size);
-
-        // Convert the canvas to a blob
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            reject(new Error('Could not create image blob'));
-            return;
-          }
-
-          // Create a new File object from the blob
-          const squareFile = new File([blob], file.name, {
-            type: file.type,
-            lastModified: file.lastModified
-          });
-
-          resolve(squareFile);
-        }, file.type);
-      };
-
-      img.onerror = () => {
-        reject(new Error('Failed to load image'));
-      };
-
-      // Load the image from the file
-      img.src = URL.createObjectURL(file);
-    });
-  }, []);
+  // We no longer need client-side image processing as it's handled on the server
 
   const handleUpload = useCallback(async (file: File) => {
     setIsUploading(true);
@@ -119,19 +68,16 @@ export default function AvatarUpload({ onAvatarChange }: AvatarUploadProps) {
       setPreviewUrl(objectUrl);
       setError('');
 
-      // Process the image to make it square
-      const squareFile = await processImageToSquare(file);
-
-      // Upload the square file
-      await handleUpload(squareFile);
+      // Upload the file directly (server will handle cropping and resizing)
+      await handleUpload(file);
 
       // Clean up the preview URL
       URL.revokeObjectURL(objectUrl);
     } catch (err) {
-      console.error('Error processing image:', err);
-      setError(err instanceof Error ? err.message : 'Failed to process image');
+      console.error('Error uploading image:', err);
+      setError(err instanceof Error ? err.message : 'Failed to upload image');
     }
-  }, [processImageToSquare, handleUpload]);
+  }, [handleUpload]);
 
   const handleButtonClick = useCallback(() => {
     fileInputRef.current?.click();

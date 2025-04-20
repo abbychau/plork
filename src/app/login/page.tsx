@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [username, setUsername] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,14 +23,14 @@ export default function LoginPage() {
 
     try {
       // Wait for login to complete and get the user data
-      const user = await login(username, password);
+      const user = await login(usernameOrEmail, password);
 
       // If login was successful and we have a user, redirect to home page
       if (user) {
         router.push('/');
       }
     } catch {
-      setError('Invalid username or password');
+      setError('Invalid username/email or password');
     } finally {
       setIsLoading(false);
     }
@@ -53,14 +53,14 @@ export default function LoginPage() {
               </div>
             )}
             <div className="space-y-2">
-              <label htmlFor="username" className="text-sm font-medium">
-                Username
+              <label htmlFor="usernameOrEmail" className="text-sm font-medium">
+                Username or Email
               </label>
               <Input
-                id="username"
+                id="usernameOrEmail"
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={usernameOrEmail}
+                onChange={(e) => setUsernameOrEmail(e.target.value)}
                 required
               />
             </div>

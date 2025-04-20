@@ -68,6 +68,13 @@ export const userService = {
     });
   },
 
+  // Get user by email
+  async getUserByEmail(email: string) {
+    return prisma.user.findUnique({
+      where: { email },
+    });
+  },
+
   // Get user by ID
   async getUserById(id: string) {
     return prisma.user.findUnique({

@@ -6,17 +6,13 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/auth-context';
 import MarkdownContent from '@/components/markdown-content';
 import CommentSection from '@/components/comment-section';
+import EnhancedPostEditor from '@/components/enhanced-post-editor';
 
-// Import Mynaui icons
-import {
-  Edit,
-  Heart,
-  HeartSolid,
-  Share
-} from '@mynaui/icons-react';
+import PostInteractionButtons from '@/components/post-interaction-buttons';
 
 interface Like {
   id: string;
@@ -56,11 +52,13 @@ interface Post {
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
   const { user } = useAuth();
   const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  // isPreviewMode is now handled by the EnhancedPostEditor
   const [editContent, setEditContent] = useState('');
   const [isLiked, setIsLiked] = useState(false);
 
@@ -111,6 +109,8 @@ export default function PostDetailPage() {
     setEditContent(post?.content || '');
   };
 
+
+
   const handleLike = async () => {
     if (!user || !post) {
       router.push('/login');
@@ -138,14 +138,28 @@ export default function PostDetailPage() {
               : [...prevPost.likes, { id: 'temp-' + Date.now(), userId: user.id, user: { id: user.id, username: user.username } }]
           };
         });
+
+        // Show toast notification
+        if (!isLiked && post.author.id !== user.id) {
+          toast({
+            title: "Post liked",
+            description: `${post.author.displayName || post.author.username} will be notified of your like.`,
+            duration: 3000
+          });
+        }
       }
     } catch (error) {
       console.error('Error liking/unliking post:', error);
+      toast({
+        title: "Error",
+        description: "Failed to like/unlike post. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
-  const handleSaveEdit = async () => {
-    if (!post || !editContent.trim() || isLoading) return;
+  const handleSaveEdit = async (newContent: string) => {
+    if (!post || !newContent.trim() || isLoading) return;
 
     setIsLoading(true);
 
@@ -155,7 +169,7 @@ export default function PostDetailPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content: editContent }),
+        body: JSON.stringify({ content: newContent }),
       });
 
       if (!response.ok) {
@@ -166,9 +180,18 @@ export default function PostDetailPage() {
       const updatedPost = await response.json();
       setPost(updatedPost);
       setIsEditing(false);
+      toast({
+        title: "Post updated",
+        description: "Your post has been successfully updated"
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update post');
       console.error('Error updating post:', err);
+      toast({
+        title: "Update failed",
+        description: "Could not update your post",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -188,11 +211,19 @@ export default function PostDetailPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Button
         variant="ghost"
         className="mb-4"
-        onClick={() => router.back()}
+        onClick={() => {
+          // Check if there's a previous page in the history
+          if (window.history.length > 1) {
+            router.back();
+          } else {
+            // If no previous page, go to the home page
+            router.push('/');
+          }
+        }}
       >
         ← Back
       </Button>
@@ -221,28 +252,13 @@ export default function PostDetailPage() {
 
               {isEditing ? (
                 <div className="mt-4">
-                  <textarea
-                    className="w-full p-3 border rounded-md text-sm min-h-[150px] outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
+                  <EnhancedPostEditor
+                    mode="edit"
+                    initialContent={editContent}
+                    isLoading={isLoading}
+                    onEditSubmit={handleSaveEdit}
+                    onCancel={handleCancelEdit}
                   />
-                  <div className="flex justify-end gap-2 mt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancelEdit}
-                      disabled={isLoading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleSaveEdit}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? 'Saving...' : 'Save'}
-                    </Button>
-                  </div>
                 </div>
               ) : (
                 <div className="mt-2">
@@ -250,40 +266,19 @@ export default function PostDetailPage() {
                 </div>
               )}
 
-              <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
-                <div>
-                  <span>{post.comments?.length || 0}</span> Comments
-                </div>
-                <div>
-                  <span>{post.likes?.length || 0}</span> Likes
-                </div>
-              </div>
+              {/* Post interaction buttons will show the counts */}
 
               <div className="border-t mt-4 pt-4">
-                <div className="flex gap-4">
-                  {user && user.id === post.author.id && !isEditing && (
-                    <button
-                      className="text-muted-foreground hover:text-primary flex items-center gap-1"
-                      onClick={handleEditPost}
-                    >
-                      <Edit className="w-4 h-4 mr-1" /> Edit
-                    </button>
-                  )}
-
-                  <button
-                    className={`flex items-center gap-1 ${isLiked ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'}`}
-                    onClick={handleLike}
-                  >
-                    {isLiked ?
-                      <HeartSolid className="w-4 h-4 mr-1" /> :
-                      <Heart className="w-4 h-4 mr-1" />
-                    }
-                    {isLiked ? 'Liked' : 'Like'}
-                  </button>
-                  <button className="text-muted-foreground hover:text-primary flex items-center gap-1">
-                    <Share className="w-4 h-4 mr-1" /> Share
-                  </button>
-                </div>
+                <PostInteractionButtons
+                  postId={post.id}
+                  authorId={post.author.id}
+                  isLiked={isLiked}
+                  likesCount={post.likes?.length || 0}
+                  commentsCount={post.comments?.length || 0}
+                  onLike={() => handleLike()}
+                  onEdit={user && user.id === post.author.id && !isEditing ? handleEditPost : undefined}
+                  hideViewFullPost={true}
+                />
               </div>
             </div>
           </div>

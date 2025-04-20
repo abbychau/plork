@@ -20,15 +20,31 @@ cd plork
 npm install --legacy-peer-deps
 ```
 
+### Environment Configuration
+
+The application uses environment variables for configuration. Create a `.env` file in the root directory:
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit the .env file to customize settings
+# You can set the database path and server port
+```
+
+Available environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|--------|
+| `DATABASE_URL` | Path to the SQLite database | `file:./dev.db` |
+| `PORT` | Server port for both development and production | `8090` |
+| `DOMAIN_NAME` | Domain name for the application | `localhost:PORT` |
+
 ### Database Setup
 
 The application uses SQLite with Prisma ORM. To set up the database:
 
 ```bash
-# set the DATABASE_URL environment variable to point to the development database
-# echo to .env (optional, you can also set it in your shell)
-echo DATABASE_URL="file:./dev.db" >> .env
-
 # Generate Prisma client
 npx prisma generate
 
@@ -73,46 +89,90 @@ npx prisma studio
 npm run build
 ```
 
-#### Handling Type Errors
-
-The project is configured to ignore TypeScript type errors and ESLint warnings during build via `next.config.js`. This allows you to build and deploy even when there are type issues that need to be addressed.
-
-If you want to enforce type checking during build, modify `next.config.js` to set:
-
-```javascript
-typescript: {
-  ignoreBuildErrors: false,
-},
-eslint: {
-  ignoreDuringBuilds: false,
-},
-```
-
 ### Database Setup for Production
 
+1. edit .env.production and set the DATABASE_URL environment variable to point to the production database
+
 ```bash
-# Set the DATABASE_URL environment variable to point to the production database
-# On Windows PowerShell:
-$env:DATABASE_URL="file:./prod.db"
-
-# On Linux/macOS:
-# export DATABASE_URL="file:./prod.db"
-
 # Apply migrations to production database
 npx prisma migrate deploy
 ```
 
 ### Running Production Server
 
-```bash
-# On Windows PowerShell:
-$env:DATABASE_URL="file:./prod.db"; npx next start -p 8090
+Create a `.env.production` file with your production settings:
 
-# On Linux/macOS:
-# export DATABASE_URL="file:./prod.db" && npx next start -p 8090
+```bash
+# .env.production example
+DATABASE_URL="file:./prod.db"
+PORT=8090
 ```
 
-The production server will be available at [http://localhost:8090](http://localhost:8090).
+Then start the production server:
+
+```bash
+# Build and start the production server
+npm run build && npm run start
+
+# Or use the combined command
+npm run start:with-build
+
+# Or just start (will build automatically if needed)
+npm run start
+
+# With environment variables (Windows PowerShell)
+$env:DATABASE_URL="file:./prod.db"; $env:PORT=8090; npm run start
+
+# With environment variables (Linux/macOS)
+DATABASE_URL="file:./prod.db" PORT=8090 npm run start
+```
+
+The production server will be available at the configured port (default: [http://localhost:8090](http://localhost:8090)).
+
+### Running as a Background Service with PM2
+
+For production deployments, you can use PM2 to run the application as a background service:
+
+1. First, install PM2 globally:
+
+```bash
+npm install -g pm2
+```
+
+2. Start the application using the provided PM2 configuration:
+
+```bash
+npm run start:pm2
+```
+
+3. Other PM2 commands:
+
+```bash
+# Stop the application
+npm run stop:pm2
+
+# Restart the application
+npm run restart:pm2
+
+# View logs
+pm2 logs plork-activitypub
+
+# Monitor the application
+pm2 monit
+```
+
+4. To make PM2 start automatically on system boot (Windows):
+
+```bash
+# Install PM2 as a Windows service
+pm2 install pm2-windows-service
+
+# Set up the service
+pm2-service-install
+
+# Save the current PM2 configuration
+pm2 save
+```
 
 ## Project Structure
 
@@ -157,17 +217,37 @@ npx prisma migrate dev
 $env:DATABASE_URL="file:./prod.db"; npx prisma migrate deploy
 ```
 
-#### Port Already in Use
+#### Run Production Server
 
-If port 8090 is already in use, you can specify a different port:
+To run the production server, use the `start` script:
 
 ```bash
-# For development
-npm run dev -- -p 3000
-
-# For production
-npx next start -p 3000
+npm run start
 ```
+
+#### Port Configuration
+
+The default port is 8090, but you can specify a different port in several ways:
+
+1. **Using environment variables** (recommended):
+
+```bash
+# In .env file for development
+PORT=3000
+
+# In .env.production file for production
+PORT=3000
+
+# Or directly in the command line (Windows)
+$env:PORT=3000; npm run dev
+$env:PORT=3000; npm run start
+
+# Or directly in the command line (Linux/macOS)
+PORT=3000 npm run dev
+PORT=3000 npm run start
+```
+
+The application will automatically use the port specified in the environment variables.
 
 ## License
 

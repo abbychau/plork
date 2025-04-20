@@ -5,6 +5,8 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
 import Header from "@/components/header";
+import { Toaster } from "@/components/ui/toaster";
+import DynamicTitle from "@/components/dynamic-title";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,11 +35,13 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider defaultTheme="system" storageKey="plork-theme">
+            <DynamicTitle />
             <div className="min-h-screen flex flex-col">
               <Header />
               <main className="flex-1 container mx-auto">
                 {children}
               </main>
+              <Toaster />
               <footer className="py-8 border-t">
                 <div className="container mx-auto px-4">
                   <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -47,16 +51,7 @@ export default function RootLayout({
                     </div>
 
                     <div className="flex space-x-6 text-sm">
-                      <Link href="/about" className="text-muted-foreground hover:text-primary transition-colors duration-200">
-                        About
-                      </Link>
-                      <Link href="/explore" className="text-muted-foreground hover:text-primary transition-colors duration-200">
-                        Explore
-                      </Link>
-                      <a href="https://github.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors duration-200">
-                        GitHub
-                      </a>
-                      <a href="https://activitypub.rocks/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors duration-200">
+                      <a href="/activitypub" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                         ActivityPub
                       </a>
                     </div>
@@ -65,9 +60,6 @@ export default function RootLayout({
                   <div className="mt-6 pt-6 border-t border-border/40 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="text-sm text-muted-foreground">
                       &copy; {new Date().getFullYear()} Plork. All rights reserved.
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Built with Next.js, React, and Shadcn UI
                     </div>
                   </div>
                 </div>

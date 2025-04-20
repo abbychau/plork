@@ -43,7 +43,7 @@ export default function Header() {
         </div>
 
         <div className="flex items-center space-x-3">
-          <div className="hidden md:block w-64">
+          <div className="hidden lg:block w-70">
             <UserSearchBar />
           </div>
           <ThemeToggle />

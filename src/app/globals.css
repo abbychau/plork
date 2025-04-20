@@ -180,3 +180,24 @@
 .prose hr {
   @apply border-border my-6;
 }
+
+/* Emoji picker styles */
+.emoji-picker-container {
+  position: relative;
+  z-index: 9999;
+}
+
+/* Fix for emoji picker in sidebar */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+/* Portal emoji picker styles */
+.emoji-picker-portal {
+  position: fixed;
+  z-index: 99999;
+  background-color: var(--background);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}

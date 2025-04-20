@@ -1,4 +1,15 @@
 /** @type {import('next').NextConfig} */
+
+// Read port from environment variables with fallback to 8090
+const port = process.env.PORT || process.env.SERVER_PORT || 8090;
+
+// Read domain name from environment variables with fallback
+const domainName = process.env.DOMAIN_NAME || `localhost:${port}`;
+
+// Log the configuration
+console.log(`Using port: ${port}`);
+console.log(`Using domain: ${domainName}`);
+
 const nextConfig = {
   // Ignore TypeScript type errors during build
   typescript: {

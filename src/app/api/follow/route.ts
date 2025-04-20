@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { userService, followService } from '@/lib/db';
+import { createNotification } from '@/lib/notifications';
 import { v4 as uuidv4 } from 'uuid';
 
 // POST /api/follow - Follow a user
@@ -66,6 +67,20 @@ export async function POST(req: NextRequest) {
       activityId,
       accepted: true, // Auto-accept for now
     });
+
+    // Create notification for the target user
+    try {
+      await createNotification({
+        type: 'follow',
+        userId: targetUser.id, // recipient
+        actorId: userId, // who performed the action
+        message: 'started following you',
+      });
+      console.log('Follow notification created for user:', targetUser.id);
+    } catch (notificationError) {
+      console.error('Error creating follow notification:', notificationError);
+      // Continue even if notification creation fails
+    }
 
     return NextResponse.json({
       message: `Now following ${username}`,

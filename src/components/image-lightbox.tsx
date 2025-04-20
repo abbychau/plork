@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { X } from 'lucide-react';
@@ -17,11 +18,14 @@ export default function ImageLightbox({ src, alt, className = '' }: ImageLightbo
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <img
+        <Image
           src={src}
           alt={alt}
+          width={600}
+          height={300}
           className={`cursor-pointer max-w-full max-h-[300px] rounded-md my-4 ${className}`}
-          loading="lazy"
+          style={{ objectFit: 'contain' }}
+          priority={false}
         />
       </DialogTrigger>
       <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[90vw] max-h-[90vh] w-auto" closeButton={false}>
@@ -36,11 +40,14 @@ export default function ImageLightbox({ src, alt, className = '' }: ImageLightbo
           >
             <X className="h-6 w-6" />
           </button>
-          <img
+          <Image
             src={src}
             alt={alt}
-            className="max-w-[90vw] max-h-[90vh] object-contain"
-            loading="lazy"
+            width={1200}
+            height={800}
+            className="max-w-[90vw] max-h-[90vh]"
+            style={{ objectFit: 'contain' }}
+            priority={false}
           />
         </div>
       </DialogContent>

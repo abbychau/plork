@@ -57,10 +57,12 @@ export async function GET(request: NextRequest) {
 
     // Add search filter if provided
     if (search) {
+      // For SQLite, we'll use the default contains which is case-sensitive
+      // but we'll handle multiple search terms for better results
       where.OR = [
-        { content: { contains: search, mode: 'insensitive' } },
-        { author: { username: { contains: search, mode: 'insensitive' } } },
-        { author: { displayName: { contains: search, mode: 'insensitive' } } },
+        { content: { contains: search } },
+        { author: { username: { contains: search } } },
+        { author: { displayName: { contains: search } } },
       ];
     }
 

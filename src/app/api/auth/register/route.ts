@@ -2,12 +2,29 @@
  * Register API endpoint
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { userService } from '@/lib/db';
+import { userService, prisma } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { getBaseUrl } from '@/lib/config';
 
 export async function POST(req: NextRequest) {
   try {
     const { username, displayName, email, password, summary, profileImage } = await req.json();
+
+    // Validate required fields
+    if (!username || !password || !email) {
+      return NextResponse.json(
+        { error: 'Username, password, and email are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate username doesn't contain @
+    if (username.includes('@')) {
+      return NextResponse.json(
+        { error: 'Username cannot contain the @ symbol' },
+        { status: 400 }
+      );
+    }
 
     // Check if username is already taken
     const existingUser = await userService.getUserByUsername(username);
@@ -18,8 +35,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Check if email is already taken
+    const existingEmail = await prisma.user.findUnique({
+      where: { email }
+    });
+    if (existingEmail) {
+      return NextResponse.json(
+        { error: 'Email already in use' },
+        { status: 400 }
+      );
+    }
+
     // Create the user
-    const baseUrl = `${req.nextUrl.protocol}//${req.headers.get('host')}`;
+    // Use the configured domain name instead of the request host
+    const protocol = req.nextUrl.protocol === 'https:' ? 'https' : 'http';
+    const baseUrl = getBaseUrl(protocol);
     const user = await userService.createUser({
       username,
       displayName,

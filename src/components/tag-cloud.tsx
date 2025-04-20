@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { extractHashtags } from '@/lib/utils';
 
@@ -23,6 +23,7 @@ interface TagCloudProps {
 }
 
 export default function TagCloud({ posts, maxTags = 20 }: TagCloudProps) {
+  const router = useRouter();
   const [tags, setTags] = useState<{ tag: string; count: number }[]>([]);
 
   useEffect(() => {
@@ -59,11 +60,15 @@ export default function TagCloud({ posts, maxTags = 20 }: TagCloudProps) {
       <h3 className="font-medium mb-3">Trending Tags</h3>
       <div className="flex flex-wrap gap-2">
         {tags.map(({ tag, count }) => (
-          <Link key={tag} href={`/explore?tag=${tag}`}>
+          <button
+            key={tag}
+            onClick={() => router.push(`/explore?tag=${tag}`)}
+            className="inline-block"
+          >
             <Badge variant="outline" className="hover:bg-primary/10 transition-colors">
               #{tag} <span className="ml-1 text-xs text-muted-foreground">({count})</span>
             </Badge>
-          </Link>
+          </button>
         ))}
       </div>
     </div>

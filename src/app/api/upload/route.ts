@@ -8,6 +8,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import sharp from 'sharp';
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,8 +70,18 @@ export async function POST(req: NextRequest) {
       console.log(`Created directory: ${uploadDir}`);
     }
 
-    // Write the file to disk
-    await writeFile(filePath, fileBuffer);
+    // Process the image with sharp
+    // 1. Resize to a square (crop to aspect ratio)
+    // 2. Resize to 300x300 pixels
+    const processedImageBuffer = await sharp(fileBuffer)
+      .resize(300, 300, {
+        fit: 'cover',    // This crops the image to maintain aspect ratio
+        position: 'center' // Center the crop
+      })
+      .toBuffer();
+
+    // Write the processed file to disk
+    await writeFile(filePath, processedImageBuffer);
 
     // Return the URL to the uploaded file
     const fileUrl = `/uploads/${fileName}`;

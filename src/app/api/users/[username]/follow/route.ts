@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { userService, followService } from '@/lib/db';
+import { createNotification } from '@/lib/notifications';
 import { v4 as uuidv4 } from 'uuid';
 
 // POST /api/users/[username]/follow - Follow a user
@@ -15,26 +16,26 @@ export async function POST(
     // Check authentication
     const cookieStore = await cookies();
     const userId = cookieStore.get('userId')?.value;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
-    
+
     const { username } = await params;
-    
+
     // Find the target user
     const targetUser = await userService.getUserByUsername(username);
-    
+
     if (!targetUser) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
-    
+
     // Don't allow following yourself
     if (userId === targetUser.id) {
       return NextResponse.json(
@@ -42,17 +43,17 @@ export async function POST(
         { status: 400 }
       );
     }
-    
+
     // Check if already following
     const existingFollow = await followService.getFollow(userId, targetUser.id);
-    
+
     if (existingFollow) {
       return NextResponse.json(
         { error: 'Already following this user' },
         { status: 400 }
       );
     }
-    
+
     // Create a follow
     const activityId = `https://${req.headers.get('host')}/activities/${uuidv4()}`;
     const follow = await followService.createFollow({
@@ -61,7 +62,21 @@ export async function POST(
       activityId,
       accepted: true, // Auto-accept for now
     });
-    
+
+    // Create notification for the target user
+    try {
+      await createNotification({
+        type: 'follow',
+        userId: targetUser.id, // recipient
+        actorId: userId, // who performed the action
+        message: 'started following you',
+      });
+      console.log('Follow notification created for user:', targetUser.id);
+    } catch (notificationError) {
+      console.error('Error creating follow notification:', notificationError);
+      // Continue even if notification creation fails
+    }
+
     return NextResponse.json({
       message: `Now following ${username}`,
       follow,
@@ -84,29 +99,29 @@ export async function DELETE(
     // Check authentication
     const cookieStore = await cookies();
     const userId = cookieStore.get('userId')?.value;
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
-    
+
     const { username } = await params;
-    
+
     // Find the target user
     const targetUser = await userService.getUserByUsername(username);
-    
+
     if (!targetUser) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
-    
+
     // Delete the follow
     await followService.deleteFollow(userId, targetUser.id);
-    
+
     return NextResponse.json({
       message: `Unfollowed ${username}`,
     });

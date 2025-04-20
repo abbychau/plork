@@ -14,7 +14,7 @@ type User = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (usernameOrEmail: string, password: string) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
 };
@@ -53,15 +53,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (usernameOrEmail: string, password: string) => {
     setLoading(true);
     try {
+      // Determine if input is email or username based on @ symbol
+      const isEmail = usernameOrEmail.includes('@');
+
+      const loginData = isEmail
+        ? { email: usernameOrEmail, password }
+        : { username: usernameOrEmail, password };
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(loginData),
       });
 
       if (!response.ok) {

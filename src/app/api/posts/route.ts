@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { userService, postService } from '@/lib/db';
 // import { generateActivityId, createNoteObject, createCreateActivity } from '@/lib/activitypub';
 import crypto from 'crypto';
+import { getBaseUrl } from '@/lib/config';
 
 // GET /api/posts - Get posts for the timeline
 export async function GET(req: NextRequest) {
@@ -89,7 +90,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate ActivityPub IDs
-    const baseUrl = `${req.nextUrl.protocol}//${req.headers.get('host')}`;
+    // Use the configured domain name instead of the request host
+    const protocol = req.nextUrl.protocol === 'https:' ? 'https' : 'http';
+    const baseUrl = getBaseUrl(protocol);
     // const postId = crypto.randomBytes(16).toString('hex');
     // const noteId = `${baseUrl}/posts/${postId}`;
     const activityId = `${baseUrl}/activities/${crypto.randomBytes(16).toString('hex')}`;

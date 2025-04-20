@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/lib/auth-context';
 import MarkdownContent from '@/components/markdown-content';
+import EnhancedPostEditor from '@/components/enhanced-post-editor';
 import Link from 'next/link';
 import { Edit } from '@mynaui/icons-react';
 
@@ -24,21 +24,19 @@ interface Comment {
 interface CommentSectionProps {
   postId: string;
   initialComments: Comment[];
+  compact?: boolean;
 }
 
-export default function CommentSection({ postId, initialComments }: CommentSectionProps) {
+export default function CommentSection({ postId, initialComments, compact = false }: CommentSectionProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>(initialComments || []);
-  const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!newComment.trim() || !user) return;
+  const handleSubmitComment = async (content: string) => {
+    if (!content.trim() || !user) return;
 
     setIsSubmitting(true);
     setError('');
@@ -49,7 +47,7 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content: newComment }),
+        body: JSON.stringify({ content }),
       });
 
       if (!response.ok) {
@@ -62,8 +60,7 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
       // Add the new comment to the list
       setComments([...comments, comment]);
 
-      // Clear the input
-      setNewComment('');
+      // Comment added successfully
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to post comment');
       console.error('Error posting comment:', err);
@@ -82,19 +79,19 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
     setEditContent('');
   };
 
-  const handleSaveEdit = async (commentId: string) => {
-    if (!editContent.trim() || isSubmitting) return;
+  const handleSaveEdit = async (content: string) => {
+    if (!editingCommentId || !content.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
     setError('');
 
     try {
-      const response = await fetch(`/api/comments?commentId=${commentId}`, {
+      const response = await fetch(`/api/comments?commentId=${editingCommentId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content: editContent }),
+        body: JSON.stringify({ content }),
       });
 
       if (!response.ok) {
@@ -104,7 +101,7 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
 
       const updatedComment = await response.json();
       setComments(comments.map(comment =>
-        comment.id === commentId ? updatedComment : comment
+        comment.id === editingCommentId ? updatedComment : comment
       ));
       setEditingCommentId(null);
       setEditContent('');
@@ -147,26 +144,15 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
 
                 {editingCommentId === comment.id ? (
                   <div className="mt-2">
-                    <textarea
-                      className="w-full p-2 border rounded-md text-sm min-h-[80px] outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
+                    <EnhancedPostEditor
+                      mode="edit"
+                      initialContent={editContent}
+                      isLoading={isSubmitting}
+                      onEditSubmit={handleSaveEdit}
+                      onCancel={handleCancelEdit}
+                      placeholder="Edit your comment..."
+                      compact={compact}
                     />
-                    <div className="flex justify-end gap-2 mt-2">
-                      <button
-                        className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors duration-200"
-                        onClick={handleCancelEdit}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="px-3 py-1 text-xs bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors duration-200"
-                        onClick={() => handleSaveEdit(comment.id)}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? 'Saving...' : 'Save'}
-                      </button>
-                    </div>
                   </div>
                 ) : (
                   <div className="mt-1">
@@ -191,7 +177,7 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
       )}
 
       {user ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
@@ -199,7 +185,7 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
           )}
 
           <div className="flex gap-3">
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-8 w-8 mt-1">
               <AvatarImage src={user.profileImage} alt={user.username} />
               <AvatarFallback>
                 {user.displayName?.[0] || user.username[0]}
@@ -207,27 +193,17 @@ export default function CommentSection({ postId, initialComments }: CommentSecti
             </Avatar>
 
             <div className="flex-1">
-              <Textarea
+              <EnhancedPostEditor
+                mode="create"
                 placeholder="Write a comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                rows={3}
-                className="resize-none"
-                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                onCreateSubmit={handleSubmitComment}
+                submitLabel="Post Comment"
+                compact={compact}
               />
-
-              <div className="flex justify-end mt-2">
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={!newComment.trim() || isSubmitting}
-                >
-                  {isSubmitting ? 'Posting...' : 'Post Comment'}
-                </Button>
-              </div>
             </div>
           </div>
-        </form>
+        </div>
       ) : (
         <div className="text-center py-4 border rounded-md">
           <p className="mb-2">You need to be logged in to comment.</p>

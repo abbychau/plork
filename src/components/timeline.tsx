@@ -5,19 +5,14 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 import MarkdownContent from '@/components/markdown-content';
 import { useAuth } from '@/lib/auth-context';
 import TagCloud from '@/components/tag-cloud';
 import { formatDistanceToNow } from '@/lib/utils';
-
-// Import Mynaui icons
-import {
-  Edit,
-  Heart,
-  HeartSolid,
-  MessageDots,
-  Share
-} from '@mynaui/icons-react';
+import EnhancedPostEditor from '@/components/enhanced-post-editor';
+import CommentSidebar from '@/components/comment-sidebar';
+import PostInteractionButtons from '@/components/post-interaction-buttons';
 
 interface Post {
   id: string;
@@ -35,12 +30,15 @@ interface Post {
 
 export default function Timeline() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [commentSidebarOpen, setCommentSidebarOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const fetchPosts = async () => {
     if (!user) return;
@@ -99,6 +97,9 @@ export default function Timeline() {
         }
         setLikedPosts(newLikedPosts);
 
+        // Find the post that was liked/unliked
+        const targetPost = posts.find(post => post.id === postId);
+
         // Update post likes count in the UI
         setPosts(posts.map(post => {
           if (post.id === postId) {
@@ -111,9 +112,23 @@ export default function Timeline() {
           }
           return post;
         }));
+
+        // Show toast notification when liking a post (not when unliking)
+        if (!isLiked && targetPost && targetPost.author.id !== user.id) {
+          toast({
+            title: "Post liked",
+            description: `${targetPost.author.displayName || targetPost.author.username} will be notified of your like.`,
+            duration: 3000
+          });
+        }
       }
     } catch (error) {
       console.error('Error liking/unliking post:', error);
+      toast({
+        title: "Error",
+        description: "Failed to like/unlike post. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -127,8 +142,8 @@ export default function Timeline() {
     setEditContent('');
   };
 
-  const handleSaveEdit = async (postId: string) => {
-    if (!editContent.trim()) return;
+  const handleSaveEdit = async (postId: string, newContent: string) => {
+    if (!newContent.trim()) return;
 
     try {
       const response = await fetch(`/api/posts/single?postId=${postId}`, {
@@ -136,7 +151,7 @@ export default function Timeline() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content: editContent }),
+        body: JSON.stringify({ content: newContent }),
       });
 
       if (response.ok) {
@@ -144,13 +159,29 @@ export default function Timeline() {
         setPosts(posts.map(post => post.id === postId ? updatedPost : post));
         setEditingPostId(null);
         setEditContent('');
+        toast({
+          title: "Post updated",
+          description: "Your post has been successfully updated"
+        });
       } else {
         console.error('Failed to update post');
+        toast({
+          title: "Update failed",
+          description: "Could not update your post",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Error updating post:', error);
+      toast({
+        title: "Update failed",
+        description: "An error occurred while updating your post",
+        variant: "destructive"
+      });
     }
   };
+
+  // This function is no longer needed as we're using EnhancedPostEditor
 
   if (!user) {
     return null;
@@ -214,7 +245,7 @@ export default function Timeline() {
           {posts.map((post, index) => (
             <Card
               key={post.id}
-              className="border border-border/40 hover:border-primary/20 transition-all duration-200 animate-fade-in-up"
+              className="p-1 border border-border/40 hover:border-primary/20 transition-all duration-200 animate-fade-in-up"
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <CardContent className="p-3">
@@ -242,84 +273,36 @@ export default function Timeline() {
 
                     {editingPostId === post.id ? (
                       <div className="mt-2">
-                        <textarea
-                          className="w-full p-2 border rounded-md text-sm min-h-[100px] outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
+                        <EnhancedPostEditor
+                          mode="edit"
+                          initialContent={editContent}
+                          isLoading={isLoading}
+                          onEditSubmit={(newContent) => handleSaveEdit(post.id, newContent)}
+                          onCancel={handleCancelEdit}
                         />
-                        <div className="flex justify-end gap-2 mt-2">
-                          <button
-                            className="px-3 py-1 text-xs bg-muted hover:bg-muted/80 rounded-md transition-colors duration-200"
-                            onClick={handleCancelEdit}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            className="px-3 py-1 text-xs bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors duration-200"
-                            onClick={() => handleSaveEdit(post.id)}
-                          >
-                            Save
-                          </button>
-                        </div>
                       </div>
                     ) : (
                       <div className="mt-1">
                         <div className="prose prose-sm dark:prose-invert max-w-none transition-colors duration-200">
                           <MarkdownContent content={post.content} />
                         </div>
-                        <Link
-                          href={`/posts/${post.id}`}
-                          className="block mt-2 text-xs text-muted-foreground hover:text-primary transition-colors duration-200"
-                        >
-                          View full post
-                        </Link>
                       </div>
                     )}
 
                     <div className="flex gap-4 mt-2 text-sm">
-                      {user && user.id === post.author.id && !editingPostId && (
-                        <button
-                          className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors duration-200"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleEditPost(post);
-                          }}
-                        >
-                          <Edit className="w-4 h-4" />
-                          <span>Edit</span>
-                        </button>
-                      )}
-                      <Link
-                        href={`/posts/${post.id}`}
-                        className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors duration-200"
-                      >
-                        <MessageDots className="w-4 h-4" />
-                        <span>{post.comments?.length || 0}</span>
-                      </Link>
-                      <button
-                        className="text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors duration-200"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          // Share functionality would go here
-                          alert('Share functionality coming soon!');
+                      <PostInteractionButtons
+                        postId={post.id}
+                        authorId={post.author.id}
+                        isLiked={likedPosts.has(post.id)}
+                        likesCount={post.likes?.length || 0}
+                        commentsCount={post.comments?.length || 0}
+                        onLike={() => handleLikeUnlike(post.id)}
+                        onEdit={user && user.id === post.author.id && !editingPostId ? () => handleEditPost(post) : undefined}
+                        onComment={() => {
+                          setSelectedPostId(post.id);
+                          setCommentSidebarOpen(true);
                         }}
-                      >
-                        <Share className="w-4 h-4" />
-                        <span>{0}</span>
-                      </button>
-                      <button
-                        className={`flex items-center gap-1 transition-colors duration-200 ${likedPosts.has(post.id) ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleLikeUnlike(post.id);
-                        }}
-                      >
-                        {likedPosts.has(post.id) ?
-                          <HeartSolid className="w-4 h-4" /> :
-                          <Heart className="w-4 h-4" />
-                        }
-                        <span>{post.likes?.length || 0}</span>
-                      </button>
+                      />
                     </div>
                   </div>
                 </div>
@@ -334,6 +317,13 @@ export default function Timeline() {
           <TagCloud posts={posts} />
         </div>
       </div>
+
+      {/* Comment Sidebar */}
+      <CommentSidebar
+        isOpen={commentSidebarOpen}
+        onClose={() => setCommentSidebarOpen(false)}
+        postId={selectedPostId}
+      />
     </div>
   );
 }

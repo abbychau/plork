@@ -69,13 +69,15 @@ export async function POST(request: NextRequest) {
 
     // Create notification for the post author (if not the same as the liker)
     if (post.authorId !== userId) {
-      await createNotification({
+      console.log('Creating like notification for post author:', post.authorId);
+      const notification = await createNotification({
         type: 'like',
         userId: post.authorId, // recipient
         actorId: userId, // who performed the action
         postId: post.id,
         message: 'liked your post',
       });
+      console.log('Like notification created:', notification.id);
     }
 
     return NextResponse.json(like);

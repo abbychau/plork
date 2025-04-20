@@ -3,10 +3,12 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '@/lib/db';
+import sharp from 'sharp';
 
 // PUT /api/users/avatar - Update user avatar
 export async function POST(request: NextRequest) {
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a unique filename
-    const fileExtension = file.name.split('.').pop();
+    const fileExtension = file.type.split('/')[1] || 'jpg';
     const fileName = `${uuidv4()}.${fileExtension}`;
 
     // Create the public directory path
@@ -64,12 +66,30 @@ export async function POST(request: NextRequest) {
     const filePath = join(uploadsDir, fileName);
 
     // Ensure the uploads directory exists
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true });
+    }
+
     try {
-      await writeFile(filePath, Buffer.from(await file.arrayBuffer()));
+      // Get file buffer
+      const buffer = Buffer.from(await file.arrayBuffer());
+
+      // Process the image with sharp
+      // 1. Resize to a square (crop to aspect ratio)
+      // 2. Resize to 300x300 pixels
+      const processedImageBuffer = await sharp(buffer)
+        .resize(300, 300, {
+          fit: 'cover',    // This crops the image to maintain aspect ratio
+          position: 'center' // Center the crop
+        })
+        .toBuffer();
+
+      // Write the processed image to disk
+      await writeFile(filePath, processedImageBuffer);
     } catch (error) {
-      console.error('Error saving file:', error);
+      console.error('Error processing and saving file:', error);
       return NextResponse.json(
-        { error: 'Failed to save file' },
+        { error: 'Failed to process and save file' },
         { status: 500 }
       );
     }

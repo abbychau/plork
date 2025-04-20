@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import PostEditor from '@/components/post-editor';
+import EnhancedPostEditor from '@/components/enhanced-post-editor';
 
 export default function ComposePage() {
   const router = useRouter();
@@ -76,8 +76,9 @@ export default function ComposePage() {
         </div>
       )}
 
-      <PostEditor
-        onSubmit={handleSubmit}
+      <EnhancedPostEditor
+        mode="create"
+        onCreateSubmit={handleSubmit}
         isLoading={isLoading}
         placeholder="What's on your mind? You can use Markdown and upload images!"
         submitLabel="Post"
@@ -89,6 +90,7 @@ export default function ComposePage() {
           <li>Use Markdown for formatting</li>
           <li>Drag & drop images or paste them directly</li>
           <li>Click the Preview button to see how your post will look</li>
+          <li>Use the Emoji button to add emojis to your post</li>
         </ul>
       </div>
     </div>

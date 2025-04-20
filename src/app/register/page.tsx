@@ -43,8 +43,18 @@ export default function RegisterPage() {
       return;
     }
 
+    if (formData.username.includes('@')) {
+      setError('Username cannot contain the @ symbol');
+      return;
+    }
+
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (!formData.email || formData.email.trim() === '') {
+      setError('Email is required');
       return;
     }
 
@@ -118,7 +128,7 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email
+                Email *
               </label>
               <Input
                 id="email"
@@ -126,6 +136,7 @@ export default function RegisterPage() {
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
+                required
               />
             </div>
             <div className="space-y-2">

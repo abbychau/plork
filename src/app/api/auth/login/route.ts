@@ -7,13 +7,21 @@ import { cookies } from 'next/headers';
 
 export async function POST(req: NextRequest) {
   try {
-    const { username, password } = await req.json();
+    const { username, email, password } = await req.json();
 
-    // Find the user
-    const user = await userService.getUserByUsername(username);
+    // Find the user by username or email
+    let user;
+    if (email) {
+      // Login with email
+      user = await userService.getUserByEmail(email);
+    } else if (username) {
+      // Login with username
+      user = await userService.getUserByUsername(username);
+    }
+
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid username or password' },
+        { error: 'Invalid username/email or password' },
         { status: 401 }
       );
     }
