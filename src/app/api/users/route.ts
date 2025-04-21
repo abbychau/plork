@@ -47,43 +47,44 @@ export async function GET(req: NextRequest) {
     } else {
       // If no search term, use the regular Prisma query
       const users = await prisma.user.findMany({
-      where: {},
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        summary: true,
-        profileImage: true,
-        actorUrl: true,
-        _count: {
-          select: {
-            followers: true,
-            following: true,
-            posts: true,
+        where: {},
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          summary: true,
+          profileImage: true,
+          actorUrl: true,
+          _count: {
+            select: {
+              followers: true,
+              following: true,
+              posts: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      skip: offset,
-    });
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        skip: offset,
+      });
 
-    // Format the response
-    const formattedUsers = users.map(user => ({
-      id: user.id,
-      username: user.username,
-      displayName: user.displayName,
-      summary: user.summary,
-      profileImage: user.profileImage,
-      actorUrl: user.actorUrl,
-      followersCount: user._count.followers,
-      followingCount: user._count.following,
-      postsCount: user._count.posts,
-    }));
+      // Format the response
+      const formattedUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        summary: user.summary,
+        profileImage: user.profileImage,
+        actorUrl: user.actorUrl,
+        followersCount: user._count.followers,
+        followingCount: user._count.following,
+        postsCount: user._count.posts,
+      }));
 
-    return NextResponse.json(formattedUsers);
+      return NextResponse.json(formattedUsers);
+    }
   } catch (error) {
     console.error('Error getting users:', error);
     return NextResponse.json(

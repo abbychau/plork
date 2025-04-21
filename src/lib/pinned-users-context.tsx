@@ -20,12 +20,15 @@ interface PinnedUsersContextType {
 
 const PinnedUsersContext = createContext<PinnedUsersContextType | undefined>(undefined);
 
-export function PinnedUsersProvider({ children }: { children: ReactNode }) {
-  const [pinnedUsers, setPinnedUsers] = useState<PinnedUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function PinnedUsersProvider({ children, initialPinnedUsers }: { children: ReactNode, initialPinnedUsers?: PinnedUser[] }) {
+  const [pinnedUsers, setPinnedUsers] = useState<PinnedUser[]>(initialPinnedUsers || []);
+  const [isLoading, setIsLoading] = useState(!initialPinnedUsers);
 
-  // Load pinned users from API on mount
+  // Load pinned users from API on mount if not provided initially
   useEffect(() => {
+    // Skip fetching if we already have initial data
+    if (initialPinnedUsers) return;
+
     const fetchPinnedUsers = async () => {
       try {
         const response = await fetch('/api/pinned-users');
@@ -41,7 +44,7 @@ export function PinnedUsersProvider({ children }: { children: ReactNode }) {
     };
 
     fetchPinnedUsers();
-  }, []);
+  }, [initialPinnedUsers]);
 
   const addPinnedUser = async (user: Omit<PinnedUser, 'timestamp'>) => {
     try {

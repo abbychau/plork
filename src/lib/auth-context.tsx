@@ -1,6 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { PinnedUser } from './pinned-users-context';
+import { fetchPinnedUsers } from './pinned-users-utils';
 
 type User = {
   id: string;
@@ -14,8 +16,9 @@ type User = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (usernameOrEmail: string, password: string) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  pinnedUsers: PinnedUser[] | null;
+  login: (usernameOrEmail: string, password: string) => Promise<any>;
+  register: (userData: RegisterData) => Promise<any>;
   logout: () => void;
 };
 
@@ -32,6 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [pinnedUsers, setPinnedUsers] = useState<PinnedUser[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,6 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
+
+          // Also fetch pinned users if user is logged in
+          if (userData) {
+            const pinnedUsersData = await fetchPinnedUsers();
+            setPinnedUsers(pinnedUsersData);
+          }
         }
       } catch (error) {
         console.error('Error checking authentication:', error);
@@ -79,8 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await response.json();
       setUser(userData);
 
-      // Return the user data
-      return userData;
+      // Also fetch pinned users
+      const pinnedUsersData = await fetchPinnedUsers();
+      setPinnedUsers(pinnedUsersData);
+
+      // Return both user data and pinned users
+      return { user: userData, pinnedUsers: pinnedUsersData };
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -135,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, pinnedUsers, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

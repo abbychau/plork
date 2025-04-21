@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
-import { PinnedUsersProvider } from "@/lib/pinned-users-context";
+import { PinnedUsersProviderWithAuth } from "@/lib/pinned-users-provider-with-auth";
 
 import { Toaster } from "@/components/ui/toaster";
 import DynamicTitle from "@/components/dynamic-title";
@@ -40,7 +40,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider defaultTheme="system" storageKey="plork-theme">
-            <PinnedUsersProvider>
+            <PinnedUsersProviderWithAuth>
             <DynamicTitle />
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
               <main className="w-full max-w-6xl h-[800px] bg-background border border-border rounded-lg shadow-lg overflow-hidden">
@@ -49,7 +49,7 @@ export default function RootLayout({
               <BottomMenu />
               <Toaster />
             </div>
-            </PinnedUsersProvider>
+            </PinnedUsersProviderWithAuth>
           </ThemeProvider>
         </AuthProvider>
       </body>

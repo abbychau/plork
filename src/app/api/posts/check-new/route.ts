@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build the query to check for newer posts
-    let whereClause: any = {
+    const whereClause: any = {
       createdAt: { gt: latestPost.createdAt },
     };
 
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       });
 
       const followingIds = following.map((f) => f.followingId);
-      
+
       // Include the user's own posts
       followingIds.push(userId);
 

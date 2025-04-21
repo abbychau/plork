@@ -66,7 +66,7 @@ export function extractYouTubeVideoId(url: string): string | null {
   if (!url) return null;
 
   // Regular YouTube watch URLs
-  let match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\s?/]+)/);
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\s?/]+)/);
 
   return match ? match[1] : null;
 }

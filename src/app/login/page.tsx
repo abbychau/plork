@@ -23,10 +23,10 @@ export default function LoginPage() {
 
     try {
       // Wait for login to complete and get the user data
-      const user = await login(usernameOrEmail, password);
+      const result = await login(usernameOrEmail, password);
 
       // If login was successful and we have a user, redirect to home page
-      if (user) {
+      if (result && result.user) {
         router.push('/');
       }
     } catch {

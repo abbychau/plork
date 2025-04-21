@@ -41,7 +41,7 @@ export default function PostList({
   initialPosts = [],
   apiEndpoint = '/api/posts',
   title = 'Posts',
-  showSearch = false, // eslint-disable-line @typescript-eslint/no-unused-vars
+  showSearch = false,
   showNewPostButton = true,
   tag,
   searchQuery: initialSearchQuery = '',
@@ -75,7 +75,7 @@ export default function PostList({
 
     try {
       // If we have a search query, use the search endpoint instead
-      let baseEndpoint = searchQuery
+      const baseEndpoint = searchQuery
         ? '/api/posts/search'
         : currentEndpoint;
 
@@ -186,7 +186,7 @@ export default function PostList({
       // Get the current API endpoint
       const currentEndpoint = apiEndpoint;
       // If we have a search query, use the search endpoint instead
-      let baseEndpoint = searchQuery
+      const baseEndpoint = searchQuery
         ? '/api/posts/search'
         : currentEndpoint;
 
@@ -226,7 +226,7 @@ export default function PostList({
       // Get the current API endpoint
       const currentEndpoint = apiEndpoint;
       // If we have a search query, use the search endpoint instead
-      let baseEndpoint = searchQuery
+      const baseEndpoint = searchQuery
         ? '/api/posts/search'
         : currentEndpoint;
 
