@@ -49,6 +49,7 @@ model Post {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   content       String
+  hashtags      String?   // Comma-separated list of hashtags for searching
   activityId    String    @unique // ActivityPub ID
 
   // Relationships
@@ -59,6 +60,7 @@ model Post {
   notifications Notification[]
 
   @@index([authorId])
+  @@index([hashtags]) // Add index for hashtag searching
 }
 
 model Comment {

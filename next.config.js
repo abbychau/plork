@@ -23,6 +23,14 @@ const nextConfig = {
     // You can re-enable this later after fixing the issues
     ignoreDuringBuilds: true,
   },
+  // Configure experimental features
+  experimental: {
+    // Any experimental features would go here
+  },
+  // Ensure we're using webpack
+  webpack: (config) => {
+    return config;
+  },
 };
 
 module.exports = nextConfig;

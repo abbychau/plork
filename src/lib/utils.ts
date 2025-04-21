@@ -42,6 +42,7 @@ export function formatDistanceToNow(date: Date): string {
 
 /**
  * Extract hashtags from text
+ * Returns hashtags in lowercase for consistent storage and searching
  */
 export function extractHashtags(text: string): string[] {
   const hashtagRegex = /#([\w\u0080-\uFFFF]+)/g;
@@ -49,6 +50,30 @@ export function extractHashtags(text: string): string[] {
 
   if (!matches) return [];
 
-  // Remove duplicates and the # symbol
-  return [...new Set(matches)].map(tag => tag.substring(1));
+  // Remove duplicates, the # symbol, and convert to lowercase for consistency
+  return [...new Set(matches)].map(tag => tag.substring(1).toLowerCase());
+}
+
+/**
+ * Extract YouTube video ID from a URL
+ * Supports various YouTube URL formats:
+ * - https://www.youtube.com/watch?v=VIDEO_ID
+ * - https://youtu.be/VIDEO_ID
+ * - https://youtube.com/shorts/VIDEO_ID
+ * - https://www.youtube.com/embed/VIDEO_ID
+ */
+export function extractYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+
+  // Regular YouTube watch URLs
+  let match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([^&\s?/]+)/);
+
+  return match ? match[1] : null;
+}
+
+/**
+ * Check if a URL is a YouTube link
+ */
+export function isYouTubeLink(url: string): boolean {
+  return !!extractYouTubeVideoId(url);
 }

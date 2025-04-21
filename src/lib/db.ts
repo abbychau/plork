@@ -88,6 +88,9 @@ export const userService = {
   },
 };
 
+// Import the extractHashtags function
+import { extractHashtags } from './utils';
+
 // Post service
 export const postService = {
   // Create a new post
@@ -98,11 +101,16 @@ export const postService = {
   }) {
     const { content, authorId, activityId } = data;
 
+    // Extract hashtags from content and store them
+    const hashtags = extractHashtags(content);
+    const hashtagsString = hashtags.length > 0 ? hashtags.join(',') : null;
+
     return prisma.post.create({
       data: {
         content,
         authorId,
         activityId,
+        hashtags: hashtagsString,
       },
       include: {
         author: true,
@@ -223,10 +231,15 @@ export const postService = {
 
   // Update a post
   async updatePost(id: string, data: { content: string }) {
+    // Extract hashtags from content and store them
+    const hashtags = extractHashtags(data.content);
+    const hashtagsString = hashtags.length > 0 ? hashtags.join(',') : null;
+
     return prisma.post.update({
       where: { id },
       data: {
         content: data.content,
+        hashtags: hashtagsString,
         updatedAt: new Date(),
       },
       include: {

@@ -38,7 +38,7 @@ console.log(`Starting development server on port ${port}...`);
 console.log(`Domain name: ${domainName}`);
 
 // Start the Next.js development server with the specified port
-const nextDev = spawn('next', ['dev', '--turbopack', '-p', port], {
+const nextDev = spawn('next', ['dev', '-p', port], {
   stdio: 'inherit',
   shell: true
 });

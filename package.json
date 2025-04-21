@@ -6,7 +6,6 @@
     "dev": "node scripts/start-dev.js",
     "build": "next build",
     "start": "node scripts/start-prod.js",
-    "start:with-build": "npm run build && node scripts/start-prod.js",
     "start:pm2": "pm2 start pm2.config.json",
     "stop:pm2": "pm2 stop plork-activitypub",
     "restart:pm2": "pm2 restart plork-activitypub",

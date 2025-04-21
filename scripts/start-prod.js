@@ -67,10 +67,11 @@ const buildIdPath = path.join(nextDir, 'BUILD_ID');
 if (!fs.existsSync(buildIdPath)) {
   console.log('No production build found. Running next build first...');
 
-  // Run next build synchronously
+  // Run next build synchronously with webpack (not turbopack)
   const buildResult = spawnSync('next', ['build'], {
     stdio: 'inherit',
-    shell: true
+    shell: true,
+    env: { ...process.env, NEXT_TURBO: 'false' }
   });
 
   // Check if build was successful
@@ -88,7 +89,8 @@ console.log(`Domain name: ${domainName}`);
 // Start the Next.js production server with the specified port
 const nextStart = spawn('next', ['start', '-p', port], {
   stdio: 'inherit',
-  shell: true
+  shell: true,
+  env: { ...process.env, NEXT_TURBO: 'false' }
 });
 
 // Handle process exit

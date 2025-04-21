@@ -40,40 +40,32 @@ export default function Timeline() {
   const [editContent, setEditContent] = useState('');
   const [commentSidebarOpen, setCommentSidebarOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [hasNewPosts, setHasNewPosts] = useState(false);
-  const [checkingNewPosts, setCheckingNewPosts] = useState(false);
-  const [lastPostId, setLastPostId] = useState<string | null>(null);
-
+  
   // Pagination state - using nextOffset instead of page
   const [nextOffset, setNextOffset] = useState<number | null>(0);
   const loaderRef = useRef<HTMLDivElement>(null);
-
+  
   // Initial data loading
   useEffect(() => {
     if (!user) return;
-
+    
     const fetchInitialPosts = async () => {
       setIsLoading(true);
       setError('');
-
+      
       try {
         const response = await fetch('/api/posts?limit=10&offset=0');
-
+        
         if (!response.ok) {
           throw new Error('Failed to fetch posts');
         }
-
+        
         const data = await response.json();
         setPosts(data);
-
-        // Store the ID of the most recent post for checking new posts later
-        if (data.length > 0) {
-          setLastPostId(data[0].id);
-        }
-
+        
         // Set next offset for pagination or null if no more posts
         setNextOffset(data.length < 10 ? null : 10);
-
+        
         // Update liked posts set
         const newLikedPosts = new Set<string>();
         data.forEach((post: Post) => {
@@ -89,37 +81,37 @@ export default function Timeline() {
         setIsLoading(false);
       }
     };
-
+    
     fetchInitialPosts();
   }, [user]);
-
+  
   // Function to load more posts
   const loadMorePosts = useCallback(async () => {
     // If there's no next offset, we've reached the end
     if (nextOffset === null || isLoading) {
       return false;
     }
-
+    
     try {
       console.log(`Loading more posts with offset: ${nextOffset}`);
       const response = await fetch(`/api/posts?limit=10&offset=${nextOffset}`);
-
+      
       if (!response.ok) {
         throw new Error('Failed to fetch more posts');
       }
-
+      
       const data = await response.json();
-
+      
       // If we got fewer than 10 posts, we've reached the end
       if (data.length < 10) {
         setNextOffset(null); // No more posts to load
       } else {
         setNextOffset(nextOffset + 10); // Set next offset
       }
-
+      
       // Append new posts to existing ones
       setPosts(prevPosts => [...prevPosts, ...data]);
-
+      
       // Update liked posts set
       const newLikedPosts = new Set<string>(likedPosts);
       data.forEach((post: Post) => {
@@ -128,7 +120,7 @@ export default function Timeline() {
         }
       });
       setLikedPosts(newLikedPosts);
-
+      
       // Return true if there are more posts to load
       return data.length === 10;
     } catch (err) {
@@ -136,113 +128,12 @@ export default function Timeline() {
       return false;
     }
   }, [nextOffset, isLoading, user, likedPosts]);
-
+  
   // Set up infinite scrolling
   const { isLoading: isLoadingMore } = useInfiniteScroll(
     loadMorePosts,
     loaderRef
   );
-
-  // Function to check for new posts
-  const checkForNewPosts = useCallback(async () => {
-    if (!user || !lastPostId || checkingNewPosts) return;
-
-    setCheckingNewPosts(true);
-    try {
-      // Fetch the most recent posts to see if there are any new ones
-      const response = await fetch('/api/posts?limit=1&offset=0');
-
-      if (!response.ok) {
-        throw new Error('Failed to check for new posts');
-      }
-
-      const data = await response.json();
-
-      // If we got a post and it's different from our most recent one, there are new posts
-      if (data.length > 0 && data[0].id !== lastPostId) {
-        setHasNewPosts(true);
-      }
-    } catch (err) {
-      console.error('Error checking for new posts:', err);
-    } finally {
-      setCheckingNewPosts(false);
-    }
-  }, [user, lastPostId, checkingNewPosts]);
-
-  // Function to load new posts
-  const loadNewPosts = useCallback(async () => {
-    if (!user || !lastPostId) return;
-
-    setIsLoading(true);
-    setHasNewPosts(false);
-
-    try {
-      // Fetch all posts since the last time we loaded
-      const response = await fetch('/api/posts?limit=50&offset=0');
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch new posts');
-      }
-
-      const data = await response.json();
-
-      // Find the index of our current most recent post
-      const lastPostIndex = data.findIndex((post: Post) => post.id === lastPostId);
-
-      // If we found it and there are new posts before it
-      if (lastPostIndex > 0) {
-        // Get only the new posts
-        const newPosts = data.slice(0, lastPostIndex);
-
-        // Update the posts list with the new posts at the top
-        setPosts(prevPosts => [...newPosts, ...prevPosts]);
-
-        // Update the last post ID
-        if (newPosts.length > 0) {
-          setLastPostId(newPosts[0].id);
-        }
-
-        // Update liked posts set
-        const newLikedPosts = new Set<string>(likedPosts);
-        newPosts.forEach((post: Post) => {
-          if (post.likes && post.likes.some((like: any) => like.userId === user.id)) {
-            newLikedPosts.add(post.id);
-          }
-        });
-        setLikedPosts(newLikedPosts);
-      } else if (data.length > 0) {
-        // If we didn't find our last post, just replace everything
-        setPosts(data);
-        setLastPostId(data[0].id);
-
-        // Update liked posts set
-        const newLikedPosts = new Set<string>();
-        data.forEach((post: Post) => {
-          if (post.likes && post.likes.some((like: any) => like.userId === user.id)) {
-            newLikedPosts.add(post.id);
-          }
-        });
-        setLikedPosts(newLikedPosts);
-      }
-    } catch (err) {
-      console.error('Error loading new posts:', err);
-      setError('Failed to load new posts');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, lastPostId, likedPosts]);
-
-  // Set up periodic checking for new posts
-  useEffect(() => {
-    if (!user) return;
-
-    // Check for new posts every 30 seconds
-    const interval = setInterval(() => {
-      checkForNewPosts();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [user, checkForNewPosts]);
 
   const handleLikeUnlike = async (postId: string) => {
     if (!user) return;
@@ -349,8 +240,6 @@ export default function Timeline() {
     }
   };
 
-  // This function is no longer needed as we're using EnhancedPostEditor
-
   if (!user) {
     return null;
   }
@@ -398,34 +287,15 @@ export default function Timeline() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-fade-in">
       <div className="md:col-span-3">
-        <div className="flex flex-col gap-2 mb-4 sticky top-0 bg-background/80 backdrop-blur-sm py-3 z-10">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold">
-              Timeline
-            </h2>
-            <Link href="/compose">
-              <Button size="sm" className="shadow-sm hover:shadow-md transition-all duration-200">
-                <span className="mr-1">+</span> New Post
-              </Button>
-            </Link>
-          </div>
-
-          {/* New posts notification button */}
-          {hasNewPosts && (
-            <Button
-              variant="outline"
-              className="w-full bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary transition-all duration-200"
-              onClick={loadNewPosts}
-              disabled={isLoading}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="1 4 1 10 7 10"></polyline>
-                <polyline points="23 20 23 14 17 14"></polyline>
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
-              </svg>
-              New posts available
+        <div className="flex justify-between items-center mb-4 sticky top-0 bg-background/80 backdrop-blur-sm py-3 z-10">
+          <h2 className="text-xl font-bold">
+            Timeline
+          </h2>
+          <Link href="/compose">
+            <Button size="sm" className="shadow-sm hover:shadow-md transition-all duration-200">
+              <span className="mr-1">+</span> New Post
             </Button>
-          )}
+          </Link>
         </div>
 
         <div className="space-y-3">

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
 import Header from "@/components/header";
 import { Toaster } from "@/components/ui/toaster";
 import DynamicTitle from "@/components/dynamic-title";
+import faviconSVG from "./favicon.svg";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,6 +21,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Plork - ActivityPub SNS",
   description: "A minimal ActivityPub-compatible social network",
+  icons: {
+    icon: faviconSVG.src,
+  },
 };
 
 export default function RootLayout({
@@ -53,6 +56,9 @@ export default function RootLayout({
                     <div className="flex space-x-6 text-sm">
                       <a href="/activitypub" className="text-muted-foreground hover:text-primary transition-colors duration-200">
                         ActivityPub
+                      </a>
+                      <a href="/api-tester" className="text-muted-foreground hover:text-primary transition-colors duration-200">
+                        API Tester
                       </a>
                     </div>
                   </div>

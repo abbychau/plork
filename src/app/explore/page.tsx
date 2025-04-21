@@ -1,22 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense, KeyboardEvent } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
 import MarkdownContent from '@/components/markdown-content';
 import TagCloud from '@/components/tag-cloud';
-import { formatDistanceToNow, extractHashtags } from '@/lib/utils';
+import { formatDistanceToNow } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import CommentSidebar from '@/components/comment-sidebar';
-
 import PostInteractionButtons from '@/components/post-interaction-buttons';
+import { useInfiniteScroll } from '@/hooks';
 
 interface Author {
   id: string;
@@ -51,12 +49,10 @@ interface User {
 }
 
 function ExplorePageContent() {
-  const { user } = useAuth();
-
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { } = useAuth();
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const tagParam = searchParams.get('tag');
-  const searchParam = searchParams.get('search');
+
   const [commentSidebarOpen, setCommentSidebarOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
@@ -67,17 +63,114 @@ function ExplorePageContent() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState(searchParam || (tagParam ? `#${tagParam}` : ''));
-  const [inputValue, setInputValue] = useState(searchParam || (tagParam ? `#${tagParam}` : ''));
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState('hot');
+  const [taggedPosts, setTaggedPosts] = useState<Post[]>([]);
 
-  const fetchPosts = useCallback(async (type: string) => {
+  // Pagination state
+  const [hotPage, setHotPage] = useState(0);
+  const [newPage, setNewPage] = useState(0);
+  const [usersPage, setUsersPage] = useState(0);
+  const [tagPage, setTagPage] = useState(0);
+  const [hasMoreHot, setHasMoreHot] = useState(true);
+  const [hasMoreNew, setHasMoreNew] = useState(true);
+  const [hasMoreUsers, setHasMoreUsers] = useState(true);
+  const [hasMoreTagged, setHasMoreTagged] = useState(true);
+  const loaderRef = useRef<HTMLDivElement>(null);
+
+  // Fetch posts by tag
+  const fetchTaggedPosts = useCallback(async (reset = false) => {
+    if (!tagParam) return;
+
+    if (reset) {
+      setTagPage(0);
+      setTaggedPosts([]);
+      setHasMoreTagged(true);
+      return; // Exit early after reset to avoid duplicate fetches
+    }
+
+    // Don't fetch if we've reached the end
+    if (!hasMoreTagged) {
+      return;
+    }
+
+    const currentPageValue = tagPage;
+    const limit = 10;
+    const offset = currentPageValue * limit;
+
+    console.log(`Fetching tagged posts with tag: ${tagParam}, offset: ${offset}, page: ${currentPageValue}`);
+
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await fetch(`/api/posts/explore?type=${type}`);
+      const response = await fetch(`/api/posts/hashtag?tag=${encodeURIComponent(tagParam)}&limit=${limit}&offset=${offset}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch posts with tag #${tagParam}`);
+      }
+
+      const data = await response.json();
+
+      // If we received fewer posts than the limit, we've reached the end
+      if (data.length < limit) {
+        setHasMoreTagged(false);
+      }
+
+      setTaggedPosts(prev => [...prev, ...data]);
+      setTagPage(prev => prev + 1);
+      setFilteredPosts(prev => [...prev, ...data]);
+
+      // Update liked posts set
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        const newLikedPosts = new Set<string>(likedPosts);
+        data.forEach((post: Post) => {
+          if (post.likes && post.likes.some((like: Like) => like.userId === userId)) {
+            newLikedPosts.add(post.id);
+          }
+        });
+        setLikedPosts(newLikedPosts);
+      }
+    } catch (err) {
+      console.error(`Error fetching tagged posts:`, err);
+      setError(`Failed to load posts with tag #${tagParam}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [tagParam, tagPage, hasMoreTagged, likedPosts]);
+
+  const fetchPosts = useCallback(async (type: string, reset = false) => {
+    if (reset) {
+      if (type === 'hot') {
+        setHotPage(0);
+        setHotPosts([]);
+        setHasMoreHot(true);
+      } else {
+        setNewPage(0);
+        setNewPosts([]);
+        setHasMoreNew(true);
+      }
+      return; // Exit early after reset to avoid duplicate fetches
+    }
+
+    // Don't fetch if we've reached the end
+    if ((type === 'hot' && !hasMoreHot) || (type === 'new' && !hasMoreNew)) {
+      return;
+    }
+
+    // Get current page values directly
+    const currentPageValue = type === 'hot' ? hotPage : newPage;
+    const limit = 10;
+    const offset = currentPageValue * limit;
+
+    console.log(`Fetching ${type} posts with offset: ${offset}, page: ${currentPageValue}`);
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`/api/posts/explore?type=${type}&limit=${limit}&offset=${offset}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch ${type} posts`);
@@ -85,22 +178,33 @@ function ExplorePageContent() {
 
       const data = await response.json();
 
+      // If we received fewer posts than the limit, we've reached the end
+      if (data.length < limit) {
+        if (type === 'hot') {
+          setHasMoreHot(false);
+        } else {
+          setHasMoreNew(false);
+        }
+      }
+
       if (type === 'hot') {
-        setHotPosts(data);
+        setHotPosts(prev => [...prev, ...data]);
+        setHotPage(prev => prev + 1);
         if (activeTab === 'hot') {
-          setFilteredPosts(data);
+          setFilteredPosts(prev => [...prev, ...data]);
         }
       } else {
-        setNewPosts(data);
+        setNewPosts(prev => [...prev, ...data]);
+        setNewPage(prev => prev + 1);
         if (activeTab === 'new') {
-          setFilteredPosts(data);
+          setFilteredPosts(prev => [...prev, ...data]);
         }
       }
 
       // Update liked posts set
       const userId = localStorage.getItem('userId');
       if (userId) {
-        const newLikedPosts = new Set<string>();
+        const newLikedPosts = new Set<string>(likedPosts);
         data.forEach((post: Post) => {
           if (post.likes && post.likes.some((like: Like) => like.userId === userId)) {
             newLikedPosts.add(post.id);
@@ -114,82 +218,52 @@ function ExplorePageContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, likedPosts, hotPage, newPage, hasMoreHot, hasMoreNew]);
 
-  const searchPosts = useCallback(async () => {
-    setIsLoading(true);
-    setError('');
 
-    try {
-      // If searching for user's own posts
-      if (searchTerm.toLowerCase() === 'my posts' && user) {
-        const response = await fetch(`/api/posts/explore?username=${user.username}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch your posts');
-        }
-        const data = await response.json();
-        setFilteredPosts(data);
-        return;
-      }
 
-      // If term starts with #, treat it as a hashtag search
-      if (searchTerm.startsWith('#')) {
-        const tag = searchTerm.substring(1).toLowerCase();
-        const allPosts = [...hotPosts, ...newPosts];
-        // Remove duplicates
-        const uniquePosts = allPosts.filter((post, index, self) =>
-          index === self.findIndex((p) => p.id === post.id)
-        );
-
-        const filtered = uniquePosts.filter(post => {
-          const hashtags = extractHashtags(post.content);
-          return hashtags.some(hashtag => hashtag.toLowerCase().includes(tag));
-        });
-        setFilteredPosts(filtered);
-        return;
-      }
-
-      // Regular search - use the appropriate search endpoint based on active tab
-      if (activeTab === 'users') {
-        const response = await fetch(`/api/users?search=${encodeURIComponent(searchTerm)}`);
-        if (!response.ok) {
-          throw new Error('Failed to search users');
-        }
-        const data = await response.json();
-        setFilteredUsers(data);
-      } else {
-        // Search posts
-        const response = await fetch(`/api/posts/search?q=${encodeURIComponent(searchTerm)}`);
-        if (!response.ok) {
-          throw new Error('Failed to search posts');
-        }
-        const data = await response.json();
-        setFilteredPosts(data);
-      }
-    } catch (err) {
-      console.error('Error searching:', err);
-      setError('Failed to search');
-    } finally {
-      setIsLoading(false);
+  const fetchUsers = useCallback(async (reset = false) => {
+    if (reset) {
+      setUsersPage(0);
+      setUsers([]);
+      setHasMoreUsers(true);
+      return; // Exit early after reset to avoid duplicate fetches
     }
-  }, [user, hotPosts, newPosts, searchTerm, activeTab]);
 
-  const fetchUsers = useCallback(async () => {
+    // Don't fetch if we've reached the end
+    if (!hasMoreUsers) {
+      return;
+    }
+
+    // Get current page value directly
+    const currentPageValue = usersPage;
+    const limit = 10;
+    const offset = currentPageValue * limit;
+
+    console.log(`Fetching users with offset: ${offset}, page: ${currentPageValue}`);
+
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch(`/api/users?limit=${limit}&offset=${offset}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
 
       const data = await response.json();
-      setUsers(data);
+
+      // Check if we've reached the end
+      if (data.length < limit) {
+        setHasMoreUsers(false);
+      }
+
+      setUsers(prev => [...prev, ...data]);
+      setUsersPage(prev => prev + 1);
 
       if (activeTab === 'users') {
-        setFilteredUsers(data);
+        setFilteredUsers(prev => [...prev, ...data]);
       }
     } catch (err) {
       console.error('Error fetching users:', err);
@@ -197,64 +271,206 @@ function ExplorePageContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, usersPage, hasMoreUsers]);
 
-  useEffect(() => {
-    fetchPosts('hot');
-    fetchPosts('new');
-    fetchUsers();
-  }, [fetchPosts, fetchUsers]);
+  // Load more content based on the active tab
+  const loadMore = useCallback(async () => {
+    if (isLoading) return false;
 
-  // Listen for URL parameter changes
-  useEffect(() => {
-    const tag = searchParams.get('tag');
-    const search = searchParams.get('search');
-
-    if (tag) {
-      const newValue = `#${tag}`;
-      setSearchTerm(newValue);
-      setInputValue(newValue);
-    } else if (search) {
-      setSearchTerm(search);
-      setInputValue(search);
+    // If we have a tag parameter, we're in tag filtering mode
+    if (tagParam) {
+      if (!hasMoreTagged) return false;
+      await fetchTaggedPosts();
+      return hasMoreTagged;
     }
-  }, [searchParams]);
 
-  // Only search when URL parameters change, not on every searchTerm change
+    // Check if there's more content to load based on the current view
+    const hasMore = activeTab === 'hot'
+      ? hasMoreHot
+      : activeTab === 'new'
+        ? hasMoreNew
+        : activeTab === 'users'
+          ? hasMoreUsers
+          : false;
+
+    // If there's no more content, stop the infinite scroll
+    if (!hasMore) return false;
+
+    if (activeTab === 'hot') {
+      // Load more hot posts
+      await fetchPosts('hot');
+      return hasMoreHot;
+    } else if (activeTab === 'new') {
+      // Load more new posts
+      await fetchPosts('new');
+      return hasMoreNew;
+    } else if (activeTab === 'users') {
+      // Load more users
+      await fetchUsers();
+      return hasMoreUsers;
+    }
+
+    return false; // Default case, stop infinite scroll
+  }, [isLoading, activeTab, fetchPosts, fetchUsers, hasMoreHot, hasMoreNew, hasMoreUsers, tagParam, fetchTaggedPosts, hasMoreTagged]);
+
+  // Set up infinite scrolling
+  const { isLoading: isLoadingMore, hasMore } = useInfiniteScroll(
+    loadMore,
+    loaderRef
+  );
+
+  // Sync the hook's hasMore state with our component states
   useEffect(() => {
-    const tag = searchParams.get('tag');
-    const search = searchParams.get('search');
+    if (!hasMore) {
+      if (tagParam && hasMoreTagged) {
+        setHasMoreTagged(false);
+      } else if (activeTab === 'hot' && hasMoreHot) {
+        setHasMoreHot(false);
+      } else if (activeTab === 'new' && hasMoreNew) {
+        setHasMoreNew(false);
+      } else if (activeTab === 'users' && hasMoreUsers) {
+        setHasMoreUsers(false);
+      }
+    }
+  }, [hasMore, activeTab, hasMoreHot, hasMoreNew, hasMoreUsers, tagParam, hasMoreTagged]);
 
-    if (tag || search) {
-      searchPosts();
+  // Initial data loading
+  useEffect(() => {
+    // Reset everything and load first pages directly
+    // to avoid circular dependency issues
+    const fetchInitialData = async () => {
+      setIsLoading(true);
+
+      try {
+        // Reset pagination state
+        setHotPage(0);
+        setNewPage(0);
+        setUsersPage(0);
+        setTagPage(0);
+        setHotPosts([]);
+        setNewPosts([]);
+        setUsers([]);
+        setTaggedPosts([]);
+        setHasMoreHot(true);
+        setHasMoreNew(true);
+        setHasMoreUsers(true);
+        setHasMoreTagged(true);
+        setFilteredPosts([]);
+
+        // If we have a tag parameter, fetch tagged posts
+        if (tagParam) {
+          const taggedResponse = await fetch(`/api/posts/hashtag?tag=${encodeURIComponent(tagParam)}&limit=10&offset=0`);
+
+          if (!taggedResponse.ok) {
+            throw new Error(`Failed to fetch posts with tag #${tagParam}`);
+          }
+
+          const taggedData = await taggedResponse.json();
+          setTaggedPosts(taggedData);
+          setFilteredPosts(taggedData);
+          setTagPage(1);
+
+          if (taggedData.length < 10) {
+            setHasMoreTagged(false);
+          }
+
+          // Update liked posts set
+          const userId = localStorage.getItem('userId');
+          if (userId) {
+            const newLikedPosts = new Set<string>();
+            taggedData.forEach((post: Post) => {
+              if (post.likes && post.likes.some((like: Like) => like.userId === userId)) {
+                newLikedPosts.add(post.id);
+              }
+            });
+            setLikedPosts(newLikedPosts);
+          }
+        } else {
+          // Fetch initial data in parallel for regular explore view
+          const [hotResponse, newResponse, usersResponse] = await Promise.all([
+            fetch('/api/posts/explore?type=hot&limit=10&offset=0'),
+            fetch('/api/posts/explore?type=new&limit=10&offset=0'),
+            fetch('/api/users?limit=10&offset=0')
+          ]);
+
+          if (!hotResponse.ok || !newResponse.ok || !usersResponse.ok) {
+            throw new Error('Failed to fetch initial data');
+          }
+
+          const [hotData, newData, usersData] = await Promise.all([
+            hotResponse.json(),
+            newResponse.json(),
+            usersResponse.json()
+          ]);
+
+          // Update state with fetched data
+          setHotPosts(hotData);
+          setNewPosts(newData);
+          setUsers(usersData);
+
+          // Set pagination state
+          setHotPage(1);
+          setNewPage(1);
+          setUsersPage(1);
+
+          // Check if we've reached the end
+          if (hotData.length < 10) setHasMoreHot(false);
+          if (newData.length < 10) setHasMoreNew(false);
+          if (usersData.length < 10) setHasMoreUsers(false);
+
+          // Set filtered content based on active tab
+          if (activeTab === 'hot') {
+            setFilteredPosts(hotData);
+          } else if (activeTab === 'new') {
+            setFilteredPosts(newData);
+          } else if (activeTab === 'users') {
+            setFilteredUsers(usersData);
+          }
+
+          // Update liked posts set
+          const userId = localStorage.getItem('userId');
+          if (userId) {
+            const newLikedPosts = new Set<string>();
+            [...hotData, ...newData].forEach((post: Post) => {
+              if (post.likes && post.likes.some((like: Like) => like.userId === userId)) {
+                newLikedPosts.add(post.id);
+              }
+            });
+            setLikedPosts(newLikedPosts);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching initial data:', err);
+        setError('Failed to load initial data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [activeTab, tagParam]); // Add tagParam to dependencies
+
+  useEffect(() => {
+    // If we have a tag parameter, we're in tag filtering mode
+    if (tagParam) {
+      setFilteredPosts(taggedPosts);
+    } else if (activeTab === 'users') {
+      setFilteredUsers(users);
     } else {
-      // If no search parameters, show content based on active tab
-      if (activeTab === 'users') {
-        setFilteredUsers(users);
-      } else {
-        setFilteredPosts(activeTab === 'hot' ? hotPosts : newPosts);
-      }
+      setFilteredPosts(activeTab === 'hot' ? hotPosts : newPosts);
     }
-  }, [searchParams, searchPosts, activeTab, hotPosts, newPosts, users]);
-
-  useEffect(() => {
-    if (!searchTerm) {
-      if (activeTab === 'users') {
-        setFilteredUsers(users);
-      } else {
-        setFilteredPosts(activeTab === 'hot' ? hotPosts : newPosts);
-      }
-    }
-  }, [activeTab, searchTerm, hotPosts, newPosts, users]);
+  }, [activeTab, hotPosts, newPosts, users, tagParam, taggedPosts]);
 
   const handleTabChange = (value: string) => {
+    // If we're in tag filtering mode, don't change tabs
+    if (tagParam) return;
+
     setActiveTab(value);
-    if (!searchTerm) {
-      if (value === 'users') {
-        setFilteredUsers(users);
-      } else {
-        setFilteredPosts(value === 'hot' ? hotPosts : newPosts);
-      }
+    // Reset filtered content when changing tabs
+    if (value === 'users') {
+      setFilteredUsers(users);
+    } else {
+      setFilteredPosts(value === 'hot' ? hotPosts : newPosts);
     }
   };
 
@@ -308,59 +524,16 @@ function ExplorePageContent() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold">Explore</h1>
-        <div className="w-full md:w-auto flex-1 md:max-w-md">
-          <div className="flex gap-2">
-            <Input
-              type="search"
-              placeholder="Search posts..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === 'Enter') {
-                  setSearchTerm(inputValue);
-                  router.push(`/explore?search=${encodeURIComponent(inputValue)}`);
-                }
-              }}
-              className="w-full"
-            />
-            <Button
-              onClick={() => {
-                setSearchTerm(inputValue);
-                router.push(`/explore?search=${encodeURIComponent(inputValue)}`);
-              }}
-              type="submit"
-              size="sm"
-            >
-              Search
-            </Button>
+        {tagParam && (
+          <div className="text-lg font-medium">
+            <Badge variant="secondary" className="text-base px-3 py-1">
+              #{tagParam}
+            </Badge>
           </div>
-        </div>
+        )}
       </div>
 
-      {searchTerm ? (
-        <div className="mb-4">
-          <p className="text-sm text-muted-foreground mb-2">
-            {filteredPosts.length} {filteredPosts.length === 1 ? 'result' : 'results'} for &quot;{searchTerm}&quot;
-          </p>
-          {searchTerm.startsWith('#') && (
-            <Badge variant="secondary" className="mr-2">
-              {searchTerm}
-            </Badge>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setSearchTerm('');
-              setInputValue('');
-              router.push('/explore');
-            }}
-            className="ml-2"
-          >
-            Clear
-          </Button>
-        </div>
-      ) : (
+      {!tagParam && (
         <Tabs defaultValue="hot" className="mb-6" onValueChange={handleTabChange}>
           <TabsList>
             <TabsTrigger value="hot">Hot Posts</TabsTrigger>
@@ -389,20 +562,7 @@ function ExplorePageContent() {
           ) : activeTab === 'users' ? (
             filteredUsers.length === 0 ? (
               <div className="text-center py-8 bg-muted/30 rounded-lg">
-                <p className="text-muted-foreground">No users found matching your search.</p>
-                {searchTerm && (
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setInputValue('');
-                      router.push('/explore');
-                    }}
-                  >
-                    Clear Search
-                  </Button>
-                )}
+                <p className="text-muted-foreground">No users found.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -442,24 +602,29 @@ function ExplorePageContent() {
                     </CardContent>
                   </Card>
                 ))}
+
+                {/* Loading indicator for users */}
+                {activeTab === 'users' && hasMoreUsers && (
+                  <div ref={loaderRef} className="py-4 text-center">
+                    {isLoadingMore && (
+                      <div className="inline-block p-3 bg-muted/30 rounded-lg animate-pulse">
+                        <div className="h-4 w-28 bg-muted rounded"></div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* End of users message */}
+                {activeTab === 'users' && !hasMoreUsers && users.length > 0 && (
+                  <div className="text-sm text-muted-foreground py-2 text-center">
+                    No more users to load
+                  </div>
+                )}
               </div>
             )
           ) : filteredPosts.length === 0 ? (
             <div className="text-center py-8 bg-muted/30 rounded-lg">
-              <p className="text-muted-foreground">No posts found matching your search.</p>
-              {searchTerm && (
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => {
-                    setSearchTerm('');
-                    setInputValue('');
-                    router.push('/explore');
-                  }}
-                >
-                  Clear Search
-                </Button>
-              )}
+              <p className="text-muted-foreground">No posts found.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -522,15 +687,33 @@ function ExplorePageContent() {
                   </CardContent>
                 </Card>
               ))}
+
+              {/* Loading indicator for posts */}
+              <div ref={loaderRef} className="py-4 text-center">
+                {((tagParam && hasMoreTagged) ||
+                  (activeTab === 'hot' && hasMoreHot) ||
+                  (activeTab === 'new' && hasMoreNew)) && isLoadingMore && (
+                  <div className="inline-block p-3 bg-muted/30 rounded-lg animate-pulse">
+                    <div className="h-4 w-28 bg-muted rounded"></div>
+                  </div>
+                )}
+
+                {/* End of posts message */}
+                {((tagParam && !hasMoreTagged && taggedPosts.length > 0) ||
+                  (activeTab === 'hot' && !hasMoreHot && hotPosts.length > 0) ||
+                  (activeTab === 'new' && !hasMoreNew && newPosts.length > 0)) && (
+                  <div className="text-sm text-muted-foreground py-2">
+                    No more posts to load
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
 
         <div className="hidden md:block">
           <div className="sticky top-20">
-            <TagCloud posts={[...hotPosts, ...newPosts].filter((post, index, self) =>
-              index === self.findIndex((p) => p.id === post.id)
-            )} />
+            <TagCloud maxTags={20} />
           </div>
         </div>
       </div>

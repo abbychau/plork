@@ -1,5 +1,6 @@
 /**
  * Explore posts API endpoint
+ * For browsing posts by type (hot/new) or by username
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
@@ -9,8 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     // Get query parameters
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'new'; // 'hot', 'new', or 'all'
-    const search = searchParams.get('search') || '';
+    const type = searchParams.get('type') || 'new'; // 'hot' or 'new'
     const username = searchParams.get('username') || '';
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
             author: true,
           },
           orderBy: {
-            createdAt: 'asc',
+            createdAt: 'asc' as const,
           },
         },
       },
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       skip: offset,
     };
 
-    // Build where clause for search
+    // Build where clause
     const where: Record<string, unknown> = {};
 
     // Filter by username if provided
@@ -55,17 +55,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Add search filter if provided
-    if (search) {
-      // For SQLite, we'll use the default contains which is case-sensitive
-      // but we'll handle multiple search terms for better results
-      where.OR = [
-        { content: { contains: search } },
-        { author: { username: { contains: search } } },
-        { author: { displayName: { contains: search } } },
-      ];
-    }
-
     // Get posts based on type
     let posts;
     if (type === 'hot') {
@@ -76,23 +65,23 @@ export async function GET(request: NextRequest) {
         orderBy: [
           {
             likes: {
-              _count: 'desc',
+              _count: 'desc' as const,
             },
           },
           {
             comments: {
-              _count: 'desc',
+              _count: 'desc' as const,
             },
           },
         ],
       });
     } else {
-      // Get new posts or all posts (default sorting by creation date)
+      // Get new posts (default sorting by creation date)
       posts = await prisma.post.findMany({
         ...baseQuery,
         where,
         orderBy: {
-          createdAt: 'desc',
+          createdAt: 'desc' as const,
         },
       });
     }

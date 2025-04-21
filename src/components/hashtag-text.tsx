@@ -32,7 +32,7 @@ export default function HashtagText({ text = '' }: HashtagTextProps) {
             href={`/explore?tag=${hashtag}`}
             className="inline-block"
           >
-            <Badge variant="secondary" className="font-normal hover:bg-secondary/80 transition-colors">
+            <Badge variant="secondary" className="font-normal hover:bg-secondary/80 transition-colors cursor-pointer">
               {part}
             </Badge>
           </Link>
