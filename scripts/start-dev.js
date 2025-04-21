@@ -28,8 +28,18 @@ try {
   console.error('Error reading .env file:', error);
 }
 
-// Read port from environment variables with fallback to 8090
-const port = envPort || process.env.PORT || process.env.SERVER_PORT || 8090;
+// Parse command line arguments
+const args = process.argv.slice(2);
+let cmdPort;
+
+// Check for -p or --port flag
+const portIndex = args.findIndex(arg => arg === '-p' || arg === '--port');
+if (portIndex !== -1 && args[portIndex + 1]) {
+  cmdPort = args[portIndex + 1];
+}
+
+// Read port from command line, environment variables with fallback to 5000
+const port = cmdPort || envPort || process.env.PORT || process.env.SERVER_PORT || 5000;
 
 // Read domain name from environment variables with fallback
 const domainName = envDomain || process.env.DOMAIN_NAME || `localhost:${port}`;

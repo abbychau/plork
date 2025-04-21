@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function AboutPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <ScrollArea className="h-full">
+      <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">About Plork</h1>
 
       <div className="prose max-w-none">
@@ -49,5 +51,6 @@ export default function AboutPage() {
         </div>
       </div>
     </div>
+    </ScrollArea>
   );
 }

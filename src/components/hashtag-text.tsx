@@ -29,7 +29,7 @@ export default function HashtagText({ text = '' }: HashtagTextProps) {
         return (
           <Link
             key={index}
-            href={`/explore?tag=${hashtag}`}
+            href={`/tags?tag=${hashtag}`}
             className="inline-block"
           >
             <Badge variant="secondary" className="font-normal hover:bg-secondary/80 transition-colors cursor-pointer">

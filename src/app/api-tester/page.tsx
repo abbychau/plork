@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,7 +9,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export default function ApiTesterPage() {
+// Client component that uses browser APIs
+function ApiTesterContent() {
   const [method, setMethod] = useState('GET');
   const [url, setUrl] = useState('');
   const [headers, setHeaders] = useState('{\n  "Accept": "application/activity+json"\n}');
@@ -141,20 +143,21 @@ export default function ApiTesterPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-2">ActivityPub API Tester</h1>
-      <p className="text-sm text-muted-foreground mb-2">Using domain: <code className="bg-muted px-1 py-0.5 rounded">{baseUrl}</code></p>
-      <div className="p-4 border rounded-md bg-muted/20 mb-6">
-        <h3 className="font-medium mb-2">How to use this tester:</h3>
-        <ol className="list-decimal list-inside space-y-1 text-sm">
-          <li>Select a preset from the dropdown or enter a custom URL</li>
-          <li>Replace <code className="bg-muted px-1 py-0.5 rounded">username</code> with a real username</li>
-          <li>Modify headers and body as needed</li>
-          <li>Click "Send Request" to test the API</li>
-          <li>View the response in the Response tab</li>
-        </ol>
-        <p className="text-xs mt-2 text-muted-foreground">Note: For relative URLs (starting with /), the current domain will be automatically prepended.</p>
-        <p className="text-xs mt-1 text-muted-foreground">Important: All ActivityPub endpoints are under the <code className="bg-muted px-1 py-0.5 rounded">/api/</code> path prefix.</p>
+    <ScrollArea className="h-full">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <h1 className="text-3xl font-bold mb-2">ActivityPub API Tester</h1>
+        <p className="text-sm text-muted-foreground mb-2">Using domain: <code className="bg-muted px-1 py-0.5 rounded">{baseUrl}</code></p>
+        <div className="p-4 border rounded-md bg-muted/20 mb-6">
+          <h3 className="font-medium mb-2">How to use this tester:</h3>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            <li>Select a preset from the dropdown or enter a custom URL</li>
+            <li>Replace <code className="bg-muted px-1 py-0.5 rounded">username</code> with a real username</li>
+            <li>Modify headers and body as needed</li>
+            <li>Click "Send Request" to test the API</li>
+            <li>View the response in the Response tab</li>
+          </ol>
+          <p className="text-xs mt-2 text-muted-foreground">Note: For relative URLs (starting with /), the current domain will be automatically prepended.</p>
+          <p className="text-xs mt-1 text-muted-foreground">Important: All ActivityPub endpoints are under the <code className="bg-muted px-1 py-0.5 rounded">/api/</code> path prefix.</p>
       </div>
 
       <Card>
@@ -345,7 +348,17 @@ export default function ApiTesterPage() {
             </CardContent>
           </Card>
         </div>
+        </div>
       </div>
-    </div>
+    </ScrollArea>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function ApiTesterPage() {
+  return (
+    <Suspense fallback={<div className="p-4">Loading API tester...</div>}>
+      <ApiTesterContent />
+    </Suspense>
   );
 }

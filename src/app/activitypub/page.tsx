@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -44,7 +45,8 @@ export default function ActivityPubPage() {
   };
 
   return (
-    <div className="container max-w-4xl p-8">
+    <ScrollArea className="h-full">
+      <div className="container max-w-4xl p-8">
       <h1 className="text-3xl font-bold mb-6">ActivityPub Information</h1>
 
       <Card className="mb-8">
@@ -209,6 +211,7 @@ export default function ActivityPubPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </ScrollArea>
   );
 }

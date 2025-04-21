@@ -7,10 +7,8 @@ import { markNotificationAsRead, deleteNotification } from '@/lib/notifications'
 import { prisma } from '@/lib/db';
 
 // PUT /api/notifications/[id] - Mark a notification as read
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Check authentication
     const cookieStore = await cookies();
@@ -61,7 +59,7 @@ export async function PUT(
 // DELETE /api/notifications/[id] - Delete a notification
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -76,7 +74,7 @@ export async function DELETE(
     }
 
     // Get the id from the URL
-    const id = params.id;
+    const { id } = (await context.params);
 
     // Check if notification exists and belongs to the user
     const notification = await prisma.notification.findUnique({

@@ -3,7 +3,6 @@ import type { NextRequest } from 'next/server';
 
 // Define paths that require authentication
 const protectedPaths = [
-  '/compose',
   '/settings',
 ];
 
@@ -35,7 +34,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/compose/:path*',
     '/settings/:path*',
     '/login',
     '/register',

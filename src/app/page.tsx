@@ -3,19 +3,15 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import Timeline from '@/components/timeline';
+import AppLayout from '@/components/app-layout';
 import { useAuth } from '@/lib/auth-context';
 
 export default function Home() {
   const { user } = useAuth();
 
-  // If user is logged in, show the timeline
+  // If user is logged in, show the app layout with timeline
   if (user) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Timeline />
-      </div>
-    );
+    return <AppLayout title="Timeline" apiEndpoint="/api/posts" />;
   }
 
   // Otherwise, show the landing page
@@ -42,6 +38,11 @@ export default function Home() {
               <Link href="/register">
                 <Button size="lg" className="shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary">
                   Get Started
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button variant="secondary" size="lg" className="shadow-sm hover:shadow-md transition-all duration-200">
+                  Login
                 </Button>
               </Link>
               <Link href="/about">

@@ -7,7 +7,7 @@ import { userService, prisma } from '@/lib/db';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  context: { params: Promise<{ username: string }> }
 ) {
   try {
     // Check authentication
@@ -21,7 +21,7 @@ export async function GET(
       );
     }
 
-    const { username } = await params;
+    const { username } = (await context.params);
 
     // Find the target user
     const targetUser = await userService.getUserByUsername(username);

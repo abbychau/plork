@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import CreatePostModal from '@/components/create-post-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,32 +41,32 @@ export default function Timeline() {
   const [editContent, setEditContent] = useState('');
   const [commentSidebarOpen, setCommentSidebarOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  
+
   // Pagination state - using nextOffset instead of page
   const [nextOffset, setNextOffset] = useState<number | null>(0);
   const loaderRef = useRef<HTMLDivElement>(null);
-  
+
   // Initial data loading
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchInitialPosts = async () => {
       setIsLoading(true);
       setError('');
-      
+
       try {
         const response = await fetch('/api/posts?limit=10&offset=0');
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch posts');
         }
-        
+
         const data = await response.json();
         setPosts(data);
-        
+
         // Set next offset for pagination or null if no more posts
         setNextOffset(data.length < 10 ? null : 10);
-        
+
         // Update liked posts set
         const newLikedPosts = new Set<string>();
         data.forEach((post: Post) => {
@@ -81,37 +82,37 @@ export default function Timeline() {
         setIsLoading(false);
       }
     };
-    
+
     fetchInitialPosts();
   }, [user]);
-  
+
   // Function to load more posts
   const loadMorePosts = useCallback(async () => {
     // If there's no next offset, we've reached the end
     if (nextOffset === null || isLoading) {
       return false;
     }
-    
+
     try {
       console.log(`Loading more posts with offset: ${nextOffset}`);
       const response = await fetch(`/api/posts?limit=10&offset=${nextOffset}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch more posts');
       }
-      
+
       const data = await response.json();
-      
+
       // If we got fewer than 10 posts, we've reached the end
       if (data.length < 10) {
         setNextOffset(null); // No more posts to load
       } else {
         setNextOffset(nextOffset + 10); // Set next offset
       }
-      
+
       // Append new posts to existing ones
       setPosts(prevPosts => [...prevPosts, ...data]);
-      
+
       // Update liked posts set
       const newLikedPosts = new Set<string>(likedPosts);
       data.forEach((post: Post) => {
@@ -120,7 +121,7 @@ export default function Timeline() {
         }
       });
       setLikedPosts(newLikedPosts);
-      
+
       // Return true if there are more posts to load
       return data.length === 10;
     } catch (err) {
@@ -128,7 +129,7 @@ export default function Timeline() {
       return false;
     }
   }, [nextOffset, isLoading, user, likedPosts]);
-  
+
   // Set up infinite scrolling
   const { isLoading: isLoadingMore } = useInfiniteScroll(
     loadMorePosts,
@@ -205,7 +206,7 @@ export default function Timeline() {
     if (!newContent.trim()) return;
 
     try {
-      const response = await fetch(`/api/posts/single?postId=${postId}`, {
+      const response = await fetch(`/api/posts/${postId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -274,11 +275,18 @@ export default function Timeline() {
         <div className="inline-block p-6 bg-muted/30 rounded-lg max-w-md">
           <h3 className="text-xl font-medium mb-2">Your timeline is empty</h3>
           <p className="mb-6 text-muted-foreground">Follow some users or create your first post to get started!</p>
-          <Link href="/compose">
+          <CreatePostModal
+            onPostCreated={(newPost) => {
+              // Add the new post to the list
+              if (newPost) {
+                setPosts([newPost]);
+              }
+            }}
+          >
             <Button className="shadow-sm hover:shadow-md transition-all duration-200">
               Create Your First Post
             </Button>
-          </Link>
+          </CreatePostModal>
         </div>
       </div>
     );
@@ -291,11 +299,18 @@ export default function Timeline() {
           <h2 className="text-xl font-bold">
             Timeline
           </h2>
-          <Link href="/compose">
+          <CreatePostModal
+            onPostCreated={(newPost) => {
+              // Add the new post to the top of the list
+              if (newPost) {
+                setPosts(prevPosts => [newPost, ...prevPosts]);
+              }
+            }}
+          >
             <Button size="sm" className="shadow-sm hover:shadow-md transition-all duration-200">
               <span className="mr-1">+</span> New Post
             </Button>
-          </Link>
+          </CreatePostModal>
         </div>
 
         <div className="space-y-3">
@@ -385,7 +400,7 @@ export default function Timeline() {
 
       <div className="hidden md:block">
         <div className="sticky top-20">
-          <TagCloud posts={posts} />
+          <TagCloud />
         </div>
       </div>
 

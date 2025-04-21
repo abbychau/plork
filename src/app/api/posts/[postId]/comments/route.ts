@@ -10,11 +10,11 @@ import crypto from 'crypto';
 // GET /api/posts/[postId]/comments - Get comments for a post
 export async function GET(
   req: NextRequest,
-  { params }: { params: { postId: string } }
+  context: { params: Promise<{ postId: string }> }
 ) {
   try {
     // Get the postId from the URL
-    const postId = params.postId;
+    const { postId } = (await context.params);
 
     // Check if post exists
     const post = await postService.getPostById(postId);
@@ -41,7 +41,7 @@ export async function GET(
 // POST /api/posts/[postId]/comments - Create a new comment
 export async function POST(
   req: NextRequest,
-  { params }: { params: { postId: string } }
+  context: { params: Promise<{ postId: string }> }
 ) {
   try {
     // Check authentication
@@ -56,7 +56,7 @@ export async function POST(
     }
 
     // Get the postId from the URL
-    const postId = params.postId;
+    const { postId } = (await context.params);
 
     // Check if post exists
     const post = await postService.getPostById(postId);

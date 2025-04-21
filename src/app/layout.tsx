@@ -3,9 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
-import Header from "@/components/header";
+import { PinnedUsersProvider } from "@/lib/pinned-users-context";
+
 import { Toaster } from "@/components/ui/toaster";
 import DynamicTitle from "@/components/dynamic-title";
+import BottomMenu from "@/components/bottom-menu";
 import faviconSVG from "./favicon.svg";
 
 const geistSans = Geist({
@@ -38,39 +40,16 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ThemeProvider defaultTheme="system" storageKey="plork-theme">
+            <PinnedUsersProvider>
             <DynamicTitle />
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <main className="flex-1 container mx-auto">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+              <main className="w-full max-w-6xl h-[800px] bg-background border border-border rounded-lg shadow-lg overflow-hidden">
                 {children}
               </main>
+              <BottomMenu />
               <Toaster />
-              <footer className="py-8 border-t">
-                <div className="container mx-auto px-4">
-                  <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-lg">Plork</span>
-                      <span className="text-sm text-muted-foreground">A minimal ActivityPub SNS</span>
-                    </div>
-
-                    <div className="flex space-x-6 text-sm">
-                      <a href="/activitypub" className="text-muted-foreground hover:text-primary transition-colors duration-200">
-                        ActivityPub
-                      </a>
-                      <a href="/api-tester" className="text-muted-foreground hover:text-primary transition-colors duration-200">
-                        API Tester
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 pt-6 border-t border-border/40 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="text-sm text-muted-foreground">
-                      &copy; {new Date().getFullYear()} Plork. All rights reserved.
-                    </div>
-                  </div>
-                </div>
-              </footer>
             </div>
+            </PinnedUsersProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>

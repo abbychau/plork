@@ -212,6 +212,15 @@ export default function EnhancedPostEditor({
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onPaste={handlePaste}
+                onKeyDown={(e) => {
+                  // Submit on CTRL+ENTER
+                  if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    if (content.trim() && !isLoading && !isUploading) {
+                      handleSubmit(e);
+                    }
+                  }
+                }}
                 placeholder={placeholder}
                 className="w-full resize-none border-0 bg-transparent p-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                 minRows={3}

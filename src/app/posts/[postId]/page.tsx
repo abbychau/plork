@@ -164,7 +164,7 @@ export default function PostDetailPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/posts/single?postId=${post.id}`, {
+      const response = await fetch(`/api/posts/${post.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -212,22 +212,6 @@ export default function PostDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Button
-        variant="ghost"
-        className="mb-4"
-        onClick={() => {
-          // Check if there's a previous page in the history
-          if (window.history.length > 1) {
-            router.back();
-          } else {
-            // If no previous page, go to the home page
-            router.push('/');
-          }
-        }}
-      >
-        ← Back
-      </Button>
-
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">

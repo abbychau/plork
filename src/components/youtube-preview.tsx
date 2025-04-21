@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from '@/components/ui/button';
-import { X, Play } from 'lucide-react';
+import { X, Play, ExternalLink, ClipboardCopy } from 'lucide-react';
 import { extractYouTubeVideoId } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface YouTubePreviewProps {
   url: string;
@@ -15,6 +17,25 @@ interface YouTubePreviewProps {
 export default function YouTubePreview({ url, title = 'YouTube Video' }: YouTubePreviewProps) {
   const [isOpen, setIsOpen] = useState(false);
   const videoId = extractYouTubeVideoId(url);
+  const { toast } = useToast();
+
+  const handleCopyUrl = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const success = await copyToClipboard(url);
+
+    if (success) {
+      toast({
+        title: "URL copied",
+        description: "YouTube URL copied to clipboard",
+      });
+    } else {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy URL to clipboard",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (!videoId) {
     return (
@@ -54,15 +75,29 @@ export default function YouTubePreview({ url, title = 'YouTube Video' }: YouTube
           {/* Video Title and Link */}
           <span className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm p-1.5 flex justify-between items-center">
             <span className="font-medium text-sm truncate">{title}</span>
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline ml-2 flex-shrink-0"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Watch on YouTube
-            </a>
+            <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-foreground hover:text-primary"
+                onClick={handleCopyUrl}
+                title="Copy URL"
+              >
+                <ClipboardCopy className="h-3.5 w-3.5" />
+                <span className="sr-only">Copy URL</span>
+              </Button>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center h-6 w-6 text-foreground hover:text-primary"
+                onClick={(e) => e.stopPropagation()}
+                title="Watch on YouTube"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span className="sr-only">Watch on YouTube</span>
+              </a>
+            </div>
           </span>
         </span>
       </span>

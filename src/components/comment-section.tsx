@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
+import { usePinnedUsers } from '@/lib/pinned-users-context';
 import MarkdownContent from '@/components/markdown-content';
 import EnhancedPostEditor from '@/components/enhanced-post-editor';
+import UserProfilePopover from '@/components/user-profile-popover';
 import Link from 'next/link';
 import { Edit } from '@mynaui/icons-react';
 
@@ -29,6 +31,7 @@ interface CommentSectionProps {
 
 export default function CommentSection({ postId, initialComments, compact = false }: CommentSectionProps) {
   const { user } = useAuth();
+  const { addPinnedUser } = usePinnedUsers();
   const [comments, setComments] = useState<Comment[]>(initialComments || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
@@ -123,18 +126,40 @@ export default function CommentSection({ postId, initialComments, compact = fals
         <div className="space-y-4 mb-6">
           {comments.map((comment) => (
             <div key={comment.id} className="flex gap-3 pb-4 border-b">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={comment.author.profileImage} alt={comment.author.username} />
-                <AvatarFallback>
-                  {comment.author.displayName?.[0] || comment.author.username[0]}
-                </AvatarFallback>
-              </Avatar>
+              <UserProfilePopover
+                username={comment.author.username}
+                onPin={() => addPinnedUser({
+                  id: comment.author.id,
+                  username: comment.author.username,
+                  displayName: comment.author.displayName,
+                  profileImage: comment.author.profileImage
+                })}
+              >
+                <div className="cursor-pointer">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={comment.author.profileImage} alt={comment.author.username} />
+                    <AvatarFallback>
+                      {comment.author.displayName?.[0] || comment.author.username[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </UserProfilePopover>
 
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <Link href={`/users/${comment.author.username}`} className="font-semibold hover:underline">
-                    {comment.author.displayName || comment.author.username}
-                  </Link>
+                  <UserProfilePopover
+                    username={comment.author.username}
+                    onPin={() => addPinnedUser({
+                      id: comment.author.id,
+                      username: comment.author.username,
+                      displayName: comment.author.displayName,
+                      profileImage: comment.author.profileImage
+                    })}
+                  >
+                    <span className="font-semibold hover:underline cursor-pointer">
+                      {comment.author.displayName || comment.author.username}
+                    </span>
+                  </UserProfilePopover>
                   <span className="text-muted-foreground text-sm">@{comment.author.username}</span>
                   <span className="text-muted-foreground text-sm">·</span>
                   <span className="text-muted-foreground text-sm">

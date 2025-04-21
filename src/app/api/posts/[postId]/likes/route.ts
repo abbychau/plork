@@ -8,16 +8,10 @@ import { createNotification } from '@/lib/notifications';
 import crypto from 'crypto';
 
 // POST /api/posts/[postId]/likes - Like a post
-export async function POST(request: NextRequest, { params }: { params: { postId: string } }) {
-  console.log('Params:', params);
+export async function POST(request: NextRequest, context: { params: Promise<{ postId: string }> }) {
   try {
     // Get the postId from the URL
-    const url = request.url;
-    console.log('URL:', url);
-    const parts = url.split('/');
-    console.log('URL parts:', parts);
-    const postId = parts[parts.length - 2]; // The postId is the second-to-last part of the URL
-    console.log('Extracted postId:', postId);
+    const { postId } = (await context.params);
 
     // Check authentication
     const cookieStore = await cookies();
@@ -87,12 +81,10 @@ export async function POST(request: NextRequest, { params }: { params: { postId:
 }
 
 // DELETE /api/posts/[postId]/likes - Unlike a post
-export async function DELETE(request: NextRequest) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ postId: string }> }) {
   try {
     // Get the postId from the URL
-    const url = request.url;
-    const parts = url.split('/');
-    const postId = parts[parts.length - 2]; // The postId is the second-to-last part of the URL
+    const { postId } = (await context.params);
 
     // Check authentication
     const cookieStore = await cookies();
@@ -128,12 +120,10 @@ export async function DELETE(request: NextRequest) {
 }
 
 // GET /api/posts/[postId]/likes - Get likes for a post
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, context: { params: Promise<{ postId: string }> }) {
   try {
     // Get the postId from the URL
-    const url = request.url;
-    const parts = url.split('/');
-    const postId = parts[parts.length - 2]; // The postId is the second-to-last part of the URL
+    const { postId } = (await context.params);
 
     // Check if post exists
     const post = await postService.getPostById(postId);

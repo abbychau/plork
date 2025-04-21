@@ -6,9 +6,11 @@ import { Badge } from '@/components/ui/badge';
 
 interface TagCloudProps {
   maxTags?: number;
+  showTitle?: boolean;
+  className?: string;
 }
 
-export default function TagCloud({ maxTags = 20 }: TagCloudProps) {
+export default function TagCloud({ maxTags = 20, showTitle = true, className = '' }: TagCloudProps) {
   const router = useRouter();
   const [tags, setTags] = useState<{ tag: string; count: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,8 +40,8 @@ export default function TagCloud({ maxTags = 20 }: TagCloudProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-muted/30 rounded-lg p-4">
-        <h3 className="font-medium mb-3">Trending Tags</h3>
+      <div className={`bg-muted/30 rounded-lg p-4 ${className}`}>
+        {showTitle && <h3 className="font-medium mb-3">Trending Tags</h3>}
         <div className="flex flex-wrap gap-2">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-6 w-16 bg-muted/50 rounded-full animate-pulse"></div>
@@ -54,13 +56,13 @@ export default function TagCloud({ maxTags = 20 }: TagCloudProps) {
   }
 
   return (
-    <div className="bg-muted/30 rounded-lg p-4">
-      <h3 className="font-medium mb-3">Trending Tags</h3>
+    <div className={`bg-muted/30 rounded-lg p-4 ${className}`}>
+      {showTitle && <h3 className="font-medium mb-3">Trending Tags</h3>}
       <div className="flex flex-wrap gap-2">
         {tags.map(({ tag, count }) => (
           <button
             key={tag}
-            onClick={() => router.push(`/explore?tag=${tag}`)}
+            onClick={() => router.push(`/tags?tag=${encodeURIComponent(tag)}`)}
             className="inline-block"
           >
             <Badge variant="outline" className="hover:bg-primary/10 transition-colors cursor-pointer">

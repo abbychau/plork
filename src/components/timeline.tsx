@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import CreatePostModal from '@/components/create-post-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -314,7 +315,7 @@ export default function Timeline() {
     if (!newContent.trim()) return;
 
     try {
-      const response = await fetch(`/api/posts/single?postId=${postId}`, {
+      const response = await fetch(`/api/posts/${postId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -385,11 +386,20 @@ export default function Timeline() {
         <div className="inline-block p-6 bg-muted/30 rounded-lg max-w-md">
           <h3 className="text-xl font-medium mb-2">Your timeline is empty</h3>
           <p className="mb-6 text-muted-foreground">Follow some users or create your first post to get started!</p>
-          <Link href="/compose">
+          <CreatePostModal
+            onPostCreated={(newPost) => {
+              // Add the new post to the list
+              if (newPost) {
+                setPosts([newPost]);
+                // Update the last post ID for checking new posts
+                setLastPostId(newPost.id);
+              }
+            }}
+          >
             <Button className="shadow-sm hover:shadow-md transition-all duration-200">
               Create Your First Post
             </Button>
-          </Link>
+          </CreatePostModal>
         </div>
       </div>
     );
@@ -403,11 +413,20 @@ export default function Timeline() {
             <h2 className="text-xl font-bold">
               Timeline
             </h2>
-            <Link href="/compose">
+            <CreatePostModal
+              onPostCreated={(newPost) => {
+                // Add the new post to the top of the list
+                if (newPost) {
+                  setPosts(prevPosts => [newPost, ...prevPosts]);
+                  // Update the last post ID for checking new posts
+                  setLastPostId(newPost.id);
+                }
+              }}
+            >
               <Button size="sm" className="shadow-sm hover:shadow-md transition-all duration-200">
                 <span className="mr-1">+</span> New Post
               </Button>
-            </Link>
+            </CreatePostModal>
           </div>
 
           {/* New posts notification button */}
@@ -515,7 +534,7 @@ export default function Timeline() {
 
       <div className="hidden md:block">
         <div className="sticky top-20">
-          <TagCloud posts={posts} />
+          <TagCloud />
         </div>
       </div>
 

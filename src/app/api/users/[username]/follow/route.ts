@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 // POST /api/users/[username]/follow - Follow a user
 export async function POST(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  context: { params: Promise<{ username: string }> }
 ) {
   try {
     // Check authentication
@@ -24,7 +24,7 @@ export async function POST(
       );
     }
 
-    const { username } = await params;
+    const { username } = (await context.params);
 
     // Find the target user
     const targetUser = await userService.getUserByUsername(username);
@@ -93,7 +93,7 @@ export async function POST(
 // DELETE /api/users/[username]/follow - Unfollow a user
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  context: { params: Promise<{ username: string }> }
 ) {
   try {
     // Check authentication
@@ -107,7 +107,7 @@ export async function DELETE(
       );
     }
 
-    const { username } = await params;
+    const { username } = (await context.params);
 
     // Find the target user
     const targetUser = await userService.getUserByUsername(username);

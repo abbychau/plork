@@ -167,3 +167,30 @@ model Notification {
   @@index([commentId])
   @@index([read])
 }
+
+model UserReadState {
+  id              String    @id @default(cuid())
+  lastReadAt      DateTime  @default(now())
+
+  // Relationships
+  userId          String
+  authorUsername  String    // Username of the author whose posts were read
+
+  @@unique([userId, authorUsername])
+  @@index([userId])
+  @@index([authorUsername])
+}
+
+model PinnedUser {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  userId        String    // User who pinned
+  pinnedUserId  String    // User who was pinned
+
+  @@unique([userId, pinnedUserId])
+  @@index([userId])
+  @@index([pinnedUserId])
+}

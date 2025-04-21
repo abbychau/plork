@@ -12,20 +12,42 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search') || '';
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
-    
-    // Build the where clause
-    const where = search
-      ? {
-          OR: [
-            { username: { contains: search } },
-            { displayName: { contains: search } },
-          ],
-        }
-      : {};
-    
-    // Get users
-    const users = await prisma.user.findMany({
-      where,
+
+    // Handle search differently based on whether we have a search term
+    if (search) {
+      // Use raw SQL for case-insensitive search in SQLite
+      const users = await prisma.$queryRaw`
+        SELECT
+          id, username, displayName, profileImage, summary, actorUrl,
+          (SELECT COUNT(*) FROM Follow WHERE followingId = User.id) as followersCount,
+          (SELECT COUNT(*) FROM Follow WHERE followerId = User.id) as followingCount,
+          (SELECT COUNT(*) FROM Post WHERE authorId = User.id) as postsCount
+        FROM User
+        WHERE
+          LOWER(username) LIKE ${'%' + search.toLowerCase() + '%'} OR
+          LOWER(displayName) LIKE ${'%' + search.toLowerCase() + '%'}
+        ORDER BY createdAt DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+
+      // Convert BigInt values to numbers before returning
+      const serializedUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        summary: user.summary,
+        profileImage: user.profileImage,
+        actorUrl: user.actorUrl,
+        followersCount: Number(user.followersCount),
+        followingCount: Number(user.followingCount),
+        postsCount: Number(user.postsCount)
+      }));
+
+      return NextResponse.json(serializedUsers);
+    } else {
+      // If no search term, use the regular Prisma query
+      const users = await prisma.user.findMany({
+      where: {},
       select: {
         id: true,
         username: true,
@@ -47,7 +69,7 @@ export async function GET(req: NextRequest) {
       take: limit,
       skip: offset,
     });
-    
+
     // Format the response
     const formattedUsers = users.map(user => ({
       id: user.id,
@@ -60,7 +82,7 @@ export async function GET(req: NextRequest) {
       followingCount: user._count.following,
       postsCount: user._count.posts,
     }));
-    
+
     return NextResponse.json(formattedUsers);
   } catch (error) {
     console.error('Error getting users:', error);

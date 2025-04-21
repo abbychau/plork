@@ -65,7 +65,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(posts);
+    // Format the response to match the expected structure
+    const formattedResponse = {
+      posts: posts,
+      nextOffset: posts.length < limit ? null : offset + posts.length
+    };
+
+    return NextResponse.json(formattedResponse);
   } catch (error) {
     console.error('Error searching posts by hashtag:', error);
     return NextResponse.json(

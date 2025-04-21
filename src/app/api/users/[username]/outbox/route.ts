@@ -26,9 +26,9 @@ interface ActivityPubActivity {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  context: { params: Promise<{ username: string }> }
 ) {
-  const { username } = params;
+  const { username } = (await context.params);
 
   // Find the user
   const user = await userService.getUserByUsername(username);
@@ -61,9 +61,9 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  context: { params: Promise<{ username: string }> }
 ) {
-  const { username } = params;
+  const { username } = (await context.params);
 
   // Find the user
   const user = await userService.getUserByUsername(username);
