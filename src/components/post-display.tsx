@@ -104,7 +104,7 @@ export default function PostDisplay() {
         {selectedPost ? (
           <>
             <div className="flex items-center p-2 h-[52px]">
-              <div className="ml-auto flex items-center gap-2">
+              <div className="w-full flex items-center gap-2">
                 <PostInteractionButtons
                   postId={selectedPost.id}
                   authorId={selectedPost.author.id}
@@ -114,11 +114,18 @@ export default function PostDisplay() {
                   onLike={handleLike}
                   onEdit={user && user.id === selectedPost.author.id && !isEditing ? handleEditPost : undefined}
                   hideViewFullPost={false}
+                  onComment={() => {
+                    // Scroll to comments section
+                    const commentsSection = document.getElementById('comments');
+                    if (commentsSection) {
+                      commentsSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
                 />
                 <Separator orientation="vertical" className="mx-1 h-6" />
                 <Link
                   href={`/posts/${selectedPost.id}`}
-                  className="text-muted-foreground hover:text-primary"
+                  className="text-muted-foreground hover:text-primary ml-auto"
                   target="_blank"
                 >
                   <Button variant="ghost" size="icon" className="h-8 w-8" title="Open in new tab">
@@ -148,7 +155,7 @@ export default function PostDisplay() {
         </div>
       ) : selectedPost ? (
         <ScrollArea className="flex-1">
-          <div className="flex flex-col p-4">
+          <div className="flex flex-col p-4 overflow-x-hidden">
             <div className="flex items-start gap-4 mb-4">
               <UserProfilePopover
                 username={selectedPost.author.username}

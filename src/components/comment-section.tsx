@@ -10,6 +10,7 @@ import EnhancedPostEditor from '@/components/enhanced-post-editor';
 import UserProfilePopover from '@/components/user-profile-popover';
 import Link from 'next/link';
 import { Edit } from '@mynaui/icons-react';
+import { formatDistanceToNow } from '@/lib/utils';
 
 interface Comment {
   id: string;
@@ -117,15 +118,20 @@ export default function CommentSection({ postId, initialComments, compact = fals
   };
 
   return (
-    <div className="mt-6">
-      <h3 className="text-lg font-semibold mb-4">
-        Comments {comments.length > 0 && `(${comments.length})`}
+    <div className="mt-4">
+      <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" id="comments">
+        Comments
+        {comments.length > 0 && (
+          <span className="text-sm font-normal bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+            {comments.length}
+          </span>
+        )}
       </h3>
 
       {comments.length > 0 ? (
-        <div className="space-y-4 mb-6">
+        <div className="space-y-6 mb-8">
           {comments.map((comment) => (
-            <div key={comment.id} className="flex gap-3 pb-4 border-b">
+            <div key={comment.id} className="group flex gap-4 pb-6 border-b last:border-b-0">
               <UserProfilePopover
                 username={comment.author.username}
                 onPin={() => addPinnedUser({
@@ -136,7 +142,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
                 })}
               >
                 <div className="cursor-pointer">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-10 w-10 border border-muted hover:border-primary transition-colors">
                     <AvatarImage src={comment.author.profileImage} alt={comment.author.username} />
                     <AvatarFallback>
                       {comment.author.displayName?.[0] || comment.author.username[0]}
@@ -146,7 +152,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
               </UserProfilePopover>
 
               <div className="flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <UserProfilePopover
                     username={comment.author.username}
                     onPin={() => addPinnedUser({
@@ -162,13 +168,13 @@ export default function CommentSection({ postId, initialComments, compact = fals
                   </UserProfilePopover>
                   <span className="text-muted-foreground text-sm">@{comment.author.username}</span>
                   <span className="text-muted-foreground text-sm">·</span>
-                  <span className="text-muted-foreground text-sm">
-                    {new Date(comment.createdAt).toLocaleDateString()}
+                  <span className="text-muted-foreground text-sm" title={new Date(comment.createdAt).toLocaleString()}>
+                    {formatDistanceToNow(new Date(comment.createdAt))}
                   </span>
                 </div>
 
                 {editingCommentId === comment.id ? (
-                  <div className="mt-2">
+                  <div className="mt-3">
                     <EnhancedPostEditor
                       mode="edit"
                       initialContent={editContent}
@@ -180,11 +186,11 @@ export default function CommentSection({ postId, initialComments, compact = fals
                     />
                   </div>
                 ) : (
-                  <div className="mt-1">
+                  <div className="mt-2">
                     <MarkdownContent content={comment.content} />
                     {user && user.id === comment.author.id && (
                       <button
-                        className="text-xs text-muted-foreground hover:text-primary mt-1 flex items-center gap-1 transition-colors duration-200"
+                        className="text-xs font-medium text-muted-foreground hover:text-primary mt-3 flex items-center gap-1.5 transition-colors duration-200 py-1"
                         onClick={() => handleEditComment(comment)}
                       >
                         <Edit className="w-3 h-3" />
@@ -198,19 +204,21 @@ export default function CommentSection({ postId, initialComments, compact = fals
           ))}
         </div>
       ) : (
-        <p className="text-muted-foreground mb-6">No comments yet. Be the first to comment!</p>
+        <div className="text-center py-8 mb-6 bg-muted/30 rounded-lg">
+          <p className="text-muted-foreground">No comments yet. Be the first to comment!</p>
+        </div>
       )}
 
       {user ? (
-        <div className="space-y-4">
+        <div className="space-y-4 mt-8">
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-md mb-4">
               {error}
             </div>
           )}
 
-          <div className="flex gap-3">
-            <Avatar className="h-8 w-8 mt-1">
+          <div className="flex gap-4">
+            <Avatar className="h-10 w-10 mt-1 border border-muted">
               <AvatarImage src={user.profileImage} alt={user.username} />
               <AvatarFallback>
                 {user.displayName?.[0] || user.username[0]}
@@ -230,10 +238,10 @@ export default function CommentSection({ postId, initialComments, compact = fals
           </div>
         </div>
       ) : (
-        <div className="text-center py-4 border rounded-md">
-          <p className="mb-2">You need to be logged in to comment.</p>
+        <div className="text-center py-6 border rounded-md bg-muted/20 mt-8">
+          <p className="mb-3 text-muted-foreground">You need to be logged in to comment.</p>
           <Link href="/login">
-            <Button size="sm">Login</Button>
+            <Button size="sm" variant="outline">Login to comment</Button>
           </Link>
         </div>
       )}

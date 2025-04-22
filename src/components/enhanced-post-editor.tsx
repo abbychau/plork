@@ -203,7 +203,7 @@ export default function EnhancedPostEditor({
             )}
 
             {isPreview ? (
-              <div className="min-h-[100px] py-2">
+              <div className="min-h-[100px] py-2 max-h-[600px] h-full overflow-y-auto">
                 <MarkdownContent content={content} />
               </div>
             ) : (
@@ -222,9 +222,11 @@ export default function EnhancedPostEditor({
                   }
                 }}
                 placeholder={placeholder}
-                className="w-full resize-none border-0 bg-transparent p-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="w-full resize-none border-0 bg-transparent p-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[600px] font-mono text-xs"
                 minRows={3}
                 disabled={isLoading || isUploading}
+                maxRows={100}
+                
               />
             )}
 

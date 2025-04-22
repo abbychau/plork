@@ -31,6 +31,19 @@ const nextConfig = {
   webpack: (config) => {
     return config;
   },
+  // Configure image domains
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      }
+    ],
+  },
 };
 
 module.exports = nextConfig;

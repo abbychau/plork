@@ -23,7 +23,7 @@ export default function ImageLightbox({ src, alt, className = '' }: ImageLightbo
           alt={alt}
           width={600}
           height={300}
-          className={`cursor-pointer max-w-full max-h-[300px] rounded-md my-4 ${className}`}
+          className={`cursor-pointer max-w-[50%] max-h-[300px] rounded-md my-4 ${className}`}
           style={{ objectFit: 'contain' }}
           priority={false}
         />

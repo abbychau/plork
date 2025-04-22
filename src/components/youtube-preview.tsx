@@ -53,13 +53,13 @@ export default function YouTubePreview({ url, title = 'YouTube Video' }: YouTube
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {/* Use a span instead of div to avoid nesting issues with <p> tags */}
-      <span className="block my-4 rounded-md overflow-hidden border border-border max-w-[320px] mx-auto">
+      <span className="block my-4 rounded-md overflow-hidden border border-border max-w-[50%] mx-auto">
         <span className="relative block">
           {/* YouTube Thumbnail */}
           <img
             src={thumbnailUrl}
             alt={`YouTube thumbnail for ${title}`}
-            className="w-full h-auto max-h-[180px] max-w-[320px] mx-auto object-cover"
+            className="w-full h-auto mx-auto object-cover"
           />
 
           {/* Play Button Overlay */}

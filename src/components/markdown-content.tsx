@@ -14,7 +14,7 @@ interface MarkdownContentProps {
 
 export default function MarkdownContent({ content, className = '' }: MarkdownContentProps) {
   return (
-    <div className={`prose dark:prose-invert max-w-none ${className}`}>
+    <div className={`prose dark:prose-invert max-w-none overflow-x-hidden ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -48,9 +48,10 @@ export default function MarkdownContent({ content, className = '' }: MarkdownCon
           img: ({ node, ...props }) => {
             const src = typeof props.src === 'string' ? props.src : '';
             return (
-              <ImageLightbox
+              <img
                 src={src}
                 alt={props.alt || 'Image'}
+                className='inline-block'
               />
             );
           },
@@ -104,12 +105,15 @@ export default function MarkdownContent({ content, className = '' }: MarkdownCon
             return <p {...props} className="my-2">{children}</p>;
           },
           code: ({ node, ...props }: any) => {
-            const isInline = props.inline || false;
+            const isInline = props.inline || true;
             return (
               isInline ?
-                <code {...props} className="bg-muted px-1 py-0.5 rounded text-sm" /> :
-                <code {...props} className="block bg-muted p-4 rounded-md overflow-x-auto text-sm" />
+                <code {...props} className="bg-muted p-1 py-0.5 rounded text-sm break-all" /> :
+                <code {...props} className="block bg-muted p-4 rounded-md overflow-x-auto text-sm break-all max-w-1" />
             );
+          },
+          pre: ({ node, ...props }) => {
+            return <pre {...props} className="bg-muted p-1 m-1 rounded-md overflow-x-auto text-sm break-all max-w-prose" />;
           },
         }}
       >

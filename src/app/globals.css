@@ -117,7 +117,11 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground min-h-screen;
+  }
+
+  html, body {
+    @apply overflow-auto;
   }
   textarea {
     @apply outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0;
@@ -151,7 +155,7 @@
     --chart-3: 120 100% 40%;
     --chart-4: 60 100% 50%;
     --chart-5: 300 100% 50%;
-    
+
     --sidebar-background: 0 0% 95%;
     --sidebar-foreground: 0 0% 38%;
     --sidebar-primary: 0 100% 47%;
@@ -188,7 +192,7 @@
     --chart-3: 120 100% 40%;
     --chart-4: 60 100% 50%;
     --chart-5: 300 100% 50%;
-    
+
     --sidebar-background: 0 0% 2%;
     --sidebar-foreground: 0 0% 50%;
     --sidebar-primary: 0 100% 42%;
@@ -250,7 +254,7 @@
 }
 
 .prose img {
-  @apply rounded-md max-w-full h-auto;
+  @apply rounded-md max-w-[50%] h-auto mx-auto;
 }
 
 .prose hr {

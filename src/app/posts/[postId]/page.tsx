@@ -1,18 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/auth-context';
 import MarkdownContent from '@/components/markdown-content';
 import CommentSection from '@/components/comment-section';
 import EnhancedPostEditor from '@/components/enhanced-post-editor';
-
 import PostInteractionButtons from '@/components/post-interaction-buttons';
+import { formatDistanceToNow } from '@/lib/utils';
+import { ArrowLeft, MessageSquare } from 'lucide-react';
+import logo from '@/app/favicon.svg';
 
 interface Like {
   id: string;
@@ -61,8 +65,30 @@ export default function PostDetailPage() {
   // isPreviewMode is now handled by the EnhancedPostEditor
   const [editContent, setEditContent] = useState('');
   const [isLiked, setIsLiked] = useState(false);
+  const commentsRef = useRef<HTMLDivElement>(null);
 
   const postId = params.postId as string;
+  const [canGoBack, setCanGoBack] = useState(false);
+
+
+  // Add a class to the body to ensure scrolling works
+  useEffect(() => {
+    document.body.classList.add('overflow-auto');
+    return () => {
+      document.body.classList.remove('overflow-auto');
+    };
+  }, []);
+
+  // Set document title when post loads
+  useEffect(() => {
+    if (post) {
+      const authorName = post.author.displayName || post.author.username;
+      document.title = `${authorName}'s Post - Plork`;
+    }
+    return () => {
+      document.title = 'Plork';
+    };
+  }, [post]);
 
   useEffect(() => {
     // Skip if no postId
@@ -197,80 +223,138 @@ export default function PostDetailPage() {
     }
   };
 
+  const scrollToComments = () => {
+    if (commentsRef.current) {
+      commentsRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   if (isLoading) {
-    return <div className="container mx-auto px-4 py-8 text-center">Loading post...</div>;
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4 mb-4" />
+                <Skeleton className="h-8 w-full mb-2" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (error || !post) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className="text-red-500 mb-4">{error || 'Post not found'}</p>
-        <Button onClick={() => router.push('/')}>Back to Home</Button>
+      <div className="container mx-auto px-4 py-8 max-w-4xl text-center">
+        <Card>
+          <CardContent className="py-12">
+            <p className="text-red-500 mb-4 text-lg">{error || 'Post not found'}</p>
+            <Button onClick={() => router.push('/')} className="gap-2">
+              <ArrowLeft className="h-4 w-4" /> Back to Home
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Card>
-        <CardContent className="pt-6">
+    <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
+      <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
+        {
+          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
+        }
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={scrollToComments}
+          className="gap-2"
+        >
+          <MessageSquare className="h-4 w-4" /> Comments ({post.comments?.length || 0})
+        </Button>
+      </div>
+
+      <Card className=" shadow-sm border-muted max-w-5xl m-auto">
+        <CardHeader className="">
           <div className="flex items-start gap-4">
-            <Avatar>
-              <AvatarImage src={post.author.profileImage} alt={post.author.username} />
-              <AvatarFallback>
-                {post.author.displayName?.[0] || post.author.username[0]}
-              </AvatarFallback>
-            </Avatar>
+            <Link href={`/users/${post.author.username}`}>
+              <Avatar className="h-12 w-12 border-2 border-background shadow-sm hover:border-primary transition-colors">
+                <AvatarImage src={post.author.profileImage} alt={post.author.username} />
+                <AvatarFallback className="text-lg">
+                  {post.author.displayName?.[0] || post.author.username[0]}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
 
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <Link href={`/users/${post.author.username}`} className="font-semibold hover:underline">
+              <div className="flex flex-wrap items-center gap-2">
+                <Link href={`/users/${post.author.username}`} className="font-semibold hover:underline text-lg">
                   {post.author.displayName || post.author.username}
                 </Link>
                 <span className="text-muted-foreground">@{post.author.username}</span>
-                <span className="text-muted-foreground">·</span>
-                <span className="text-muted-foreground">
-                  {new Date(post.createdAt).toLocaleDateString()}
-                </span>
               </div>
-
-              {isEditing ? (
-                <div className="mt-4">
-                  <EnhancedPostEditor
-                    mode="edit"
-                    initialContent={editContent}
-                    isLoading={isLoading}
-                    onEditSubmit={handleSaveEdit}
-                    onCancel={handleCancelEdit}
-                  />
-                </div>
-              ) : (
-                <div className="mt-2">
-                  <MarkdownContent content={post.content} />
-                </div>
-              )}
-
-              {/* Post interaction buttons will show the counts */}
-
-              <div className="border-t mt-4 pt-4">
-                <PostInteractionButtons
-                  postId={post.id}
-                  authorId={post.author.id}
-                  isLiked={isLiked}
-                  likesCount={post.likes?.length || 0}
-                  commentsCount={post.comments?.length || 0}
-                  onLike={() => handleLike()}
-                  onEdit={user && user.id === post.author.id && !isEditing ? handleEditPost : undefined}
-                  hideViewFullPost={true}
-                />
+              <div className="text-muted-foreground text-sm">
+                <time dateTime={post.createdAt} title={new Date(post.createdAt).toLocaleString()}>
+                  {formatDistanceToNow(new Date(post.createdAt))}
+                </time>
               </div>
             </div>
           </div>
+        </CardHeader>
 
-          <CommentSection
-            postId={post.id}
-            initialComments={post.comments || []}
-          />
+        <Separator />
+
+        <CardContent className="pt-6">
+          {isEditing ? (
+            <div className="mb-6">
+              <EnhancedPostEditor
+                mode="edit"
+                initialContent={editContent}
+                isLoading={isLoading}
+                onEditSubmit={handleSaveEdit}
+                onCancel={handleCancelEdit}
+              />
+            </div>
+          ) : (
+            <div className="mb-6">
+              <MarkdownContent content={post.content} className="text-lg" />
+            </div>
+          )}
+
+          <div className="mt-6 pt-4 border-t">
+            <PostInteractionButtons
+              postId={post.id}
+              authorId={post.author.id}
+              isLiked={isLiked}
+              likesCount={post.likes?.length || 0}
+              commentsCount={post.comments?.length || 0}
+              onLike={() => handleLike()}
+              onEdit={user && user.id === post.author.id && !isEditing ? handleEditPost : undefined}
+              hideViewFullPost={true}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm border-muted max-w-5xl m-auto pt-0 mt-4">
+        <CardContent className="pt-0">
+          <div ref={commentsRef}>
+            <CommentSection
+              postId={post.id}
+              initialComments={post.comments || []}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

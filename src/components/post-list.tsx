@@ -13,7 +13,8 @@ import { useAuth } from '@/lib/auth-context';
 import { usePinnedUsers } from '@/lib/pinned-users-context';
 import { usePost, Post } from '@/lib/post-context';
 import { useInfiniteScroll } from '@/hooks';
-import { Search, Plus, X } from 'lucide-react';
+import { Search, Plus, X, MessageSquare } from 'lucide-react';
+import { Heart } from '@mynaui/icons-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -556,10 +557,16 @@ export default function PostList({
               {/* Display post tags */}
               <PostTags hashtags={post.hashtags} limit={3} className="mt-1" />
 
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{post.comments?.length || 0} comments</span>
-                <span>•</span>
-                <span>{post.likes?.length || 0} likes</span>
+              <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <MessageSquare className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{post.comments?.length || 0}</span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <Heart className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{post.likes?.length || 0}</span>
+                </div>
               </div>
             </button>
           ))}

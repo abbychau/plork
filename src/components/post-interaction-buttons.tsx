@@ -12,8 +12,7 @@ import {
   Edit,
   Heart,
   HeartSolid,
-  MessageDots,
-  Eye
+  MessageDots
 } from '@mynaui/icons-react';
 
 interface PostInteractionButtonsProps {
@@ -25,7 +24,6 @@ interface PostInteractionButtonsProps {
   onLike: (postId: string) => void;
   onEdit?: () => void;
   onComment?: () => void;
-  hideViewFullPost?: boolean;
 }
 
 export default function PostInteractionButtons({
@@ -36,8 +34,7 @@ export default function PostInteractionButtons({
   commentsCount,
   onLike,
   onEdit,
-  onComment,
-  hideViewFullPost = false
+  onComment
 }: PostInteractionButtonsProps) {
 
   const { user } = useAuth();
@@ -67,90 +64,70 @@ export default function PostInteractionButtons({
   };
 
   return (
-    <div className="flex gap-1 text-sm">
-      {onComment ? (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-foreground hover:text-primary"
-          onClick={onComment}
-          title={`${commentsCount} comment${commentsCount !== 1 ? 's' : ''}`}
-        >
-          <MessageDots className="w-4 h-4" />
-          <span className="sr-only">Comments</span>
-          <span className="ml-1 text-xs">{commentsCount}</span>
-        </Button>
-      ) : (
-        <Link
-          href={`/posts/${postId}#comments`}
-          title={`${commentsCount} comment${commentsCount !== 1 ? 's' : ''}`}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-foreground hover:text-primary"
+    <div className="flex justify-between items-center w-full text-sm">
+      {/* Left side - Comment and Like counts */}
+      <div className="flex items-center gap-4 ml-2">
+        {/* Comment count - now black and clickable */}
+        {onComment ? (
+          <button
+            onClick={onComment}
+            className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer"
+            title={`${commentsCount} comment${commentsCount !== 1 ? 's' : ''}`}
           >
             <MessageDots className="w-4 h-4" />
-            <span className="sr-only">Comments</span>
-            <span className="ml-1 text-xs">{commentsCount}</span>
-          </Button>
-        </Link>
-      )}
-
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-foreground hover:text-primary"
-        onClick={handleShare}
-        title="Copy permalink"
-      >
-        <ClipboardCopy className="w-4 h-4" />
-        <span className="sr-only">Copy</span>
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="icon"
-        className={`h-8 w-8 ${isLiked ? 'text-red-500' : 'text-foreground hover:text-red-500'}`}
-        onClick={() => onLike(postId)}
-        title={`${likesCount} like${likesCount !== 1 ? 's' : ''}`}
-      >
-        {isLiked ?
-          <HeartSolid className="w-4 h-4" /> :
-          <Heart className="w-4 h-4" />
-        }
-        <span className="sr-only">Like</span>
-        <span className="ml-1 text-xs">{likesCount}</span>
-      </Button>
-
-      {!hideViewFullPost && (
-        <Link
-          href={`/posts/${postId}`}
-          title="View full post"
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-foreground hover:text-primary"
+            <span className="text-sm">{commentsCount}</span>
+          </button>
+        ) : (
+          <Link
+            href={`/posts/${postId}#comments`}
+            className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer"
+            title={`${commentsCount} comment${commentsCount !== 1 ? 's' : ''}`}
           >
-            <Eye className="w-4 h-4" />
-            <span className="sr-only">View Full Post</span>
-          </Button>
-        </Link>
-      )}
+            <MessageDots className="w-4 h-4" />
+            <span className="text-sm">{commentsCount}</span>
+          </Link>
+        )}
 
-      {isAuthor && onEdit && (
+        {/* Like count - now black and clickable */}
+        <button
+          onClick={() => onLike(postId)}
+          className={`flex items-center gap-1.5 ${isLiked ? 'text-red-500' : 'hover:text-red-500'} transition-colors cursor-pointer`}
+          title={`${likesCount} like${likesCount !== 1 ? 's' : ''}`}
+        >
+          {isLiked ?
+            <HeartSolid className="w-4 h-4" /> :
+            <Heart className="w-4 h-4" />
+          }
+          <span className="text-sm">{likesCount}</span>
+        </button>
+      </div>
+
+      {/* Right side - Action buttons */}
+      <div className="flex gap-1">
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-foreground hover:text-primary"
-          onClick={onEdit}
-          title="Edit post"
+          className="h-8 w-8 text-foreground hover:text-primary cursor-pointer"
+          onClick={handleShare}
+          title="Copy permalink"
         >
-          <Edit className="w-4 h-4" />
-          <span className="sr-only">Edit</span>
+          <ClipboardCopy className="w-4 h-4" />
+          <span className="sr-only">Copy</span>
         </Button>
-      )}
+
+        {isAuthor && onEdit && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-foreground hover:text-primary cursor-pointer"
+            onClick={onEdit}
+            title="Edit post"
+          >
+            <Edit className="w-4 h-4" />
+            <span className="sr-only">Edit</span>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

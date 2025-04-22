@@ -189,6 +189,7 @@ export default function NotificationDropdown() {
                   href={getNotificationLink(notification)}
                   className="flex items-start gap-3 w-full"
                   onClick={() => markAsRead(notification.id)}
+                  target={notification.type === 'comment' ? "_blank" : undefined}
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={notification.actor.profileImage} alt={notification.actor.username} />

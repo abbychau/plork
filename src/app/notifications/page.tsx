@@ -151,6 +151,7 @@ export default function NotificationsPage() {
             <Link
               key={notification.id}
               href={getNotificationLink(notification)}
+              target={notification.type === 'comment' ? "_blank" : undefined}
             >
               <Card className={`hover:border-primary/20 transition-colors ${!notification.read ? 'bg-muted/30' : ''}`}>
                 <CardContent className="p-4">
