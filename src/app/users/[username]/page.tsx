@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { useAuth } from '@/lib/auth-context';
 import AppLayout from '@/components/app-layout';
@@ -21,7 +22,8 @@ interface User {
   postsCount?: number;
 }
 
-export default function UserProfilePage() {
+// Separate component for user profile content
+function UserProfileContent() {
   const params = useParams();
   const { user: currentUser } = useAuth();
   const { addPinnedUser } = usePinnedUsers();
@@ -75,27 +77,52 @@ export default function UserProfilePage() {
     fetchUserProfile();
   }, [username, currentUser]);
 
+  // Loading state within the AppLayout
   if (isLoading) {
     return (
-    <div className="flex justify-center py-20 text-center ">
-
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-      <p className="ml-2 ">Loading...</p>
-    </div>
+      <div className="flex flex-col h-full">
+        <AppLayout
+          apiEndpoint={`/api/posts?username=${username}`}
+          title={
+            <div className="flex items-center gap-3 -mb-1">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div>
+                <Skeleton className="h-5 w-32" />
+              </div>
+            </div>
+          }
+          showSearch={false}
+          showNewPostButton={false}
+        />
+      </div>
     );
   }
 
+  // Error state within the AppLayout
   if (error || !user) {
-    return <div className="flex justify-center py-12 text-red-500">{error || 'User not found'}</div>;
+    return (
+      <div className="flex flex-col h-full">
+        <AppLayout
+          apiEndpoint={`/api/posts?username=${username}`}
+          title={
+            <div className="flex justify-start text-red-500">
+              {error || 'User not found'}
+            </div>
+          }
+          showSearch={false}
+          showNewPostButton={false}
+        />
+      </div>
+    );
   }
 
+  // Normal render with user data
   return (
     <div className="flex flex-col h-full">
       <AppLayout
         apiEndpoint={`/api/posts?username=${username}`}
         title={
           <div className="flex items-center gap-3 -mb-1">
-
             <UserProfilePopover
               username={user.username}
               onPin={() => addPinnedUser({
@@ -117,7 +144,6 @@ export default function UserProfilePage() {
             <div>
               <span className="font-bold">{user.displayName || user.username}</span>
               <span className="text-muted-foreground ml-2 text-sm font-medium">@{user.username}</span>
-
             </div>
           </div>
         }
@@ -125,5 +151,33 @@ export default function UserProfilePage() {
         showNewPostButton={false}
       />
     </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function UserProfilePage() {
+  const params = useParams();
+  const username = params.username as string;
+
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-full">
+        <AppLayout
+          apiEndpoint={`/api/posts?username=${username}`}
+          title={
+            <div className="flex items-center gap-3 -mb-1">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div>
+                <Skeleton className="h-5 w-32" />
+              </div>
+            </div>
+          }
+          showSearch={false}
+          showNewPostButton={false}
+        />
+      </div>
+    }>
+      <UserProfileContent />
+    </Suspense>
   );
 }

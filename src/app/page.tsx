@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/components/app-layout';
 import { useAuth } from '@/lib/auth-context';
-import { Globe, MessageSquare } from 'lucide-react';
+import { Globe, Timer, Mailbox, Code, Info, ArrowRight } from 'lucide-react';
 import LoginPopover from '@/components/login-popover';
 import RegisterPopover from '@/components/register-popover';
 import logo from '@/app/favicon.svg';
@@ -16,7 +17,14 @@ export default function Home() {
 
   // If user is logged in, show the app layout with timeline
   if (user) {
-    return <AppLayout title="Timeline" apiEndpoint="/api/posts" />;
+    return <AppLayout
+      title={
+        <>
+          <Timer className="inline-block mr-2 mb-1" />
+          Timeline
+        </>
+      } apiEndpoint="/api/posts"
+    />;
   }
 
   // Otherwise, show the landing page
@@ -29,6 +37,9 @@ export default function Home() {
             <span className="font-bold text-xl">Plork</span>
           </div>
           <div className="flex items-center space-x-4">
+            <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors mr-2">
+              About
+            </Link>
             <LoginPopover>
               <Button id="login-trigger" variant="ghost" size="sm" className="hover:text-primary transition-colors">
                 Login
@@ -43,7 +54,7 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="py-16 md:py-24 lg:py-32 xl:py-40 relative overflow-hidden h-full">
+      <section className="py-16 md:py-24 lg:py-32 xl:py-40 relative overflow-hidden h-full professional-bg">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 dark:from-primary/10 dark:via-secondary/10 dark:to-primary/20 z-0"></div>
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] bg-center opacity-20 z-0 animate-subtle-pulse"></div>
 
@@ -66,12 +77,24 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-4 pt-4 animate-fade-in-up animation-delay-200">
-                {/* Buttons removed as requested */}
+                <Link href="/about">
+                  <Button size="lg" className="gap-2">
+                    <Info className="h-5 w-5" />
+                    Learn More
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </Link>
               </div>
             </div>
 
             {/* 3-column mailbox-like interface mockup */}
             <div className="relative w-full md:w-1/2 h-[400px] rounded-lg overflow-hidden shadow-2xl animate-fade-in-up animation-delay-300 border border-border/40 bg-card/50 backdrop-blur-sm">
+              <div className="absolute top-0 right-0 z-10 m-2">
+                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm">
+                  <Mailbox className="h-3 w-3 mr-1" />
+                  Mailbox Design
+                </Badge>
+              </div>
               <div className="flex h-full">
                 {/* Left column - Navigation */}
                 <div className="w-[20%] border-r bg-muted/30 flex flex-col">
@@ -215,6 +238,69 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Feature highlights */}
+            <div className="w-full mt-16 animate-fade-in-up animation-delay-400">
+              <h2 className="text-2xl font-semibold mb-6 text-center">Key Features</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="bg-background/70 backdrop-blur-sm border-border/40">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="p-2 rounded-full bg-primary/10">
+                        <Mailbox className="h-5 w-5 text-primary" />
+                      </div>
+                      Mailbox Design
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm">
+                      A clean, organized three-column layout inspired by email clients for intuitive navigation and content management.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-background/70 backdrop-blur-sm border-border/40">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="p-2 rounded-full bg-primary/10">
+                        <Code className="h-5 w-5 text-primary" />
+                      </div>
+                      Open API
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm">
+                      Build integrations and automate your social experience with our comprehensive API and key management system.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-background/70 backdrop-blur-sm border-border/40">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="p-2 rounded-full bg-primary/10">
+                        <Globe className="h-5 w-5 text-primary" />
+                      </div>
+                      ActivityPub
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm">
+                      Connect with users across the decentralized social web including Mastodon, Pleroma, and the entire Fediverse.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="text-center mt-8">
+                <Link href="/about">
+                  <Button variant="outline" size="lg" className="gap-2">
+                    <Info className="h-5 w-5" />
+                    Discover More About Plork
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

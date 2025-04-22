@@ -1,10 +1,9 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
-
 import { useTheme } from '@/lib/theme-context';
-
 import { Button } from '@/components/ui/button';
+import SettingsModal from '@/components/settings-modal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,11 +50,13 @@ export default function BottomMenu() {
             </Link>
           </DropdownMenuItem>
 
-          <DropdownMenuItem asChild>
-            <Link href="/settings" className="flex items-center gap-2 cursor-pointer">
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
-            </Link>
+          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+            <SettingsModal triggerElement={
+              <div className="flex items-center gap-2 cursor-pointer w-full">
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
+              </div>
+            } />
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={logout} className="flex items-center gap-2 cursor-pointer">
@@ -99,6 +100,13 @@ export default function BottomMenu() {
             <Link href="/api-tester" className="flex items-center gap-2 cursor-pointer">
               <Code className="h-4 w-4" />
               <span>API Tester</span>
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+            <Link href="/api-docs" className="flex items-center gap-2 cursor-pointer">
+              <Code className="h-4 w-4" />
+              <span>API Documentation</span>
             </Link>
           </DropdownMenuItem>
 

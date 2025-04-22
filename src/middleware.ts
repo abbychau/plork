@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 // Define paths that require authentication
 const protectedPaths = [
   '/settings',
+  '/api-docs',
 ];
 
 // Define paths that are only for non-authenticated users
@@ -35,6 +36,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/settings/:path*',
+    '/api-docs/:path*',
     '/login',
     '/register',
   ],

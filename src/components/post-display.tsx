@@ -167,7 +167,7 @@ export default function PostDisplay() {
                 })}
               >
                 <div className="cursor-pointer">
-                  <Avatar>
+                  <Avatar className="h-12 w-12 mt-1.5">
                     <AvatarImage src={selectedPost.author.profileImage} alt={selectedPost.author.username} />
                     <AvatarFallback>
                       {selectedPost.author.displayName?.[0] || selectedPost.author.username[0]}

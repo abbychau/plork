@@ -4,6 +4,7 @@
 import { PrismaClient } from '@prisma/client';
 import { generateKeyPair } from './activitypub';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 // Create a singleton instance of PrismaClient
 const globalForPrisma = globalThis as unknown as {
@@ -410,6 +411,104 @@ export const likeService = {
         post: true,
       },
     });
+  },
+};
+
+// API Key service
+export const apiKeyService = {
+  // Generate a new API key for a user
+  async createApiKey(data: {
+    userId: string;
+    name: string;
+    expiresAt?: Date;
+  }) {
+    const { userId, name, expiresAt } = data;
+
+    // Generate a random API key
+    const key = crypto.randomBytes(32).toString('hex');
+
+    return prisma.apiKey.create({
+      data: {
+        userId,
+        name,
+        key,
+        expiresAt,
+      },
+    });
+  },
+
+  // Get all API keys for a user
+  async getUserApiKeys(userId: string) {
+    return prisma.apiKey.findMany({
+      where: {
+        userId,
+        revoked: false,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  },
+
+  // Get API key by ID
+  async getApiKeyById(id: string) {
+    return prisma.apiKey.findUnique({
+      where: { id },
+    });
+  },
+
+  // Get API key by key
+  async getApiKeyByKey(key: string) {
+    return prisma.apiKey.findUnique({
+      where: { key },
+      include: {
+        user: true,
+      },
+    });
+  },
+
+  // Update API key last used timestamp
+  async updateApiKeyLastUsed(id: string) {
+    return prisma.apiKey.update({
+      where: { id },
+      data: {
+        lastUsed: new Date(),
+      },
+    });
+  },
+
+  // Revoke an API key
+  async revokeApiKey(id: string) {
+    return prisma.apiKey.update({
+      where: { id },
+      data: {
+        revoked: true,
+      },
+    });
+  },
+
+  // Validate an API key
+  async validateApiKey(key: string) {
+    const apiKey = await this.getApiKeyByKey(key);
+
+    if (!apiKey) {
+      return null;
+    }
+
+    // Check if the key is revoked
+    if (apiKey.revoked) {
+      return null;
+    }
+
+    // Check if the key is expired
+    if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
+      return null;
+    }
+
+    // Update last used timestamp
+    await this.updateApiKeyLastUsed(apiKey.id);
+
+    return apiKey;
   },
 };
 

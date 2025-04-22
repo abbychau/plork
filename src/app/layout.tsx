@@ -42,8 +42,8 @@ export default function RootLayout({
           <ThemeProvider defaultTheme="system" storageKey="plork-theme">
             <PinnedUsersProviderWithAuth>
             <DynamicTitle />
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-0 sm:p-4">
-              <main className="w-full sm:h-[calc(100vh-50px)] bg-background border border-border sm:rounded-lg rounded-none shadow-lg overflow-hidden h-full">
+            <div className="min-h-screen flex flex-col items-center justify-center professional-bg p-0 lg:p-4">
+              <main className="w-full lg:h-[calc(100vh-50px)] h-[calc(100vh)] bg-background border border-border lg:rounded-lg rounded-none shadow-lg overflow-y-auto ">
                 {children}
               </main>
               <BottomMenu />

@@ -104,6 +104,12 @@ export default function UserMenu({ isCollapsed = false }: UserMenuProps) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
+            <Link href="/api-docs" className="cursor-pointer">
+              <Code className="mr-2 h-4 w-4" />
+              <span>API Documentation</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/activitypub" className="cursor-pointer">
               <Activity className="mr-2 h-4 w-4" />
               <span>ActivityPub</span>

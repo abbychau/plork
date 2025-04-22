@@ -380,30 +380,7 @@ export default function PostList({
               </TabsList>
             </Tabs>
           ) : (
-            <div className="flex items-center gap-2">
-              {showNewPostButton && user && (
-                <CreatePostModal
-                  onPostCreated={(newPost) => {
-                    // Add the new post to the top of the list
-                    if (newPost) {
-                      setPosts(prevPosts => {
-                        // Check if the post already exists
-                        const existingIds = new Set(prevPosts.map(p => p.id));
-                        if (!existingIds.has(newPost.id)) {
-                          return [newPost, ...prevPosts];
-                        }
-                        return prevPosts;
-                      });
-                    }
-                  }}
-                >
-                  <Button size="sm" className="gap-1">
-                    <Plus className="h-4 w-4" />
-                    <span>New Post</span>
-                  </Button>
-                </CreatePostModal>
-              )}
-            </div>
+            <div className="ml-auto" />
           )}
         </div>
 

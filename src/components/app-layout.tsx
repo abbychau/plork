@@ -44,38 +44,54 @@ export default function AppLayout({
   tabs,
   isTagsPage = false,
 }: AppLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [defaultLayout, setDefaultLayout] = useState([20, 32, 48]);
   const { user } = useAuth();
 
-  // Load layout from cookies on mount
-  useEffect(() => {
-    const layout = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('react-resizable-panels:layout:plork'))
-      ?.split('=')[1];
-
-    const collapsed = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('react-resizable-panels:collapsed'))
-      ?.split('=')[1];
-
-    if (layout) {
+  // Safely access localStorage (handles cases where it might be unavailable)
+  const safeLocalStorage = {
+    getItem: (key: string): string | null => {
+      if (typeof window === 'undefined') return null;
       try {
-        setDefaultLayout(JSON.parse(layout));
+        return localStorage.getItem(key);
       } catch (e) {
-        console.error('Error parsing layout from cookie:', e);
+        console.error('Error accessing localStorage:', e);
+        return null;
+      }
+    },
+    setItem: (key: string, value: string): void => {
+      if (typeof window === 'undefined') return;
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        console.error('Error setting localStorage item:', e);
       }
     }
+  };
 
-    if (collapsed) {
-      try {
-        setIsCollapsed(JSON.parse(collapsed));
-      } catch (e) {
-        console.error('Error parsing collapsed state from cookie:', e);
-      }
+  // Initialize state from localStorage
+  // This is done outside useEffect to avoid layout shift during hydration
+  const initializeStateFromStorage = () => {
+    if (typeof window === 'undefined') return { isCollapsed: false, layout: [20, 32, 48] };
+
+    let storedLayout = [20, 32, 48];
+    let storedCollapsed = false;
+
+    try {
+      const layoutStr = localStorage.getItem('react-resizable-panels:layout:plork');
+      if (layoutStr) storedLayout = JSON.parse(layoutStr);
+
+      const collapsedStr = localStorage.getItem('react-resizable-panels:collapsed');
+      if (collapsedStr) storedCollapsed = JSON.parse(collapsedStr);
+    } catch (e) {
+      console.error('Error reading layout from localStorage:', e);
     }
-  }, []);
+
+    return { isCollapsed: storedCollapsed, layout: storedLayout };
+  };
+
+  // Initialize state directly from localStorage
+  const initialState = initializeStateFromStorage();
+  const [isCollapsed, setIsCollapsed] = useState(initialState.isCollapsed);
+  const [defaultLayout, setDefaultLayout] = useState(initialState.layout);
 
   // Mark timeline posts as read when the timeline is viewed
   useEffect(() => {
@@ -105,9 +121,8 @@ export default function AppLayout({
         <ResizablePanelGroup
           direction="horizontal"
           onLayout={(sizes: number[]) => {
-            document.cookie = `react-resizable-panels:layout:plork=${JSON.stringify(
-              sizes
-            )}`;
+            safeLocalStorage.setItem('react-resizable-panels:layout:plork', JSON.stringify(sizes));
+            setDefaultLayout(sizes); // Update state to match localStorage
           }}
           className="h-full items-stretch"
         >
@@ -119,15 +134,11 @@ export default function AppLayout({
             maxSize={20}
             onCollapse={() => {
               setIsCollapsed(true);
-              document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(
-                true
-              )}`;
+              safeLocalStorage.setItem('react-resizable-panels:collapsed', JSON.stringify(true));
             }}
             onResize={() => {
               setIsCollapsed(false);
-              document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(
-                false
-              )}`;
+              safeLocalStorage.setItem('react-resizable-panels:collapsed', JSON.stringify(false));
             }}
             className={cn(
               isCollapsed &&

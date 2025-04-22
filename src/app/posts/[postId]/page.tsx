@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -53,7 +53,8 @@ interface Post {
   comments: Comment[];
 }
 
-export default function PostDetailPage() {
+// Separate component for post detail content
+function PostDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -68,7 +69,6 @@ export default function PostDetailPage() {
   const commentsRef = useRef<HTMLDivElement>(null);
 
   const postId = params.postId as string;
-  const [canGoBack, setCanGoBack] = useState(false);
 
 
   // Add a class to the body to ensure scrolling works
@@ -134,8 +134,6 @@ export default function PostDetailPage() {
     setIsEditing(false);
     setEditContent(post?.content || '');
   };
-
-
 
   const handleLike = async () => {
     if (!user || !post) {
@@ -229,10 +227,16 @@ export default function PostDetailPage() {
     }
   };
 
+  // Loading state with skeleton UI
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card>
+      <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
+        <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
+          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
+          <Skeleton className="h-9 w-32" />
+        </div>
+
+        <Card className="shadow-sm border-muted max-w-5xl m-auto">
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
               <Skeleton className="h-12 w-12 rounded-full" />
@@ -253,11 +257,16 @@ export default function PostDetailPage() {
     );
   }
 
+  // Error state
   if (error || !post) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl text-center">
-        <Card>
-          <CardContent className="py-12">
+      <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
+        <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
+          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
+        </div>
+
+        <Card className="shadow-sm border-muted max-w-5xl m-auto">
+          <CardContent className="py-12 text-center">
             <p className="text-red-500 mb-4 text-lg">{error || 'Post not found'}</p>
             <Button onClick={() => router.push('/')} className="gap-2">
               <ArrowLeft className="h-4 w-4" /> Back to Home
@@ -268,12 +277,11 @@ export default function PostDetailPage() {
     );
   }
 
+  // Normal render with post data
   return (
     <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
       <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
-        {
-          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
-        }
+        <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
 
         <Button
           variant="outline"
@@ -358,5 +366,39 @@ export default function PostDetailPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function PostDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
+        <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
+          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
+          <Skeleton className="h-9 w-32" />
+        </div>
+
+        <Card className="shadow-sm border-muted max-w-5xl m-auto">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4 mb-4" />
+                <Skeleton className="h-8 w-full mb-2" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <PostDetailContent />
+    </Suspense>
   );
 }

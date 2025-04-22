@@ -218,7 +218,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
           )}
 
           <div className="flex gap-4">
-            <Avatar className="h-10 w-10 mt-1 border border-muted">
+            <Avatar className="h-10 w-10 mt-1 border border-muted hidden xl:block">
               <AvatarImage src={user.profileImage} alt={user.username} />
               <AvatarFallback>
                 {user.displayName?.[0] || user.username[0]}

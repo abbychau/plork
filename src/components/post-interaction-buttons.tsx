@@ -21,9 +21,10 @@ interface PostInteractionButtonsProps {
   isLiked: boolean;
   likesCount: number;
   commentsCount: number;
-  onLike: (postId: string) => void;
+  onLike: () => void;
   onEdit?: () => void;
   onComment?: () => void;
+  hideViewFullPost?: boolean;
 }
 
 export default function PostInteractionButtons({
@@ -90,7 +91,7 @@ export default function PostInteractionButtons({
 
         {/* Like count - now black and clickable */}
         <button
-          onClick={() => onLike(postId)}
+          onClick={() => onLike()}
           className={`flex items-center gap-1.5 ${isLiked ? 'text-red-500' : 'hover:text-red-500'} transition-colors cursor-pointer`}
           title={`${likesCount} like${likesCount !== 1 ? 's' : ''}`}
         >

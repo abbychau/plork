@@ -42,6 +42,7 @@ model User {
   outboxItems   OutboxItem[]
   notifications Notification[] @relation("NotificationUser")
   actions       Notification[] @relation("NotificationActor")
+  apiKeys       ApiKey[]
 }
 
 model Post {
@@ -193,4 +194,22 @@ model PinnedUser {
   @@unique([userId, pinnedUserId])
   @@index([userId])
   @@index([pinnedUserId])
+}
+
+model ApiKey {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  name          String    // A descriptive name for the API key
+  key           String    @unique // The actual API key
+  lastUsed      DateTime? // When the key was last used
+  expiresAt     DateTime? // Optional expiration date
+  revoked       Boolean   @default(false) // Whether the key has been revoked
+
+  // Relationships
+  userId        String    // User who owns this API key
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([key])
 }
