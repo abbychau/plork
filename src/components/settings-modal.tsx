@@ -37,6 +37,10 @@ interface SettingsModalProps {
   triggerElement?: React.ReactNode;
 }
 
+/**
+ * @deprecated This component is deprecated. Use the /settings route instead.
+ * This component is kept for backward compatibility.
+ */
 export default function SettingsModal({ triggerClassName, compact, triggerElement }: SettingsModalProps) {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -175,33 +179,13 @@ export default function SettingsModal({ triggerClassName, compact, triggerElemen
     }
   };
 
-  const handleAvatarChange = async (file: File) => {
-    if (!file) return;
+  const handleAvatarChange = (_url: string) => {
+    // This is now just receiving the URL after the avatar has been uploaded
+    // The AvatarUpload component handles the upload process
+    setSuccess('Avatar updated successfully');
 
-    const formData = new FormData();
-    formData.append('avatar', file);
-
-    setIsLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const response = await fetch('/api/users/avatar', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to upload avatar');
-      }
-
-      setSuccess('Avatar updated successfully');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload avatar');
-    } finally {
-      setIsLoading(false);
-    }
+    // Optionally refresh the page or update the UI
+    window.location.reload();
   };
 
   // Create a new API key
@@ -281,7 +265,7 @@ export default function SettingsModal({ triggerClassName, compact, triggerElemen
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto z-[10000]">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>

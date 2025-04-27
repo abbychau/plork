@@ -1,18 +1,36 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+
+// Define interfaces for API endpoints
+interface ApiEndpoint {
+  name: string;
+  method: string;
+  path: string;
+  description: string;
+  requestBody: string | null;
+  headers?: string;
+}
+
+interface ApiCategory {
+  id: string;
+  name: string;
+  endpoints: ApiEndpoint[];
+}
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clipboard, Send, Play } from 'lucide-react';
+import { Clipboard, Send, Info, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import { Switch } from '@/components/ui/switch';
+import { JsonHighlighter } from '@/components/ui/json-highlighter';
 
 // Define endpoint categories and their APIs
-const endpointCategories = [
+const endpointCategories: ApiCategory[] = [
   {
     id: 'auth',
     name: 'Authentication',
@@ -216,15 +234,18 @@ const endpointCategories = [
 // Client component that uses browser APIs
 function ApiTesterContent() {
   const [selectedCategory, setSelectedCategory] = useState(endpointCategories[0].id);
-  const [selectedEndpoint, setSelectedEndpoint] = useState(endpointCategories[0].endpoints[0]);
+  const [selectedEndpoint, setSelectedEndpoint] = useState<ApiEndpoint>(endpointCategories[0].endpoints[0]);
   const [method, setMethod] = useState('GET');
   const [url, setUrl] = useState('');
-  const [headers, setHeaders] = useState('{\n  "Content-Type": "application/json"\n}');
+  const [headers, setHeaders] = useState('{\n  "Content-Type": "application/json",\n  "Authorization": "Bearer YOUR_API_KEY"\n}');
   const [body, setBody] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [response, setResponse] = useState('');
+  const [fullResponse, setFullResponse] = useState<any>(null);
+  const [showFullResponse, setShowFullResponse] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [baseUrl, setBaseUrl] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
   const [pathParams, setPathParams] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState('');
 
@@ -234,6 +255,7 @@ function ApiTesterContent() {
     const currentHost = window.location.host;
     const protocol = window.location.protocol;
     setBaseUrl(`${protocol}//${currentHost}`);
+    setIsMounted(true);
   }, []);
 
   // Update the selected endpoint when category changes
@@ -254,7 +276,7 @@ function ApiTesterContent() {
       // Extract path parameters
       const paramMatches = selectedEndpoint.path.match(/{([^}]+)}/g) || [];
       const initialParams: Record<string, string> = {};
-      paramMatches.forEach(match => {
+      paramMatches.forEach((match: string) => {
         const param = match.replace(/{|}/g, '');
         initialParams[param] = '';
       });
@@ -264,10 +286,21 @@ function ApiTesterContent() {
       if (selectedEndpoint.headers) {
         setHeaders(selectedEndpoint.headers);
       } else {
-        setHeaders('{\n  "Content-Type": "application/json"\n}');
+        setHeaders('{\n  "Content-Type": "application/json",\n  "Authorization": "Bearer YOUR_API_KEY"\n}');
       }
     }
   }, [selectedEndpoint]);
+
+  // Update response display when showFullResponse changes
+  useEffect(() => {
+    if (fullResponse) {
+      if (showFullResponse) {
+        setResponse(JSON.stringify(fullResponse, null, 2));
+      } else {
+        setResponse(JSON.stringify(fullResponse.body, null, 2));
+      }
+    }
+  }, [showFullResponse, fullResponse]);
 
   const handleCopy = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
@@ -279,6 +312,7 @@ function ApiTesterContent() {
     e.preventDefault();
     setIsLoading(true);
     setResponse('');
+    setFullResponse(null);
 
     try {
       // Parse headers
@@ -313,11 +347,16 @@ function ApiTesterContent() {
       let fullUrl = processedUrl;
 
       // If the URL starts with a slash, it's a relative URL, so prepend the base URL
-      if (processedUrl.startsWith('/')) {
-        fullUrl = `${baseUrl}${processedUrl}`;
-      } else if (!processedUrl.startsWith('http')) {
-        // If it doesn't start with http, assume it's relative to the current domain
-        fullUrl = `${baseUrl}/${processedUrl}`;
+      if (isMounted) {
+        if (processedUrl.startsWith('/')) {
+          fullUrl = `${baseUrl}${processedUrl}`;
+        } else if (!processedUrl.startsWith('http')) {
+          // If it doesn't start with http, assume it's relative to the current domain
+          fullUrl = `${baseUrl}/${processedUrl}`;
+        }
+      } else {
+        // During server-side rendering, just use the path
+        fullUrl = processedUrl;
       }
 
       // Make the request
@@ -339,15 +378,23 @@ function ApiTesterContent() {
         responseBody = await response.text();
       }
 
-      // Format response
-      const formattedResponse = JSON.stringify({
+      // Store the full response data
+      const fullResponseData = {
         status: response.status,
         statusText: response.statusText,
         headers: responseHeaders,
         body: responseBody,
-      }, null, 2);
+      };
 
-      setResponse(formattedResponse);
+      setFullResponse(fullResponseData);
+
+      // Set the response based on the toggle state
+      if (showFullResponse) {
+        setResponse(JSON.stringify(fullResponseData, null, 2));
+      } else {
+        // Only show the body
+        setResponse(JSON.stringify(responseBody, null, 2));
+      }
     } catch (error) {
       console.error('Error making request:', error);
       setResponse(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }, null, 2));
@@ -359,6 +406,12 @@ function ApiTesterContent() {
   return (
     <ScrollArea className="h-full">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex items-center mb-4">
+          <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mr-4">
+            <ExternalLink className="h-4 w-4 mr-1" />
+            Back to Home
+          </Link>
+        </div>
         <h1 className="text-3xl font-bold mb-2">API Tester</h1>
         <p className="text-sm text-muted-foreground mb-6">
           Test the Plork API endpoints with your API key
@@ -412,7 +465,7 @@ function ApiTesterContent() {
                       <SelectContent>
                         {endpointCategories
                           .find(c => c.id === selectedCategory)
-                          ?.endpoints.map(endpoint => (
+                          ?.endpoints.map((endpoint: ApiEndpoint) => (
                             <SelectItem key={endpoint.name} value={endpoint.name}>
                               <span className={`inline-block w-14 text-xs font-bold mr-2 ${
                                 endpoint.method === 'GET' ? 'text-blue-600' :
@@ -434,7 +487,23 @@ function ApiTesterContent() {
                     <Input
                       id="apiKey"
                       value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
+                      onChange={(e) => {
+                        const newApiKey = e.target.value;
+                        setApiKey(newApiKey);
+
+                        // Update the headers with the new API key
+                        try {
+                          const headersObj = JSON.parse(headers);
+                          if (newApiKey) {
+                            headersObj["Authorization"] = `Bearer ${newApiKey}`;
+                          } else {
+                            headersObj["Authorization"] = "Bearer YOUR_API_KEY";
+                          }
+                          setHeaders(JSON.stringify(headersObj, null, 2));
+                        } catch (error) {
+                          console.error("Error updating headers with API key:", error);
+                        }
+                      }}
                       placeholder="Enter your API key"
                       className="font-mono text-sm"
                     />
@@ -468,13 +537,14 @@ function ApiTesterContent() {
                   )}
 
                   <div>
-                    <Label htmlFor="headers" className="mb-2 block">Headers (JSON)</Label>
+                    <Label htmlFor="headers" className="mb-2 block font-mono">Headers (JSON)</Label>
                     <Textarea
                       id="headers"
                       value={headers}
                       onChange={(e) => setHeaders(e.target.value)}
                       rows={5}
-                      className="font-mono text-sm"
+                      className="font-mono text-sm bg-muted/30"
+                      style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }}
                     />
                   </div>
 
@@ -486,7 +556,8 @@ function ApiTesterContent() {
                         value={body}
                         onChange={(e) => setBody(e.target.value)}
                         rows={8}
-                        className="font-mono text-sm"
+                        className="font-mono text-sm bg-muted/30"
+                        style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace' }}
                       />
                     </div>
                   )}
@@ -540,7 +611,10 @@ function ApiTesterContent() {
                           Object.entries(pathParams).forEach(([key, value]) => {
                             processedUrl = processedUrl.replace(`{${key}}`, value || `{${key}}`);
                           });
-                          handleCopy(`${baseUrl}${processedUrl.startsWith('/') ? '' : '/'}${processedUrl}`, 'url');
+                          const fullUrl = isMounted
+                            ? `${baseUrl}${processedUrl.startsWith('/') ? '' : '/'}${processedUrl}`
+                            : processedUrl;
+                          handleCopy(fullUrl, 'url');
                         }}
                       >
                         <Clipboard className="h-4 w-4 mr-1" />
@@ -549,14 +623,26 @@ function ApiTesterContent() {
                     )}
                   </div>
 
-                  <div>
-                    <Textarea
-                      value={response}
-                      readOnly
-                      rows={20}
-                      className="font-mono text-sm"
-                      placeholder="Response will appear here after sending the request"
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Switch
+                      id="show-full-response"
+                      checked={showFullResponse}
+                      onCheckedChange={setShowFullResponse}
                     />
+                    <Label htmlFor="show-full-response" className="text-sm cursor-pointer flex items-center">
+                      <Info className="h-4 w-4 mr-1 text-muted-foreground" />
+                      Show HTTP metadata
+                    </Label>
+                  </div>
+
+                  <div className="h-[500px] overflow-auto border rounded-md">
+                    {response ? (
+                      <JsonHighlighter code={response} className="h-full" />
+                    ) : (
+                      <div className="p-4 text-sm text-muted-foreground h-full flex items-center justify-center">
+                        Response will appear here after sending the request
+                      </div>
+                    )}
                   </div>
 
                   {response && (

@@ -5,7 +5,7 @@ import { useTheme } from '@/lib/theme-context';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import SettingsModal from '@/components/settings-modal';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,13 +80,11 @@ export default function UserMenu({ isCollapsed = false }: UserMenuProps) {
               <span>Profile</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-            <SettingsModal triggerElement={
-              <div className="flex items-center cursor-pointer w-full">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </div>
-            } />
+          <DropdownMenuItem asChild>
+            <Link href="/settings" className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

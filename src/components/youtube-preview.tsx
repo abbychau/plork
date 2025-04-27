@@ -75,7 +75,7 @@ export default function YouTubePreview({ url, title = 'YouTube Video' }: YouTube
           {/* Video Title and Link */}
           <span className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm p-1.5 flex justify-between items-center">
             <span className="font-medium text-sm truncate">{title}</span>
-            <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+            <span className="flex items-center gap-1 ml-2 flex-shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
@@ -97,7 +97,7 @@ export default function YouTubePreview({ url, title = 'YouTube Video' }: YouTube
                 <ExternalLink className="h-3.5 w-3.5" />
                 <span className="sr-only">Watch on YouTube</span>
               </a>
-            </div>
+            </span>
           </span>
         </span>
       </span>

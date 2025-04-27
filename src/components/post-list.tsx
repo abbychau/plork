@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import CreatePostModal from '@/components/create-post-modal';
 import { useRouter } from 'next/navigation';
@@ -57,6 +57,11 @@ export default function PostList({
   const [offset, setOffset] = useState(0);
   const [nextOffset, setNextOffset] = useState<number | null>(initialPosts.length);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const isMountedRef = useRef(true);
+  const isLoadingRef = useRef(false);
+  const initialMountRef = useRef(false);
+  const currentApiEndpointRef = useRef(apiEndpoint);
+  const apiEndpointChangeTimerRef = useRef<number | null>(null);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [hasNewPosts, setHasNewPosts] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -64,14 +69,19 @@ export default function PostList({
   // We still need isLoading state for API calls
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to load more posts
-  const loadMorePosts = async () => {
-    if (isLoadingMore || nextOffset === null) return false;
+  const loadMorePosts = useCallback(async () => {
+    // Prevent duplicate API calls
+    if (isLoadingMore || nextOffset === null || isLoadingRef.current || !isMountedRef.current) return false;
 
+    // Set both state and ref to prevent race conditions
     setIsLoadingMore(true);
-    // Get the current API endpoint - this ensures we're using the most up-to-date endpoint
-    const currentEndpoint = apiEndpoint;
+    isLoadingRef.current = true;
+
+    // Get the current API endpoint from ref - this ensures we're using the most up-to-date endpoint
+    const currentEndpoint = currentApiEndpointRef.current;
     console.log('Loading more posts from:', currentEndpoint, 'with offset:', offset);
 
     try {
@@ -150,42 +160,87 @@ export default function PostList({
       console.error('Error loading more posts:', error);
       return false;
     } finally {
-      setIsLoadingMore(false);
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setIsLoadingMore(false);
+        isLoadingRef.current = false;
+      }
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiEndpoint, isLoadingMore, nextOffset, offset, searchQuery, tag]);
 
   // Set up infinite scrolling
-  useInfiniteScroll(loadMorePosts, loaderRef);
+  useInfiniteScroll(loadMorePosts, loaderRef, { disabled: isLoadingMore });
 
-  // Load initial posts when component mounts
+  // Set up mounted ref and handle initial mount
   useEffect(() => {
-    console.log('Component mounted, loading initial posts');
-    if (posts.length === 0 && nextOffset !== null) {
-      loadMorePosts();
+    isMountedRef.current = true;
+
+    // Only load posts on the first mount
+    if (!initialMountRef.current) {
+      initialMountRef.current = true;
+      console.log('Component mounted, loading initial posts');
+      if (posts.length === 0 && nextOffset !== null && !isLoadingRef.current) {
+        loadMorePosts();
+      }
     }
+
+    return () => {
+      isMountedRef.current = false;
+      // Clear any pending timers
+      if (apiEndpointChangeTimerRef.current) {
+        cancelAnimationFrame(apiEndpointChangeTimerRef.current);
+      }
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Reload posts when apiEndpoint changes (e.g., when tab changes in explore page or tag changes in tags page)
   useEffect(() => {
+    // Skip if it's the same endpoint or component is not mounted
+    if (apiEndpoint === currentApiEndpointRef.current || !isMountedRef.current) return;
+
     console.log('API endpoint changed:', apiEndpoint);
-    // Reset posts and load new ones
+    currentApiEndpointRef.current = apiEndpoint;
+
+    // Clear any pending timers
+    if (apiEndpointChangeTimerRef.current) {
+      cancelAnimationFrame(apiEndpointChangeTimerRef.current);
+    }
+
+    // Reset posts and loading state
     setPosts([]);
     setOffset(0);
     setNextOffset(0);
-    // Use a small timeout to ensure state is updated before loading posts
-    setTimeout(() => {
-      loadMorePosts();
-    }, 0);
+    isLoadingRef.current = false;
+
+    // Load posts after state is updated in the next render cycle
+    apiEndpointChangeTimerRef.current = requestAnimationFrame(() => {
+      if (isMountedRef.current && !isLoadingRef.current) {
+        loadMorePosts();
+      }
+      apiEndpointChangeTimerRef.current = null;
+    });
+
+    return () => {
+      if (apiEndpointChangeTimerRef.current) {
+        cancelAnimationFrame(apiEndpointChangeTimerRef.current);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiEndpoint]);
 
   // Function to check for new posts
   const checkForNewPosts = async () => {
-    if (!posts.length) return;
+    if (!posts.length || !isMountedRef.current) return;
 
     try {
       const latestPostId = posts[0]?.id;
-      // Get the current API endpoint
-      const currentEndpoint = apiEndpoint;
+      // Get the current API endpoint from ref
+      const currentEndpoint = currentApiEndpointRef.current;
       // If we have a search query, use the search endpoint instead
       const baseEndpoint = searchQuery
         ? '/api/posts/search'
@@ -201,6 +256,9 @@ export default function PostList({
         checkNewUrl += `&q=${encodeURIComponent(searchQuery)}`;
       }
       const response = await fetch(checkNewUrl);
+
+      // Check if component is still mounted before processing response
+      if (!isMountedRef.current) return;
 
       if (!response.ok) {
         throw new Error('Failed to check for new posts');
@@ -218,14 +276,20 @@ export default function PostList({
     const interval = setInterval(checkForNewPosts, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, [posts]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posts.length > 0 ? posts[0]?.id : null]);
 
   // Function to load new posts
   const loadNewPosts = async () => {
+    if (!isMountedRef.current || isLoadingRef.current) return;
+
+    // Set loading state to prevent duplicate calls
+    isLoadingRef.current = true;
+
     try {
       const latestPostId = posts[0]?.id;
-      // Get the current API endpoint
-      const currentEndpoint = apiEndpoint;
+      // Get the current API endpoint from ref
+      const currentEndpoint = currentApiEndpointRef.current;
       // If we have a search query, use the search endpoint instead
       const baseEndpoint = searchQuery
         ? '/api/posts/search'
@@ -242,13 +306,16 @@ export default function PostList({
       }
       const response = await fetch(newPostsUrl);
 
+      // Check if component is still mounted before processing response
+      if (!isMountedRef.current) return;
+
       if (!response.ok) {
         throw new Error('Failed to fetch new posts');
       }
 
       const data = await response.json();
 
-      if (data.posts.length > 0) {
+      if (data.posts && data.posts.length > 0) {
         // Filter out duplicates before adding new posts
         setPosts(prevPosts => {
           const existingIds = new Set(prevPosts.map(p => p.id));
@@ -259,16 +326,30 @@ export default function PostList({
       }
     } catch (error) {
       console.error('Error loading new posts:', error);
+    } finally {
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        isLoadingRef.current = false;
+      }
     }
   };
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isMountedRef.current) return;
+
     const newQuery = e.target.value;
     setSearchQuery(newQuery);
 
+    // Clear any existing timer
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
     // Always use debounce for both tag suggestions and post search
-    const timer = setTimeout(() => {
+    searchTimerRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
+
       if (isTagsPage) {
         // For tags page, fetch tag suggestions
         fetchTagSuggestions(newQuery);
@@ -277,16 +358,16 @@ export default function PostList({
         setPosts([]);
         setOffset(0);
         setNextOffset(0);
+        isLoadingRef.current = false; // Reset loading state
         loadMorePosts();
       }
+      searchTimerRef.current = null;
     }, 300);
-
-    return () => clearTimeout(timer);
   };
 
   // Fetch tag suggestions
   const fetchTagSuggestions = async (query: string) => {
-    if (!query.trim()) {
+    if (!isMountedRef.current || !query.trim()) {
       setTagSuggestions([]);
       setOpen(false);
       return;
@@ -295,6 +376,10 @@ export default function PostList({
     setIsLoading(true);
     try {
       const response = await fetch(`/api/tags/suggest?q=${encodeURIComponent(query)}`);
+
+      // Check if component is still mounted before processing response
+      if (!isMountedRef.current) return;
+
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {
@@ -308,10 +393,16 @@ export default function PostList({
       }
     } catch (error) {
       console.error('Error fetching tag suggestions:', error);
-      setTagSuggestions([]);
-      setOpen(false);
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setTagSuggestions([]);
+        setOpen(false);
+      }
     } finally {
-      setIsLoading(false);
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -323,7 +414,15 @@ export default function PostList({
 
   // Handle key press for search
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isMountedRef.current) return;
+
     if (e.key === 'Enter') {
+      // Clear any existing search timer
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+        searchTimerRef.current = null;
+      }
+
       if (isTagsPage) {
         // For tags page, navigate to tag page
         if (searchQuery.trim()) {
@@ -340,6 +439,7 @@ export default function PostList({
         setPosts([]);
         setOffset(0);
         setNextOffset(0);
+        isLoadingRef.current = false; // Reset loading state
         loadMorePosts();
       }
     }
@@ -347,6 +447,14 @@ export default function PostList({
 
   // Clear search
   const handleClearSearch = () => {
+    if (!isMountedRef.current) return;
+
+    // Clear any existing search timer
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+
     setSearchQuery('');
     if (isTagsPage) {
       router.push('/tags');
@@ -354,6 +462,7 @@ export default function PostList({
       setPosts([]);
       setOffset(0);
       setNextOffset(0);
+      isLoadingRef.current = false; // Reset loading state
       loadMorePosts();
     }
   };
@@ -501,7 +610,7 @@ export default function PostList({
             >
               <div className="flex w-full flex-col gap-1">
                 <div className="flex items-center">
-                  <div className="flex items-center gap-2">
+                  <div className="md:flex items-center gap-2 hidden">
                     <UserProfilePopover
                       username={post.author.username}
                       onPin={() => addPinnedUser({
@@ -522,7 +631,10 @@ export default function PostList({
                       </div>
                     </UserProfilePopover>
                   </div>
-                  <div className="ml-auto text-xs text-muted-foreground">
+                  <div className="flex md:hidden font-bold">
+                      {post.author.displayName || post.author.username}
+                  </div>
+                  <div className="ml-auto text-xs text-muted-foreground hidden md:block">
                     {formatDistanceToNow(new Date(post.createdAt))}
                   </div>
                 </div>

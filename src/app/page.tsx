@@ -5,27 +5,14 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import AppLayout from '@/components/app-layout';
-import { useAuth } from '@/lib/auth-context';
-import { Globe, Timer, Mailbox, Code, Info, ArrowRight } from 'lucide-react';
+import { Globe, Mailbox, Code, Info, ArrowRight } from 'lucide-react';
 import LoginPopover from '@/components/login-popover';
 import RegisterPopover from '@/components/register-popover';
 import logo from '@/app/favicon.svg';
 
 export default function Home() {
-  const { user } = useAuth();
-
-  // If user is logged in, show the app layout with timeline
-  if (user) {
-    return <AppLayout
-      title={
-        <>
-          <Timer className="inline-block mr-2 mb-1" />
-          Timeline
-        </>
-      } apiEndpoint="/api/posts"
-    />;
-  }
+  // The middleware will redirect authenticated users to /timeline
+  // This component will only be shown to non-authenticated users
 
   // Otherwise, show the landing page
   return (
@@ -37,9 +24,6 @@ export default function Home() {
             <span className="font-bold text-xl">Plork</span>
           </div>
           <div className="flex items-center space-x-4">
-            <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors mr-2">
-              About
-            </Link>
             <LoginPopover>
               <Button id="login-trigger" variant="ghost" size="sm" className="hover:text-primary transition-colors">
                 Login
@@ -54,7 +38,7 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="py-16 md:py-24 lg:py-32 xl:py-40 relative overflow-hidden h-full professional-bg">
+      <section className="py-10 md:py-10 lg:py-20 xl:py-28 relative overflow-hidden h-full professional-bg">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 dark:from-primary/10 dark:via-secondary/10 dark:to-primary/20 z-0"></div>
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] bg-center opacity-20 z-0 animate-subtle-pulse"></div>
 
@@ -241,8 +225,10 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Feature highlights */}
-            <div className="w-full mt-16 animate-fade-in-up animation-delay-400">
+
+          </div>
+                      {/* Feature highlights */}
+                      <div className="w-full mt-16 animate-fade-in-up animation-delay-400">
               <h2 className="text-2xl font-semibold mb-6 text-center">Key Features</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="bg-background/70 backdrop-blur-sm border-border/40">
@@ -294,16 +280,7 @@ export default function Home() {
                 </Card>
               </div>
 
-              <div className="text-center mt-8">
-                <Link href="/about">
-                  <Button variant="outline" size="lg" className="gap-2">
-                    <Info className="h-5 w-5" />
-                    Discover More About Plork
-                  </Button>
-                </Link>
-              </div>
             </div>
-          </div>
         </div>
       </section>
 

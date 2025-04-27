@@ -21,7 +21,7 @@ export default function Header() {
     <header className="border-b">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/" className="text-2xl font-mono -mb-2 mr-8">
+          <Link href="/timeline" className="text-2xl font-mono -mb-2 mr-8">
             <img src={logo.src} alt="Plork" className="h-8 w-8 inline-block mb-1" />
             {//hide lork when collapsed
             }
@@ -31,8 +31,8 @@ export default function Header() {
           </Link>
           <nav className="hidden md:flex space-x-4">
             <Link
-              href="/"
-              className={`transition-colors ${pathname === '/' ? 'text-primary font-medium' : 'hover:text-primary'}`}
+              href="/timeline"
+              className={`transition-colors ${pathname === '/' || pathname === '/timeline' ? 'text-primary font-medium' : 'hover:text-primary'}`}
             >
               Home
             </Link>

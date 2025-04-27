@@ -35,13 +35,13 @@ export default function PostDisplay() {
     if (!selectedPost || !user) return;
 
     try {
-      const action = isLiked ? 'unlike' : 'like';
-      const response = await fetch(`/api/posts/${selectedPost.id}/${action}`, {
-        method: 'POST',
+      // Use the correct API endpoint for likes
+      const response = await fetch(`/api/posts/${selectedPost.id}/likes`, {
+        method: isLiked ? 'DELETE' : 'POST',
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${action} post`);
+        throw new Error(`Failed to ${isLiked ? 'unlike' : 'like'} post`);
       }
 
       setIsLiked(!isLiked);

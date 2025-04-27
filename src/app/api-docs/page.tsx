@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import {
   Tabs,
@@ -18,13 +20,30 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Clipboard } from 'lucide-react';
-import { getBaseUrl } from '@/lib/config';
+import { Clipboard, ExternalLink, Info } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import logo from '@/app/favicon.svg';
 
 export default function ApiDocsPage() {
   const { user } = useAuth();
   const [copied, setCopied] = useState('');
-  const baseUrl = getBaseUrl();
+  const [baseUrl, setBaseUrl] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Update baseUrl when component mounts to ensure we have the correct URL in the browser
+  useEffect(() => {
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    setBaseUrl(`${protocol}//${host}`);
+    setIsMounted(true);
+  }, []);
 
   const handleCopy = (text: string, endpoint: string) => {
     navigator.clipboard.writeText(text);
@@ -274,7 +293,13 @@ export default function ApiDocsPage() {
 
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-2">API Documentation</h1>
+      <div className="flex items-center mb-4">
+        <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mr-4">
+          <img src={logo.src} alt="Plork" className="h-4 w-4 inline-block mr-1" />
+          Back to Home
+        </Link>
+      </div>
+      <h1 className="text-2xl font-bold mb-2">Plork API Documentation</h1>
       <p className="text-muted-foreground mb-6">
         Use these endpoints to interact with the Plork API programmatically.
       </p>
@@ -290,7 +315,7 @@ export default function ApiDocsPage() {
           <p>
             There are two ways to authenticate with the Plork API:
           </p>
-          
+
           <div className="space-y-2">
             <h3 className="font-medium">1. Cookie Authentication</h3>
             <p className="text-sm text-muted-foreground">
@@ -298,7 +323,7 @@ export default function ApiDocsPage() {
               This works for testing in the browser but isn't suitable for programmatic access.
             </p>
           </div>
-          
+
           <div className="space-y-2">
             <h3 className="font-medium">2. API Key Authentication</h3>
             <p className="text-sm text-muted-foreground">
@@ -327,15 +352,26 @@ export default function ApiDocsPage() {
             <h3 className="font-medium">Example Request (using curl)</h3>
             <div className="bg-muted p-3 rounded-md overflow-x-auto">
               <code className="text-sm whitespace-pre">
-                curl -X GET "{baseUrl}/api/posts" \\
-                  -H "Authorization: Bearer YOUR_API_KEY" \\
-                  -H "Content-Type: application/json"
+                {isMounted ? (
+                  `curl -X GET "${baseUrl}/api/posts" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json"`
+                ) : (
+                  `curl -X GET "/api/posts" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json"`
+                )}
               </code>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6 ml-2"
-                onClick={() => handleCopy(`curl -X GET "${baseUrl}/api/posts" \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json"`, 'curl-example')}
+                onClick={() => {
+                  const curlCommand = isMounted
+                    ? `curl -X GET "${baseUrl}/api/posts" \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json"`
+                    : `curl -X GET "/api/posts" \\\n  -H "Authorization: Bearer YOUR_API_KEY" \\\n  -H "Content-Type: application/json"`;
+                  handleCopy(curlCommand, 'curl-example');
+                }}
               >
                 <Clipboard className="h-4 w-4" />
               </Button>
@@ -380,12 +416,12 @@ export default function ApiDocsPage() {
                         </span>
                         <h3 className="text-lg font-medium">{api.name}</h3>
                       </div>
-                      
+
                       <div className="mb-4">
                         <Label className="text-sm text-muted-foreground">Endpoint</Label>
                         <div className="flex items-center mt-1">
                           <Input
-                            value={`${baseUrl}${api.path}`}
+                            value={isMounted ? `${baseUrl}${api.path}` : api.path}
                             readOnly
                             className="font-mono text-sm"
                           />
@@ -393,7 +429,7 @@ export default function ApiDocsPage() {
                             variant="outline"
                             size="icon"
                             className="ml-2"
-                            onClick={() => handleCopy(`${baseUrl}${api.path}`, `endpoint-${endpoint.id}-${index}`)}
+                            onClick={() => handleCopy(isMounted ? `${baseUrl}${api.path}` : api.path, `endpoint-${endpoint.id}-${index}`)}
                           >
                             <Clipboard className="h-4 w-4" />
                           </Button>
@@ -402,7 +438,7 @@ export default function ApiDocsPage() {
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                           <Label className="text-sm text-muted-foreground">Description</Label>
@@ -413,7 +449,7 @@ export default function ApiDocsPage() {
                           <p className="mt-1">{api.authentication}</p>
                         </div>
                       </div>
-                      
+
                       {api.request && (
                         <div className="mb-4">
                           <Label className="text-sm text-muted-foreground">Request Body</Label>
@@ -422,7 +458,7 @@ export default function ApiDocsPage() {
                           </pre>
                         </div>
                       )}
-                      
+
                       <div>
                         <Label className="text-sm text-muted-foreground">Response</Label>
                         <pre className="mt-1 p-3 bg-muted rounded-md overflow-x-auto text-sm">

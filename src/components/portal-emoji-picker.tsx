@@ -31,10 +31,27 @@ export default function PortalEmojiPicker({
   const updatePosition = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.top - 350 - 10, // Height of picker + offset
-        left: rect.left
-      });
+      // Check if there's enough space above the button
+      const spaceAbove = rect.top;
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      // Position the picker above or below the button based on available space
+      if (spaceAbove >= 350 + 10) { // If there's enough space above
+        setPosition({
+          top: rect.top - 350 - 10, // Height of picker + offset
+          left: rect.left
+        });
+      } else if (spaceBelow >= 350 + 10) { // If there's enough space below
+        setPosition({
+          top: rect.bottom + 10, // Position below with offset
+          left: rect.left
+        });
+      } else { // Not enough space above or below, center in viewport
+        setPosition({
+          top: Math.max(10, (window.innerHeight - 350) / 2),
+          left: Math.max(10, (window.innerWidth - 320) / 2)
+        });
+      }
     }
   };
 
@@ -52,11 +69,11 @@ export default function PortalEmojiPicker({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside, { capture: true });
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside, { capture: true });
     };
   }, [isOpen]);
 
@@ -64,6 +81,11 @@ export default function PortalEmojiPicker({
   const handleEmojiSelect = (emojiData: EmojiClickData) => {
     onEmojiClick(emojiData);
     setIsOpen(false);
+  };
+
+  // Prevent event propagation for the emoji picker
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
   };
 
   // Toggle picker
@@ -96,11 +118,13 @@ export default function PortalEmojiPicker({
           style={{
             top: `${Math.max(0, position.top)}px`,
             left: `${position.left}px`,
-            zIndex: 9999,
+            zIndex: 100000, // Ensure this is higher than any other z-index in the app
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             borderRadius: '8px',
             overflow: 'hidden'
           }}
+          onClick={(e) => e.stopPropagation()} // Prevent clicks from reaching the modal
+          onMouseDown={handleMouseDown} // Prevent mousedown events from reaching the modal
         >
           <EmojiPicker
             onEmojiClick={handleEmojiSelect}

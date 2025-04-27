@@ -67,31 +67,36 @@ export default function AppLayout({
     }
   };
 
-  // Initialize state from localStorage
-  // This is done outside useEffect to avoid layout shift during hydration
-  const initializeStateFromStorage = () => {
-    if (typeof window === 'undefined') return { isCollapsed: false, layout: [20, 32, 48] };
+  // Default layout values - must be the same for server and client initial render
+  const defaultLayoutValues = [15, 37, 48];
 
-    let storedLayout = [20, 32, 48];
-    let storedCollapsed = false;
+  // Initialize state with default values to avoid hydration mismatch
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [defaultLayout, setDefaultLayout] = useState(defaultLayoutValues);
+
+  // Load saved layout from localStorage after initial render
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
 
     try {
+      // Load layout from localStorage
       const layoutStr = localStorage.getItem('react-resizable-panels:layout:plork');
-      if (layoutStr) storedLayout = JSON.parse(layoutStr);
+      if (layoutStr) {
+        const storedLayout = JSON.parse(layoutStr);
+        setDefaultLayout(storedLayout);
+      }
 
+      // Load collapsed state from localStorage
       const collapsedStr = localStorage.getItem('react-resizable-panels:collapsed');
-      if (collapsedStr) storedCollapsed = JSON.parse(collapsedStr);
+      if (collapsedStr) {
+        const storedCollapsed = JSON.parse(collapsedStr);
+        setIsCollapsed(storedCollapsed);
+      }
     } catch (e) {
       console.error('Error reading layout from localStorage:', e);
     }
-
-    return { isCollapsed: storedCollapsed, layout: storedLayout };
-  };
-
-  // Initialize state directly from localStorage
-  const initialState = initializeStateFromStorage();
-  const [isCollapsed, setIsCollapsed] = useState(initialState.isCollapsed);
-  const [defaultLayout, setDefaultLayout] = useState(initialState.layout);
+  }, []);
 
   // Mark timeline posts as read when the timeline is viewed
   useEffect(() => {
@@ -114,11 +119,22 @@ export default function AppLayout({
     markTimelineAsRead();
   }, [user, apiEndpoint]);
 
+  // Track if layout has been loaded from localStorage
+  const [layoutLoaded, setLayoutLoaded] = useState(false);
+
+  // Update layoutLoaded flag when layout is loaded from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setLayoutLoaded(true);
+    }
+  }, [defaultLayout]);
+
   return (
     <Suspense>
     <PostProvider>
       <TooltipProvider delayDuration={0}>
         <ResizablePanelGroup
+          key={layoutLoaded ? 'loaded' : 'initial'}
           direction="horizontal"
           onLayout={(sizes: number[]) => {
             safeLocalStorage.setItem('react-resizable-panels:layout:plork', JSON.stringify(sizes));

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -11,27 +11,19 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useAuth } from '@/lib/auth-context';
-import { useTheme } from '@/lib/theme-context';
-import SettingsModal from '@/components/settings-modal';
 import { useToast } from '@/components/ui/use-toast';
 import {
   User,
-  LogOut,
-  Info,
-  Code,
-  Activity,
-  Sun,
-  Moon,
-  Laptop,
   Settings,
 } from 'lucide-react';
+import { PopoverClose } from "@radix-ui/react-popover";
 
 interface PersonalPortfolioPopoverProps {
   isCollapsed?: boolean;
 }
 
 export default function PersonalPortfolioPopover({ isCollapsed = false }: PersonalPortfolioPopoverProps) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [userData, setUserData] = useState<{
     followersCount: number;
@@ -49,14 +41,14 @@ export default function PersonalPortfolioPopover({ isCollapsed = false }: Person
 
   const fetchUserData = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch(`/api/users/${user.username}`);
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
       }
-      
+
       const data = await response.json();
       setUserData({
         followersCount: data.followersCount || 0,
@@ -75,22 +67,7 @@ export default function PersonalPortfolioPopover({ isCollapsed = false }: Person
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast({
-        title: 'Logged out',
-        description: 'You have been successfully logged out',
-      });
-    } catch (error) {
-      console.error('Error logging out:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to log out',
-        variant: 'destructive',
-      });
-    }
-  };
+
 
   if (!user) return null;
 
@@ -142,7 +119,7 @@ export default function PersonalPortfolioPopover({ isCollapsed = false }: Person
                   </div>
                 </div>
               </div>
-              
+
               {userData && (
                 <div className="flex gap-4 mt-4 text-sm">
                   <div>
@@ -160,9 +137,9 @@ export default function PersonalPortfolioPopover({ isCollapsed = false }: Person
                 </div>
               )}
             </div>
-            
+
             <Separator />
-            
+
             <div className="p-2">
               <div className="grid grid-cols-1 gap-1">
                 <Link href={`/users/${user.username}`} className="w-full">
@@ -171,15 +148,16 @@ export default function PersonalPortfolioPopover({ isCollapsed = false }: Person
                     <span>Profile</span>
                   </Button>
                 </Link>
-                
-                <SettingsModal triggerElement={
-                  <Button variant="ghost" className="w-full justify-start" size="sm">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Button>
-                } />
-                
-                
+
+                <PopoverClose asChild>
+                  <Link href="/settings" className="w-full">
+                    <Button variant="ghost" className="w-full justify-start" size="sm">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Button>
+                  </Link>
+                </PopoverClose>
+
 
               </div>
             </div>

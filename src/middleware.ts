@@ -27,7 +27,12 @@ export function middleware(request: NextRequest) {
 
   // Check if the path is for guests only and user is authenticated
   if (guestOnlyPaths.some(p => path.startsWith(p)) && isAuthenticated) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/timeline', request.url));
+  }
+
+  // Redirect authenticated users from root path to timeline
+  if (path === '/' && isAuthenticated) {
+    return NextResponse.redirect(new URL('/timeline', request.url));
   }
 
   return NextResponse.next();
@@ -35,6 +40,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
     '/settings/:path*',
     '/api-docs/:path*',
     '/login',

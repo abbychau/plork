@@ -27,6 +27,7 @@ import {
   FileText,
   Hash
 } from 'lucide-react';
+import { Heart } from '@mynaui/icons-react';
 import logo from '@/app/favicon.svg'
 
 interface NavProps {
@@ -43,9 +44,9 @@ export default function AppNav({ isCollapsed }: NavProps) {
   const navItems = [
     {
       title: 'Timeline',
-      href: '/',
+      href: '/timeline',
       icon: Home,
-      active: pathname === '/',
+      active: pathname === '/' || pathname === '/timeline',
       unreadCount: timelineUnreadCount,
     },
     {
@@ -62,13 +63,19 @@ export default function AppNav({ isCollapsed }: NavProps) {
     },
   ];
 
-  // Add My Posts to user nav items
+  // Add My Posts and Liked to user nav items
   const userNavItems = [
     {
       title: 'My Posts',
       href: user ? `/users/${user.username}` : '/',
       icon: FileText,
       active: user ? pathname === `/users/${user.username}` : false,
+    },
+    {
+      title: 'Liked',
+      href: '/liked',
+      icon: Heart,
+      active: pathname === '/liked',
     },
   ];
 
@@ -78,7 +85,7 @@ export default function AppNav({ isCollapsed }: NavProps) {
         "flex h-13 items-center justify-center",
         isCollapsed ? "h-13" : "px-2"
       )}>
-        <Link href="/" className={cn(
+        <Link href="/timeline" className={cn(
           "flex items-center gap-2 -mb-1.5",
           isCollapsed ? "justify-center" : "justify-start"
         )}>
