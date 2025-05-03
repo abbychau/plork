@@ -4,11 +4,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { userService } from '@/lib/db';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
 import crypto from 'crypto';
 import sharp from 'sharp';
+import { uploadFile } from '@/lib/minio-client';
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,35 +54,22 @@ export async function POST(req: NextRequest) {
     const fileExtension = file.name.split('.').pop() || 'jpg';
     const randomName = crypto.randomBytes(16).toString('hex');
     const fileName = `${randomName}.${fileExtension}`;
+    const filePath = `uploads/${fileName}`;
 
     // Get the file data as a buffer
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-    // Define the upload path
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    const filePath = path.join(uploadDir, fileName);
-
-    // Ensure the upload directory exists
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-      console.log(`Created directory: ${uploadDir}`);
-    }
-
     // Process the image with sharp
-    // 1. Resize to a square (crop to aspect ratio)
-    // 2. Resize to 300x300 pixels
+    // Resize only if dimensions exceed limits, maintaining aspect ratio
     const processedImageBuffer = await sharp(fileBuffer)
-      .resize(300, 300, {
-        fit: 'cover',    // This crops the image to maintain aspect ratio
-        position: 'center' // Center the crop
+      .resize(1200, 1200, {
+        fit: 'inside',    // This maintains aspect ratio and fits within the bounds
+        withoutEnlargement: true // Don't enlarge if image is smaller than bounds
       })
       .toBuffer();
 
-    // Write the processed file to disk
-    await writeFile(filePath, processedImageBuffer);
-
-    // Return the URL to the uploaded file
-    const fileUrl = `/uploads/${fileName}`;
+    // Upload to MinIO
+    const fileUrl = await uploadFile(processedImageBuffer, filePath, true);
 
     return NextResponse.json({ url: fileUrl });
   } catch (error) {

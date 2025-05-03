@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
 import { Button } from '@/components/ui/button';
 import { X, Play, ExternalLink, ClipboardCopy } from 'lucide-react';
@@ -48,59 +48,55 @@ export default function YouTubePreview({ url, title = 'YouTube Video' }: YouTube
   // Create thumbnail URL
   const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
 
-  // We need to ensure this component doesn't get wrapped in a <p> tag
-  // by the markdown renderer, so we'll use a React Fragment at the top level
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {/* Use a span instead of div to avoid nesting issues with <p> tags */}
-      <span className="block my-4 rounded-md overflow-hidden border border-border max-w-[50%] mx-auto">
-        <span className="relative block h-[150px]">
-          {/* YouTube Thumbnail */}
-          <img
-            src={thumbnailUrl}
-            alt={`YouTube thumbnail for ${title}`}
-            className="w-full h-auto mx-auto object-cover"
-          />
+      <DialogTrigger asChild>
+        <span className="relative block my-4 rounded-md overflow-hidden border border-border max-w-[50%] mx-auto cursor-pointer">
+          <span className="relative block h-[150px]">
+            {/* YouTube Thumbnail */}
+            <img
+              src={thumbnailUrl}
+              alt={`YouTube thumbnail for ${title}`}
+              className="w-full h-auto mx-auto object-cover"
+            />
 
-          {/* Play Button Overlay */}
-          <DialogTrigger asChild>
-            <Button
-              className="absolute inset-0 m-auto w-10 h-10 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground flex items-center justify-center"
-              aria-label="Play video"
-            >
-              <Play className="h-5 w-5" />
-            </Button>
-          </DialogTrigger>
+            {/* Play Button Overlay */}
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="w-10 h-10 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground flex items-center justify-center">
+                <Play className="h-5 w-5" />
+              </span>
+            </span>
 
-          {/* Video Title and Link */}
-          <span className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm p-1.5 flex justify-between items-center">
-            <span className="font-medium text-sm truncate">{title}</span>
-            <span className="flex items-center gap-1 ml-2 flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-foreground hover:text-primary"
-                onClick={handleCopyUrl}
-                title="Copy URL"
-              >
-                <ClipboardCopy className="h-3.5 w-3.5" />
-                <span className="sr-only">Copy URL</span>
-              </Button>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center h-6 w-6 text-foreground hover:text-primary"
-                onClick={(e) => e.stopPropagation()}
-                title="Watch on YouTube"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                <span className="sr-only">Watch on YouTube</span>
-              </a>
+            {/* Video Title and Link */}
+            <span className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm p-1.5 flex justify-between items-center">
+              <span className="font-medium text-sm truncate">{title}</span>
+              <span className="flex items-center gap-1 ml-2 flex-shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-foreground hover:text-primary"
+                  onClick={handleCopyUrl}
+                  title="Copy URL"
+                >
+                  <ClipboardCopy className="h-3.5 w-3.5" />
+                  <span className="sr-only">Copy URL</span>
+                </Button>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center h-6 w-6 text-foreground hover:text-primary"
+                  onClick={(e) => e.stopPropagation()}
+                  title="Watch on YouTube"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span className="sr-only">Watch on YouTube</span>
+                </a>
+              </span>
             </span>
           </span>
         </span>
-      </span>
+      </DialogTrigger>
 
       <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[90vw] max-h-[90vh] w-auto" closeButton={false}>
         <DialogTitle>

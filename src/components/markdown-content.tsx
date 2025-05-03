@@ -11,10 +11,11 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import React from 'react';
 
 interface MarkdownContentProps {
   content: string;
@@ -135,6 +136,16 @@ export default function MarkdownContent({ content, className = '', userEmojis = 
             );
           },
           p: ({ node, children, ...props }) => {
+            // Check if any of the children is a YouTubePreview component
+            const hasYouTubePreview = React.Children.toArray(children).some(
+              child => React.isValidElement(child) && child.type === YouTubePreview
+            );
+
+            // If there's a YouTube preview, render without p tag wrapper
+            if (hasYouTubePreview) {
+              return <>{children}</>;
+            }
+
             // If children is a simple string, process it for emojis and hashtags
             if (typeof children === 'string') {
               // Check for hashtags first
@@ -179,7 +190,7 @@ export default function MarkdownContent({ content, className = '', userEmojis = 
               );
             }
 
-            // For non-string children (like images, YouTube previews, etc.), render as is
+            // For other non-string children, render with p tag
             return <p {...props} className="my-2">{children}</p>;
           },
           code: ({ node, ...props }: any) => {
@@ -203,6 +214,9 @@ export default function MarkdownContent({ content, className = '', userEmojis = 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Emoji to Collection</DialogTitle>
+            <DialogDescription>
+              Add a custom emoji to your personal collection. You can give it a unique name that you'll use to reference it.
+            </DialogDescription>
           </DialogHeader>
           {selectedEmojiToAdd && (
             <div className="flex items-center space-x-4 my-4">

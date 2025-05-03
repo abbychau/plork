@@ -4,28 +4,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { authenticateRequest } from '@/lib/api-auth';
 import { prisma } from '@/lib/db';
 import sharp from 'sharp';
-import path from 'path';
-import fs from 'fs/promises';
-
-// Ensure the upload directory exists
-const EMOJI_UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'emojis');
-const ensureUploadDirExists = async () => {
-  try {
-    await fs.access(EMOJI_UPLOAD_DIR);
-  } catch (error) {
-    // Directory does not exist, create it
-    await fs.mkdir(EMOJI_UPLOAD_DIR, { recursive: true });
-  }
-};
-
-// Simple local file storage function (replace with a proper storage solution)
-async function uploadEmojiFile(buffer: Buffer, fileName: string): Promise<string> {
-  await ensureUploadDirExists();
-  const filePath = path.join(EMOJI_UPLOAD_DIR, fileName);
-  await fs.writeFile(filePath, buffer);
-  // Return the public URL path
-  return `/uploads/emojis/${fileName}`;
-}
+import { uploadFile } from '@/lib/minio-client';
 
 export async function POST(req: Request) {
   const userId = await authenticateRequest(req as NextRequest);
@@ -82,9 +61,10 @@ export async function POST(req: Request) {
     }
 
     const imageFileName = `emoji_${userId}_${name}_${Date.now()}.webp`;
+    const filePath = `emojis/${imageFileName}`;
 
     // --- File Upload ---
-    const imageUrl = await uploadEmojiFile(processedImageBuffer, imageFileName);
+    const imageUrl = await uploadFile(processedImageBuffer, filePath);
 
     // --- Database Operations ---
     // Check if user already has an emoji with this name in their collection

@@ -3,12 +3,10 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '@/lib/db';
 import sharp from 'sharp';
+import { uploadFile } from '@/lib/minio-client';
 
 // PUT /api/users/avatar - Update user avatar
 export async function POST(request: NextRequest) {
@@ -59,16 +57,7 @@ export async function POST(request: NextRequest) {
     // Create a unique filename
     const fileExtension = file.type.split('/')[1] || 'jpg';
     const fileName = `${uuidv4()}.${fileExtension}`;
-
-    // Create the public directory path
-    const publicDir = join(process.cwd(), 'public');
-    const uploadsDir = join(publicDir, 'uploads');
-    const filePath = join(uploadsDir, fileName);
-
-    // Ensure the uploads directory exists
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
+    const filePath = `avatars/${fileName}`;
 
     try {
       // Get file buffer
@@ -84,8 +73,21 @@ export async function POST(request: NextRequest) {
         })
         .toBuffer();
 
-      // Write the processed image to disk
-      await writeFile(filePath, processedImageBuffer);
+      // Upload to MinIO
+      const imageUrl = await uploadFile(processedImageBuffer, filePath);
+
+      // Update the user's profile image
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          profileImage: imageUrl,
+        },
+      });
+
+      return NextResponse.json({
+        message: 'Avatar updated successfully',
+        profileImage: imageUrl,
+      });
     } catch (error) {
       console.error('Error processing and saving file:', error);
       return NextResponse.json(
@@ -93,20 +95,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    // Update the user's profile image
-    const imageUrl = `/uploads/${fileName}`;
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        profileImage: imageUrl,
-      },
-    });
-
-    return NextResponse.json({
-      message: 'Avatar updated successfully',
-      profileImage: imageUrl,
-    });
   } catch (error) {
     console.error('Error updating avatar:', error);
     return NextResponse.json(

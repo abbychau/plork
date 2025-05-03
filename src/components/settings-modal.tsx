@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -268,6 +269,9 @@ export default function SettingsModal({ triggerClassName, compact, triggerElemen
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto z-[10000]">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
+          <DialogDescription>
+            Manage your profile, account settings, appearance preferences, and API keys.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="profile" className="w-full">

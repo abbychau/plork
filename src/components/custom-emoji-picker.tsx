@@ -377,7 +377,6 @@ export default function CustomEmojiPicker({
                     value={uploadName}
                     onChange={(e) => setUploadName(e.target.value)}
                     placeholder="letters, numbers, -, _"
-                    pattern="^[a-zA-Z0-9_-]+$"
                     required
                     disabled={isUploading}
                     className="mt-1"

@@ -14,19 +14,30 @@ interface ImageLightboxProps {
 
 export default function ImageLightbox({ src, alt, className = '' }: ImageLightboxProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const isExternalImage = src.startsWith('http://') || src.startsWith('https://');
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Image
-          src={src}
-          alt={alt}
-          width={600}
-          height={300}
-          className={`cursor-pointer max-w-[50%] max-h-[300px] rounded-md my-4 ${className}`}
-          style={{ objectFit: 'contain' }}
-          priority={false}
-        />
+        {isExternalImage ? (
+          <img
+            src={src}
+            alt={alt}
+            className={`cursor-pointer max-w-[50%] max-h-[300px] rounded-md my-4 ${className}`}
+            style={{ objectFit: 'contain' }}
+            crossOrigin="anonymous"
+          />
+        ) : (
+          <Image
+            src={src}
+            alt={alt}
+            width={600}
+            height={300}
+            className={`cursor-pointer max-w-[50%] max-h-[300px] rounded-md my-4 ${className}`}
+            style={{ objectFit: 'contain' }}
+            priority={false}
+          />
+        )}
       </DialogTrigger>
       <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[90vw] max-h-[90vh] w-auto" closeButton={false}>
         <DialogTitle>
@@ -40,15 +51,25 @@ export default function ImageLightbox({ src, alt, className = '' }: ImageLightbo
           >
             <X className="h-6 w-6" />
           </button>
-          <Image
-            src={src}
-            alt={alt}
-            width={1200}
-            height={800}
-            className="max-w-[90vw] max-h-[90vh]"
-            style={{ objectFit: 'contain' }}
-            priority={false}
-          />
+          {isExternalImage ? (
+            <img
+              src={src}
+              alt={alt}
+              className="max-w-[90vw] max-h-[90vh]"
+              style={{ objectFit: 'contain' }}
+              crossOrigin="anonymous"
+            />
+          ) : (
+            <Image
+              src={src}
+              alt={alt}
+              width={1200}
+              height={800}
+              className="max-w-[90vw] max-h-[90vh]"
+              style={{ objectFit: 'contain' }}
+              priority={false}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>

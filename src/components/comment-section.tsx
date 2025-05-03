@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
@@ -52,6 +52,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
   const [error, setError] = useState('');
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   const [localUserEmojis, setLocalUserEmojis] = useState<CustomEmoji[]>(userEmojis);
+  const commentsEndRef = useRef<HTMLDivElement>(null);
 
   // Update comments when initialComments changes
   useEffect(() => {
@@ -78,6 +79,10 @@ export default function CommentSection({ postId, initialComments, compact = fals
     }
   };
 
+  const scrollToBottom = () => {
+    commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   const handleSubmitComment = async (content: string) => {
     if (!content.trim() || !user) return;
 
@@ -102,8 +107,10 @@ export default function CommentSection({ postId, initialComments, compact = fals
 
       // Add the new comment to the list
       setComments([...comments, comment]);
+      
+      // Scroll to bottom after a short delay to ensure the new comment is rendered
+      setTimeout(scrollToBottom, 100);
 
-      // Comment added successfully
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to post comment');
       console.error('Error posting comment:', err);
@@ -276,6 +283,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
               </div>
             </div>
           ))}
+          <div ref={commentsEndRef} />
         </div>
       ) : (
         <div className="text-center py-8 mb-6 bg-muted/30 rounded-lg">
