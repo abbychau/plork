@@ -6,12 +6,18 @@ import { cookies } from 'next/headers';
 import { apiKeyService, userService } from './db';
 
 /**
- * Authenticate a request using either cookies or API key
+ * Authenticate a request using either cookies, API key, or the user ID set in request headers
  * @param req The Next.js request object
  * @returns The authenticated user ID or null if not authenticated
  */
 export async function authenticateRequest(req: NextRequest): Promise<string | null> {
-  // First, try to authenticate using cookies
+  // First, check if user ID is set in request headers by middleware
+  const headerUserId = req.headers.get('x-user-id');
+  if (headerUserId) {
+    return headerUserId;
+  }
+  
+  // If not in headers, try to authenticate using cookies
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
   
@@ -19,14 +25,23 @@ export async function authenticateRequest(req: NextRequest): Promise<string | nu
     return userId;
   }
   
-  // If no cookie, try to authenticate using API key
+  // If no cookie, try to authenticate using API key from Authorization header
   const authHeader = req.headers.get('Authorization');
+  let apiKey: string | null = null;
   
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    apiKey = authHeader.substring(7); // Remove 'Bearer ' prefix
+  } else {
+    // Try the x-api-key header if Authorization header isn't valid
+    const xApiKey = req.headers.get('x-api-key');
+    if (xApiKey) {
+      apiKey = xApiKey;
+    }
   }
   
-  const apiKey = authHeader.substring(7); // Remove 'Bearer ' prefix
+  if (!apiKey) {
+    return null;
+  }
   
   // Validate the API key
   const validApiKey = await apiKeyService.validateApiKey(apiKey);
@@ -39,12 +54,22 @@ export async function authenticateRequest(req: NextRequest): Promise<string | nu
 }
 
 /**
+ * Get the user ID from the request context without re-authenticating
+ * @param req The Next.js request object
+ * @returns The user ID from the request context or null if not available
+ */
+export function getUserIdFromContext(req: NextRequest): string | null {
+  return req.headers.get('x-user-id');
+}
+
+/**
  * Middleware to require authentication
  * @param req The Next.js request object
  * @returns A response object if authentication fails, or null if authentication succeeds
  */
 export async function requireAuth(req: NextRequest): Promise<NextResponse | null> {
-  const userId = await authenticateRequest(req);
+  // First try to get the user ID from the context (set by middleware)
+  const userId = getUserIdFromContext(req) || await authenticateRequest(req);
   
   if (!userId) {
     return NextResponse.json(

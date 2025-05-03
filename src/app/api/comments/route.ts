@@ -227,3 +227,59 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+
+// DELETE /api/comments?commentId=xxx - Delete a comment
+export async function DELETE(request: NextRequest) {
+  try {
+    // Get the commentId from the query parameters
+    const { searchParams } = new URL(request.url);
+    const commentId = searchParams.get('commentId');
+
+    if (!commentId) {
+      return NextResponse.json(
+        { error: 'Comment ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check authentication
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('userId')?.value;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    // Get the comment
+    const comment = await commentService.getCommentById(commentId);
+
+    if (!comment) {
+      return NextResponse.json(
+        { error: 'Comment not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if the user is the author of the comment
+    if (comment.authorId !== userId) {
+      return NextResponse.json(
+        { error: 'Not authorized to delete this comment' },
+        { status: 403 }
+      );
+    }
+
+    // Delete the comment
+    await commentService.deleteComment(commentId);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete comment' },
+      { status: 500 }
+    );
+  }
+}

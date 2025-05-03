@@ -43,6 +43,8 @@ model User {
   notifications Notification[] @relation("NotificationUser")
   actions       Notification[] @relation("NotificationActor")
   apiKeys       ApiKey[]
+  createdEmojis CustomEmoji[] @relation("CreatedEmojis") // Emojis created by this user
+  emojiCollection UserEmojiCollection[] @relation("EmojiCollection") // User's personal emoji collection
 }
 
 model Post {
@@ -194,6 +196,41 @@ model PinnedUser {
   @@unique([userId, pinnedUserId])
   @@index([userId])
   @@index([pinnedUserId])
+}
+
+// Custom Emoji Models
+
+model CustomEmoji {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   // Original name given by the creator
+  imageUrl  String   // URL of the 128x128 emoji image
+
+  // Relationships
+  creatorId String
+  creator   User     @relation("CreatedEmojis", fields: [creatorId], references: [id], onDelete: Cascade)
+  collectedBy UserEmojiCollection[] // Users who have this in their collection
+
+  @@unique([creatorId, name]) // Creator can't have two emojis with the same original name
+  @@index([creatorId])
+}
+
+model UserEmojiCollection {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String   // User's custom name for this emoji (e.g., :my-cat:)
+
+  // Relationships
+  userId        String
+  user          User          @relation("EmojiCollection", fields: [userId], references: [id], onDelete: Cascade)
+  customEmojiId String
+  customEmoji   CustomEmoji   @relation(fields: [customEmojiId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name]) // User can't have two emojis with the same shortcut name
+  @@unique([userId, customEmojiId]) // User can only have one instance of a specific custom emoji
+  @@index([userId])
+  @@index([customEmojiId])
 }
 
 model ApiKey {

@@ -254,7 +254,7 @@
 }
 
 .prose img {
-  @apply rounded-md max-w-[50%] h-auto mx-auto;
+  @apply rounded-md h-auto mx-auto;
 }
 
 .prose hr {

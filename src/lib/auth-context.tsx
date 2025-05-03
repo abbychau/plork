@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { PinnedUser } from './pinned-users-context';
 import { fetchPinnedUsers } from './pinned-users-utils';
 
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [pinnedUsers, setPinnedUsers] = useState<PinnedUser[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter(); // Get router instance
 
   useEffect(() => {
     // Check if user is logged in
@@ -141,6 +143,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
       });
       setUser(null);
+      setPinnedUsers(null); // Clear pinned users on logout
+      router.push('/'); // Redirect to homepage
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

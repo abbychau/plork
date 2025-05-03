@@ -36,6 +36,9 @@ interface PostListProps {
     onChange?: (value: string) => void;
   };
   isTagsPage?: boolean;
+  showUserInfo?: boolean;
+  showCommentCount?: boolean;
+  showLikeCount?: boolean;
 }
 
 export default function PostList({
@@ -48,6 +51,9 @@ export default function PostList({
   searchQuery: initialSearchQuery = '',
   tabs,
   isTagsPage = false,
+  showUserInfo = true,
+  showCommentCount = true,
+  showLikeCount = true,
 }: PostListProps) {
   const router = useRouter();
   const { user } = useAuth();

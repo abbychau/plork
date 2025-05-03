@@ -26,6 +26,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Prevent using "me" as a username
+    if (username.toLowerCase() === 'me') {
+      return NextResponse.json(
+        { error: 'The username "me" is reserved and cannot be used' },
+        { status: 400 }
+      );
+    }
+
     // Check if username is already taken
     const existingUser = await userService.getUserByUsername(username);
     if (existingUser) {

@@ -14,8 +14,10 @@ import MarkdownContent from '@/components/markdown-content';
 import CommentSection from '@/components/comment-section';
 import EnhancedPostEditor from '@/components/enhanced-post-editor';
 import PostInteractionButtons from '@/components/post-interaction-buttons';
+import PostTags from '@/components/post-tags';
 import { formatDistanceToNow } from '@/lib/utils';
 import { Loader2, ExternalLink } from 'lucide-react';
+import type { CustomEmoji } from '@/components/custom-emoji-picker'; // Import the type
 
 export default function PostDisplay() {
   const { user } = useAuth();
@@ -23,6 +25,34 @@ export default function PostDisplay() {
   const { addPinnedUser } = usePinnedUsers();
   const [isEditing, setIsEditing] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [userEmojis, setUserEmojis] = useState<CustomEmoji[]>([]); // State for user emojis
+  const [isLoadingEmojis, setIsLoadingEmojis] = useState(false); // Loading state for emojis
+
+  // Fetch user emojis when user is available
+  useEffect(() => {
+    const fetchUserEmojis = async () => {
+      if (!user) {
+        setUserEmojis([]); // Clear emojis if no user
+        return;
+      }
+      setIsLoadingEmojis(true);
+      try {
+        const response = await fetch('/api/emojis/collection');
+        if (!response.ok) {
+          throw new Error('Failed to fetch user emojis');
+        }
+        const data: CustomEmoji[] = await response.json();
+        setUserEmojis(data);
+      } catch (err) {
+        console.error('Error fetching user emojis:', err);
+        // Optionally show a toast or error message
+      } finally {
+        setIsLoadingEmojis(false);
+      }
+    };
+
+    fetchUserEmojis();
+  }, [user]); // Re-fetch if user changes
 
   // Check if the current user has liked the post
   const checkIfLiked = () => {
@@ -197,36 +227,38 @@ export default function PostDisplay() {
                 </div>
 
                 <div className="text-xs text-muted-foreground mt-1">
-                  {formatDistanceToNow(new Date(selectedPost.createdAt))}
+                  {formatDistanceToNow(new Date(selectedPost.createdAt))} ago
                 </div>
+
+                {isEditing ? (
+                  <EnhancedPostEditor
+                    mode="edit"
+                    initialContent={selectedPost.content}
+                    isLoading={isLoading} // Use the actual loading state
+                    onEditSubmit={handleEditSubmit}
+                    onCancel={handleCancelEdit}
+                    placeholder="Edit your post..."
+                    compact // Keep compact if needed
+                  />
+                ) : (
+                  <MarkdownContent content={selectedPost.content} userEmojis={userEmojis} />
+                )}
+
+                <PostTags post={selectedPost} className="mt-3" />
               </div>
             </div>
 
-            {isEditing ? (
-              <EnhancedPostEditor
-                mode="edit"
-                initialContent={selectedPost.content}
-                onEditSubmit={handleEditSubmit}
-                onCancel={handleCancelEdit}
-              />
-            ) : (
-              <div className="mb-4">
-                <MarkdownContent content={selectedPost.content} />
-              </div>
-            )}
-
             <Separator className="my-4" />
 
-            <CommentSection
-              postId={selectedPost.id}
-              initialComments={selectedPost.comments || []}
-              compact={true}
-            />
+            {/* Comments Section */}
+            <div id="comments">
+              <CommentSection postId={selectedPost.id} initialComments={selectedPost.comments || []} userEmojis={userEmojis} />
+            </div>
           </div>
         </ScrollArea>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
-          <p className="mb-2">No post selected</p>
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <p>Select a post to view its details.</p>
         </div>
       )}
     </div>

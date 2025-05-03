@@ -14,6 +14,7 @@ import MarkdownContent from '@/components/markdown-content';
 import CommentSection from '@/components/comment-section';
 import EnhancedPostEditor from '@/components/enhanced-post-editor';
 import PostInteractionButtons from '@/components/post-interaction-buttons';
+import PostTags from '@/components/post-tags';
 import { formatDistanceToNow } from '@/lib/utils';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import logo from '@/app/favicon.svg';
@@ -43,6 +44,7 @@ interface Post {
   id: string;
   content: string;
   createdAt: string;
+  hashtags?: string;
   author: {
     id: string;
     username: string;
@@ -337,6 +339,11 @@ function PostDetailContent() {
           ) : (
             <div className="mb-6">
               <MarkdownContent content={post.content} className="text-lg" />
+              {post.hashtags && (
+                <div className="mt-4">
+                  <PostTags hashtags={post.hashtags} />
+                </div>
+              )}
             </div>
           )}
 

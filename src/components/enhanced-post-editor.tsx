@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import MarkdownContent from '@/components/markdown-content';
-import PortalEmojiPicker from '@/components/portal-emoji-picker';
+import CustomEmojiPicker from '@/components/custom-emoji-picker'; // Changed import
 import { useCompactMode } from '@/hooks/use-compact-mode';
 
 // Import Lucide icons
@@ -30,6 +30,9 @@ interface EnhancedPostEditorProps {
   // For edit mode
   onEditSubmit?: (content: string) => Promise<void>;
   onCancel?: () => void;
+
+  // New prop for emoji upload callback
+  onEmojiUploaded?: () => void;
 }
 
 export default function EnhancedPostEditor({
@@ -42,6 +45,7 @@ export default function EnhancedPostEditor({
   submitLabel = 'Post',
   onEditSubmit,
   onCancel,
+  onEmojiUploaded,
 }: EnhancedPostEditorProps) {
   // Determine if compact mode should be used based on screen width
   // If compact prop is provided, it will override the screen width detection
@@ -51,26 +55,27 @@ export default function EnhancedPostEditor({
   const [isUploading, setIsUploading] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // Handle emoji selection
-  const handleEmojiClick = useCallback((emojiData: { emoji: string }) => {
+
+  // Handle emoji selection (updated for CustomEmojiPicker)
+  const handleEmojiSelect = useCallback((emojiName: string) => {
     const textarea = textareaRef.current;
     if (textarea) {
       const cursorPos = textarea.selectionStart;
       const textBefore = content.substring(0, cursorPos);
       const textAfter = content.substring(cursorPos);
 
-      const newContent = `${textBefore}${emojiData.emoji}${textAfter}`;
+      const newContent = `${textBefore}${emojiName}${textAfter}`;
       setContent(newContent);
 
       // Focus and set cursor position after the inserted emoji
       setTimeout(() => {
         textarea.focus();
-        const newCursorPos = cursorPos + emojiData.emoji.length;
+        const newCursorPos = cursorPos + emojiName.length;
         textarea.setSelectionRange(newCursorPos, newCursorPos);
       }, 0);
     } else {
       // Fallback if textarea ref is not available
-      setContent((prev) => `${prev}${emojiData.emoji}`);
+      setContent((prev) => `${prev}${emojiName}`);
     }
   }, [content, setContent]);
 
@@ -284,10 +289,11 @@ export default function EnhancedPostEditor({
                 }}
               />
 
-              <PortalEmojiPicker
-                onEmojiClick={handleEmojiClick}
+              <CustomEmojiPicker
+                onEmojiSelect={handleEmojiSelect}
                 compact={isCompact}
                 disabled={isLoading || isUploading}
+                onEmojiUploaded={onEmojiUploaded}
               />
             </div>
 

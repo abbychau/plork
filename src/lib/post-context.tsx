@@ -21,10 +21,19 @@ export interface Post {
   id: string;
   content: string;
   createdAt: string;
+  updatedAt: string;
+  authorId: string;
   author: PostAuthor;
-  hashtags?: string | null;
-  likes?: { userId: string; user: { id: string; username: string } }[];
   comments?: Comment[];
+  likes?: PostLike[];
+  activityId: string;
+}
+
+export interface PostLike {
+  id: string;
+  userId: string;
+  postId: string;
+  createdAt: string;
 }
 
 // Define the context type

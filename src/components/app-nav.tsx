@@ -25,7 +25,8 @@ import {
   Compass,
   User,
   FileText,
-  Hash
+  Hash,
+  MessageSquare
 } from 'lucide-react';
 import { Heart } from '@mynaui/icons-react';
 import logo from '@/app/favicon.svg'
@@ -76,6 +77,12 @@ export default function AppNav({ isCollapsed }: NavProps) {
       href: '/liked',
       icon: Heart,
       active: pathname === '/liked',
+    },
+    {
+      title: 'Responded',
+      href: '/responded',
+      icon: MessageSquare,
+      active: pathname === '/responded',
     },
   ];
 

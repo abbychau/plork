@@ -264,6 +264,31 @@ export const postService = {
       where: { id },
     });
   },
+
+  // Get posts that a user has commented on
+  async getPostsWithUserComments(userId: string) {
+    return prisma.post.findMany({
+      where: {
+        comments: {
+          some: {
+            authorId: userId
+          }
+        }
+      },
+      include: {
+        author: true,
+        comments: {
+          include: {
+            author: true
+          }
+        },
+        likes: true
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      }
+    });
+  },
 };
 
 // Comment service

@@ -24,6 +24,15 @@ export function PinnedUsersProvider({ children, initialPinnedUsers }: { children
   const [pinnedUsers, setPinnedUsers] = useState<PinnedUser[]>(initialPinnedUsers || []);
   const [isLoading, setIsLoading] = useState(!initialPinnedUsers);
 
+  // Update pinnedUsers state if initialPinnedUsers prop changes after mount
+  useEffect(() => {
+    // Update only if initialPinnedUsers is not undefined
+    // Avoid resetting to empty array if initialPinnedUsers becomes undefined during logout/auth check
+    if (initialPinnedUsers !== undefined) {
+      setPinnedUsers(initialPinnedUsers || []); // Use empty array if initialPinnedUsers is null
+    }
+  }, [initialPinnedUsers]);
+
   // Load pinned users from API on mount if not provided initially
   useEffect(() => {
     // Skip fetching if we already have initial data

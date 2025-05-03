@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
@@ -9,8 +9,19 @@ import MarkdownContent from '@/components/markdown-content';
 import EnhancedPostEditor from '@/components/enhanced-post-editor';
 import UserProfilePopover from '@/components/user-profile-popover';
 import Link from 'next/link';
-import { Edit } from '@mynaui/icons-react';
+import { Edit, Trash } from '@mynaui/icons-react';
 import { formatDistanceToNow } from '@/lib/utils';
+import type { CustomEmoji } from '@/components/custom-emoji-picker';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Comment {
   id: string;
@@ -28,9 +39,10 @@ interface CommentSectionProps {
   postId: string;
   initialComments: Comment[];
   compact?: boolean;
+  userEmojis?: CustomEmoji[]; // Add prop for user emojis
 }
 
-export default function CommentSection({ postId, initialComments, compact = false }: CommentSectionProps) {
+export default function CommentSection({ postId, initialComments, compact = false, userEmojis = [] }: CommentSectionProps) {
   const { user } = useAuth();
   const { addPinnedUser } = usePinnedUsers();
   const [comments, setComments] = useState<Comment[]>(initialComments || []);
@@ -38,6 +50,33 @@ export default function CommentSection({ postId, initialComments, compact = fals
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [error, setError] = useState('');
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const [localUserEmojis, setLocalUserEmojis] = useState<CustomEmoji[]>(userEmojis);
+
+  // Update comments when initialComments changes
+  useEffect(() => {
+    setComments(initialComments || []);
+  }, [initialComments]);
+
+  // Update local emojis when prop changes
+  useEffect(() => {
+    setLocalUserEmojis(userEmojis);
+  }, [userEmojis]);
+
+  // Function to refresh emojis
+  const refreshEmojis = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch('/api/emojis/collection');
+      if (!response.ok) {
+        throw new Error('Failed to fetch user emojis');
+      }
+      const data: CustomEmoji[] = await response.json();
+      setLocalUserEmojis(data);
+    } catch (err) {
+      console.error('Error fetching user emojis:', err);
+    }
+  };
 
   const handleSubmitComment = async (content: string) => {
     if (!content.trim() || !user) return;
@@ -117,6 +156,33 @@ export default function CommentSection({ postId, initialComments, compact = fals
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!commentId || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const response = await fetch(`/api/comments?commentId=${commentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete comment');
+      }
+
+      // Remove the deleted comment from the list
+      setComments(comments.filter(comment => comment.id !== commentId));
+      setCommentToDelete(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete comment');
+      console.error('Error deleting comment:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="mt-4">
       <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" id="comments">
@@ -129,9 +195,9 @@ export default function CommentSection({ postId, initialComments, compact = fals
       </h3>
 
       {comments.length > 0 ? (
-        <div className="space-y-6 mb-8">
+        <div className="space-y-3 mb-8">
           {comments.map((comment) => (
-            <div key={comment.id} className="group flex gap-4 pb-6 border-b last:border-b-0">
+            <div key={comment.id} className="group flex gap-4 pb-3 border-b last:border-b-0">
               <UserProfilePopover
                 username={comment.author.username}
                 onPin={() => addPinnedUser({
@@ -171,6 +237,22 @@ export default function CommentSection({ postId, initialComments, compact = fals
                   <span className="text-muted-foreground text-sm" title={new Date(comment.createdAt).toLocaleString()}>
                     {formatDistanceToNow(new Date(comment.createdAt))}
                   </span>
+                  {user && user.id === comment.author.id && (
+                      <div className="flex items-center gap-3 ml-2">
+                        <button
+                          className="text-xs font-medium text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-colors duration-200 py-1"
+                          onClick={() => handleEditComment(comment)}
+                        >
+                          <Edit className="w-3 h-3" />
+                        </button>
+                        <button
+                          className="text-xs font-medium text-muted-foreground hover:text-destructive flex items-center gap-1.5 transition-colors duration-200 py-1"
+                          onClick={() => setCommentToDelete(comment.id)}
+                        >
+                          <Trash className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                 </div>
 
                 {editingCommentId === comment.id ? (
@@ -187,16 +269,8 @@ export default function CommentSection({ postId, initialComments, compact = fals
                   </div>
                 ) : (
                   <div className="mt-2">
-                    <MarkdownContent content={comment.content} />
-                    {user && user.id === comment.author.id && (
-                      <button
-                        className="text-xs font-medium text-muted-foreground hover:text-primary mt-3 flex items-center gap-1.5 transition-colors duration-200 py-1"
-                        onClick={() => handleEditComment(comment)}
-                      >
-                        <Edit className="w-3 h-3" />
-                        <span>Edit</span>
-                      </button>
-                    )}
+                    <MarkdownContent content={comment.content} userEmojis={localUserEmojis} />
+
                   </div>
                 )}
               </div>
@@ -233,6 +307,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
                 onCreateSubmit={handleSubmitComment}
                 submitLabel="Post Comment"
                 compact={compact}
+                onEmojiUploaded={refreshEmojis}
               />
             </div>
           </div>
@@ -245,6 +320,28 @@ export default function CommentSection({ postId, initialComments, compact = fals
           </Link>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!commentToDelete} onOpenChange={(open) => !open && setCommentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this comment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => commentToDelete && handleDeleteComment(commentToDelete)}
+              disabled={isSubmitting}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {isSubmitting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
