@@ -43,14 +43,14 @@ interface PostListProps {
 
 export default function PostList({
   initialPosts = [],
-  apiEndpoint = '/api/posts',
-  title = 'Posts',
-  showSearch = false,
-  showNewPostButton = true,
-  tag,
+  apiEndpoint: propApiEndpoint,
+  title: propTitle,
+  showSearch: propShowSearch,
+  showNewPostButton: propShowNewPostButton,
+  tag: propTag,
   searchQuery: initialSearchQuery = '',
-  tabs,
-  isTagsPage = false,
+  tabs: propTabs,
+  isTagsPage: propIsTagsPage = false,
   showUserInfo = true,
   showCommentCount = true,
   showLikeCount = true,
@@ -59,6 +59,15 @@ export default function PostList({
   const { user } = useAuth();
   const { selectedPostId, setSelectedPostId } = usePost();
   const { addPinnedUser } = usePinnedUsers();
+
+  // Use props directly
+  const apiEndpoint = propApiEndpoint || '/api/posts';
+  const title = propTitle || 'Posts';
+  const showSearch = propShowSearch || false;
+  const showNewPostButton = propShowNewPostButton !== undefined ? propShowNewPostButton : true;
+  const tag = propTag;
+  const tabs = propTabs;
+  const isTagsPage = propIsTagsPage;
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [offset, setOffset] = useState(0);
   const [nextOffset, setNextOffset] = useState<number | null>(initialPosts.length);
@@ -172,7 +181,6 @@ export default function PostList({
         isLoadingRef.current = false;
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiEndpoint, isLoadingMore, nextOffset, offset, searchQuery, tag]);
 
   // Set up infinite scrolling
@@ -201,7 +209,6 @@ export default function PostList({
         clearTimeout(searchTimerRef.current);
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Reload posts when apiEndpoint changes (e.g., when tab changes in explore page or tag changes in tags page)
@@ -236,7 +243,6 @@ export default function PostList({
         cancelAnimationFrame(apiEndpointChangeTimerRef.current);
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiEndpoint]);
 
   // Function to check for new posts
@@ -282,7 +288,6 @@ export default function PostList({
     const interval = setInterval(checkForNewPosts, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [posts.length > 0 ? posts[0]?.id : null]);
 
   // Function to load new posts

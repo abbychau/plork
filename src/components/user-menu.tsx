@@ -28,7 +28,8 @@ import {
   Activity,
   Sun,
   Moon,
-  Laptop
+  Laptop,
+  Palette
 } from 'lucide-react';
 
 interface UserMenuProps {
@@ -134,6 +135,19 @@ export default function UserMenu({ isCollapsed = false }: UserMenuProps) {
               <DropdownMenuItem onClick={() => setTheme("system")}>
                 <Laptop className="mr-2 h-4 w-4" />
                 <span>System</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setTheme("monokaipro")}>
+                <Palette className="mr-2 h-4 w-4" />
+                <span>Monokai Pro (System)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("monokaipro-light")}>
+                <Palette className="mr-2 h-4 w-4" />
+                <span>Monokai Pro Light</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("monokaipro-dark")}>
+                <Palette className="mr-2 h-4 w-4" />
+                <span>Monokai Pro Dark</span>
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuPortal>

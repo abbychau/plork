@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import AppLayout from '@/components/app-layout';
+import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Heart } from '@mynaui/icons-react';
+import PersistentAppLayout from '@/components/persistent-app-layout';
+import PostList from '@/components/post-list';
 
 // Loading skeleton for the liked posts page
 function LikedPostsLoadingSkeleton() {
@@ -17,37 +18,20 @@ function LikedPostsLoadingSkeleton() {
   );
 }
 
-// Main content component for the liked posts page
-function LikedPostsContent() {
-  return (
-    <AppLayout
-      title={
-        <>
-          <Heart className="inline-block mr-2 mb-1" />
-          Liked Posts
-        </>
-      }
-      apiEndpoint="/api/posts/liked"
-    />
-  );
-}
-
-// Main page component
 export default function LikedPostsPage() {
-  // Use client-side only rendering to avoid hydration issues
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return <LikedPostsLoadingSkeleton />;
-  }
-
   return (
-    <Suspense fallback={<LikedPostsLoadingSkeleton />}>
-      <LikedPostsContent />
-    </Suspense>
+    <PersistentAppLayout>
+      <Suspense fallback={<LikedPostsLoadingSkeleton />}>
+        <PostList
+          title={
+            <>
+              <Heart className="inline-block mr-2 mb-1" />
+              Liked Posts
+            </>
+          }
+          apiEndpoint="/api/posts/liked"
+        />
+      </Suspense>
+    </PersistentAppLayout>
   );
 }

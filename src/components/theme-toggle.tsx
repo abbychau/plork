@@ -1,12 +1,13 @@
 'use client';
 
-import { Moon, Sun, Laptop } from 'lucide-react';
+import { Moon, Sun, Laptop, Palette } from 'lucide-react';
 import { useTheme } from '@/lib/theme-context';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -34,6 +35,19 @@ export function ThemeToggle() {
         <DropdownMenuItem onClick={() => setTheme('system')}>
           <Laptop className="mr-2 h-4 w-4" />
           <span>System</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setTheme('monokaipro')}>
+          <Palette className="mr-2 h-4 w-4" />
+          <span>Monokai Pro (System)</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme('monokaipro-light')}>
+          <Palette className="mr-2 h-4 w-4" />
+          <span>Monokai Pro Light</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme('monokaipro-dark')}>
+          <Palette className="mr-2 h-4 w-4" />
+          <span>Monokai Pro Dark</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

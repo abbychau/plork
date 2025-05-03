@@ -4,6 +4,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useRouter } from 'next/navigation'; // Import useRouter
 import { PinnedUser } from './pinned-users-context';
 import { fetchPinnedUsers } from './pinned-users-utils';
+import { auth, googleProvider, githubProvider } from './firebase';
+import { signInWithPopup, GoogleAuthProvider, GithubAuthProvider, UserCredential } from 'firebase/auth';
 
 type User = {
   id: string;
@@ -19,6 +21,8 @@ type AuthContextType = {
   loading: boolean;
   pinnedUsers: PinnedUser[] | null;
   login: (usernameOrEmail: string, password: string) => Promise<any>;
+  loginWithGoogle: () => Promise<any>;
+  loginWithGithub: () => Promise<any>;
   register: (userData: RegisterData) => Promise<any>;
   logout: () => void;
 };
@@ -53,10 +57,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (userData) {
             const pinnedUsersData = await fetchPinnedUsers();
             setPinnedUsers(pinnedUsersData);
+          } else {
+            // Clear pinned users if no user is logged in
+            setPinnedUsers(null);
           }
+        } else {
+          // Clear user and pinned users if not authenticated
+          setUser(null);
+          setPinnedUsers(null);
         }
       } catch (error) {
         console.error('Error checking authentication:', error);
+        // Clear user and pinned users on error
+        setUser(null);
+        setPinnedUsers(null);
       } finally {
         setLoading(false);
       }
@@ -64,6 +78,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     checkAuth();
   }, []);
+
+  // Add effect to update pinned users when user changes
+  useEffect(() => {
+    const updatePinnedUsers = async () => {
+      if (user) {
+        const pinnedUsersData = await fetchPinnedUsers();
+        setPinnedUsers(pinnedUsersData);
+      } else {
+        setPinnedUsers(null);
+      }
+    };
+
+    updatePinnedUsers();
+  }, [user]);
 
   const login = async (usernameOrEmail: string, password: string) => {
     setLoading(true);
@@ -99,6 +127,98 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { user: userData, pinnedUsers: pinnedUsersData };
     } catch (error) {
       console.error('Login error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    setLoading(true);
+    try {
+      // Sign in with Google using Firebase
+      const result: UserCredential = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      // Get the ID token
+      const idToken = await user.getIdToken();
+
+      // Send the token to our backend
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Google login failed');
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+
+      // Also fetch pinned users
+      const pinnedUsersData = await fetchPinnedUsers();
+      setPinnedUsers(pinnedUsersData);
+
+      // Return both user data and pinned users
+      return { user: userData, pinnedUsers: pinnedUsersData };
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGithub = async () => {
+    setLoading(true);
+    try {
+      // Sign in with GitHub using Firebase
+      const result: UserCredential = await signInWithPopup(auth, githubProvider);
+      const user = result.user;
+
+      // Get the ID token
+      const idToken = await user.getIdToken();
+
+      // Send the token to our backend
+      const response = await fetch('/api/auth/github', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'GitHub login failed');
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+
+      // Also fetch pinned users
+      const pinnedUsersData = await fetchPinnedUsers();
+      setPinnedUsers(pinnedUsersData);
+
+      // Return both user data and pinned users
+      return { user: userData, pinnedUsers: pinnedUsersData };
+    } catch (error) {
+      console.error('GitHub login error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -153,7 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, pinnedUsers, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, pinnedUsers, login, loginWithGoogle, loginWithGithub, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

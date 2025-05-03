@@ -173,7 +173,7 @@ export default function UserProfilePopover({ username, children, onPin }: UserPr
   return (
     <Popover onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="start">
+      <PopoverContent className="w-96 p-0" align="start">
         {isLoading ? (
           <div className="p-4 flex items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
@@ -181,74 +181,34 @@ export default function UserProfilePopover({ username, children, onPin }: UserPr
         ) : userData ? (
           <div className="flex flex-col">
             <div className="p-4">
-              <div className="flex items-start gap-3">
-                <Avatar className="h-12 w-12">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-16 w-16 rounded-lg">
                   <AvatarImage src={userData.profileImage} alt={userData.username} />
                   <AvatarFallback>
                     {userData.displayName?.[0] || userData.username[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <div className="truncate">
-                      <p className="font-medium">{userData.displayName || userData.username}</p>
-                      <div className="flex items-center gap-1">
-                        <p className="text-sm text-muted-foreground truncate">@{userData.username}</p>
-                        {isFollowingMe && currentUser && currentUser.username !== userData.username && (
-                          <span className="text-xs bg-muted px-1 py-0.5 rounded">Follows you</span>
-                        )}
+                  <div className="flex flex-col">
+                    <div className="flex items-center justify-between">
+                      <div className="truncate">
+                        <p className="font-medium text-lg">{userData.displayName || userData.username}</p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-sm text-muted-foreground truncate">@{userData.username}</p>
+                          {isFollowingMe && currentUser && currentUser.username !== userData.username && (
+                            <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Follows you</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      {currentUser && currentUser.username !== userData.username && (
-                        <Button
-                          size="sm"
-                          variant={isFollowing ? 'outline' : 'default'}
-                          onClick={handleFollow}
-                          disabled={isLoadingFollow}
-                          className="flex items-center gap-1"
-                        >
-                          {isFollowing ? (
-                            <>
-                              <UserMinus className="h-3 w-3" />
-                              <span>Unfollow</span>
-                            </>
-                          ) : (
-                            <>
-                              <UserPlus className="h-3 w-3" />
-                              <span>Follow</span>
-                            </>
-                          )}
-                        </Button>
-                      )}
-                      {currentUser && currentUser.username !== userData.username && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handlePin}
-                          className="flex items-center gap-1"
-                        >
-                          {isPinnedUser ? (
-                            <>
-                              <Pin className="h-3 w-3" />
-                              <span>Unpin</span>
-                            </>
-                          ) : (
-                            <>
-                              <Pin className="h-3 w-3" />
-                              <span>Pin</span>
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
+                    {userData.summary && (
+                      <p className="text-sm mt-2 text-muted-foreground">{userData.summary}</p>
+                    )}
                   </div>
-                  {userData.summary && (
-                    <p className="text-sm mt-2 line-clamp-2">{userData.summary}</p>
-                  )}
                 </div>
               </div>
-              <div className="flex gap-4 mt-3 text-sm">
+
+              <div className="flex gap-4 mt-4 text-sm">
                 <div>
                   <span className="font-medium">{userData.postsCount || 0}</span>{' '}
                   <span className="text-muted-foreground">Posts</span>
@@ -262,6 +222,58 @@ export default function UserProfilePopover({ username, children, onPin }: UserPr
                   <span className="text-muted-foreground">Following</span>
                 </div>
               </div>
+
+              {currentUser && currentUser.username !== userData.username && (
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  <Button
+                    variant={isFollowing ? 'outline' : 'default'}
+                    onClick={handleFollow}
+                    disabled={isLoadingFollow}
+                    className="flex items-center gap-1"
+                  >
+                    {isFollowing ? (
+                      <>
+                        <UserMinus className="h-3 w-3" />
+                        <span>Unfollow</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="h-3 w-3" />
+                        <span>Follow</span>
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handlePin}
+                    className="flex items-center gap-1"
+                  >
+                    {isPinnedUser ? (
+                      <>
+                        <Pin className="h-3 w-3" />
+                        <span>Unpin</span>
+                      </>
+                    ) : (
+                      <>
+                        <Pin className="h-3 w-3" />
+                        <span>Pin</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {currentUser && currentUser.username !== userData.username && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {isFollowing && isFollowingMe ? (
+                    <span>Mutually followed</span>
+                  ) : isFollowing ? (
+                    <span>Followed by you</span>
+                  ) : isFollowingMe ? (
+                    <span>Follows you</span>
+                  ) : null}
+                </div>
+              )}
             </div>
             <Separator />
             <div className="p-2">

@@ -20,10 +20,14 @@ model User {
   displayName   String?
   summary       String?
   email         String?   @unique
-  passwordHash  String
+  passwordHash  String?   // Now optional for OAuth users
   privateKey    String
   publicKey     String
   profileImage  String?
+
+  // OAuth fields
+  providerId    String?   // ID from the provider (e.g., Google UID)
+  provider      String?   // The provider name (e.g., 'google')
 
   // ActivityPub fields
   actorUrl      String    @unique

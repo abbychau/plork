@@ -16,13 +16,13 @@ const eslintConfig = [
     ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-unused-vars": "off",
       "react-hooks/exhaustive-deps": "off",
       "jsx-a11y/alt-text": "off",
       "@next/next/no-img-element": "off",
       "react/no-unescaped-entities": "off",
       "prefer-const": "error",
-      "@typescript-eslint/no-empty-object-type": "off"
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-unused-vars": "off"
     }
   }
 ];

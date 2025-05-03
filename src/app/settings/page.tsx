@@ -400,6 +400,9 @@ export default function SettingsPage() {
                         <SelectItem value="light">Light</SelectItem>
                         <SelectItem value="dark">Dark</SelectItem>
                         <SelectItem value="system">System</SelectItem>
+                        <SelectItem value="monokaipro">MonokaiPro (System)</SelectItem>
+                        <SelectItem value="monokaipro-light">MonokaiPro Light</SelectItem>
+                        <SelectItem value="monokaipro-dark">MonokaiPro Dark</SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-sm text-muted-foreground">

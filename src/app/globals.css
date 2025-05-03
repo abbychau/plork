@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./tw-animate-css.css";
+@import "./monokaipro.css";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -23,14 +23,26 @@ export const userService = {
     displayName?: string;
     summary?: string;
     email?: string;
-    password: string;
+    password?: string;
     profileImage?: string;
     baseUrl: string;
+    providerId?: string;
+    provider?: string;
   }) {
-    const { username, displayName, summary, email, password, profileImage, baseUrl } = data;
+    const {
+      username,
+      displayName,
+      summary,
+      email,
+      password,
+      profileImage,
+      baseUrl,
+      providerId,
+      provider
+    } = data;
 
-    // Generate password hash
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Generate password hash if password is provided
+    const passwordHash = password ? await bcrypt.hash(password, 10) : null;
 
     // Generate key pair for ActivityPub
     const { privateKey, publicKey } = generateKeyPair();
@@ -58,8 +70,80 @@ export const userService = {
         outboxUrl,
         followersUrl,
         followingUrl,
+        providerId,
+        provider,
       },
     });
+  },
+
+  // Find or create a user with OAuth provider
+  async findOrCreateOAuthUser(data: {
+    providerId: string;
+    provider: string;
+    email: string;
+    displayName?: string;
+    profileImage?: string;
+    baseUrl: string;
+  }) {
+    const { providerId, provider, email, displayName, profileImage, baseUrl } = data;
+
+    // First, try to find the user by provider and providerId
+    let user = await prisma.user.findFirst({
+      where: {
+        providerId,
+        provider,
+      },
+    });
+
+    // If not found, try to find by email
+    if (!user && email) {
+      user = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      // If found by email, update the provider info
+      if (user) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            providerId,
+            provider,
+            // Update profile image if provided
+            ...(profileImage && { profileImage }),
+          },
+        });
+      }
+    }
+
+    // If still not found, create a new user
+    if (!user) {
+      // Generate a unique username based on email
+      const emailUsername = email.split('@')[0];
+      let username = emailUsername.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      // Check if username exists and append numbers if needed
+      let usernameExists = await prisma.user.findUnique({ where: { username } });
+      let counter = 1;
+
+      while (usernameExists) {
+        username = `${emailUsername.toLowerCase().replace(/[^a-z0-9]/g, '')}${counter}`;
+        usernameExists = await prisma.user.findUnique({ where: { username } });
+        counter++;
+      }
+
+      // Create the new user
+      user = await this.createUser({
+        username,
+        displayName: displayName || username,
+        email,
+        profileImage,
+        baseUrl,
+        providerId,
+        provider,
+      });
+    }
+
+    return user;
   },
 
   // Get user by username

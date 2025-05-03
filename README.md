@@ -32,6 +32,29 @@ cp .env.example .env
 # You can set the database path and server port
 ```
 
+#### Firebase Setup for OAuth Authentication
+
+1. Create a Firebase project at [https://console.firebase.google.com/](https://console.firebase.google.com/)
+2. Add a web app to your Firebase project
+3. Enable authentication providers in the Firebase console (Authentication > Sign-in method):
+   - For Google authentication: Enable Google provider
+   - For GitHub authentication:
+     - Enable GitHub provider
+     - Create a GitHub OAuth App at [GitHub Developer Settings](https://github.com/settings/developers)
+     - Add the Firebase OAuth redirect URL to your GitHub OAuth App
+     - Copy the Client ID and Client Secret from GitHub to Firebase
+4. Copy your Firebase configuration values to the `.env` file:
+
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your-measurement-id
+```
+
 Available environment variables:
 
 | Variable | Description | Default |
@@ -39,6 +62,13 @@ Available environment variables:
 | `DATABASE_URL` | Path to the SQLite database | `file:./dev.db` |
 | `PORT` | Server port for both development and production | `8090` |
 | `DOMAIN_NAME` | Domain name for the application | `localhost:PORT` |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API key for Google authentication | - |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain | - |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID | - |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket | - |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID | - |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase app ID | - |
+| `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` | Firebase measurement ID (optional) | - |
 
 ### Database Setup
 
@@ -183,7 +213,10 @@ pm2 save
 
 ## Features
 
-- User authentication (register, login, logout)
+- Simplified authentication:
+  - One-click sign in with Google
+  - One-click sign in with GitHub
+  - Automatic account creation for new users
 - Create, edit, and delete posts
 - Like and comment on posts
 - Follow other users

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'dark' | 'system' | 'monokaipro' | 'monokaipro-light' | 'monokaipro-dark';
 
 type ThemeProviderProps = {
   children: ReactNode;
@@ -43,7 +43,8 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
 
-    root.classList.remove('light', 'dark');
+    // Remove all theme classes
+    root.classList.remove('light', 'dark', 'monokaipro');
 
     if (theme === 'system') {
       const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -51,6 +52,28 @@ export function ThemeProvider({
         : 'light';
 
       root.classList.add(systemTheme);
+      return;
+    }
+
+    // For monokaipro themes
+    if (theme === 'monokaipro') {
+      root.classList.add('monokaipro');
+
+      // Also add dark class if system prefers dark mode
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        root.classList.add('dark');
+      }
+      return;
+    }
+
+    if (theme === 'monokaipro-light') {
+      root.classList.add('monokaipro');
+      return;
+    }
+
+    if (theme === 'monokaipro-dark') {
+      root.classList.add('monokaipro');
+      root.classList.add('dark');
       return;
     }
 

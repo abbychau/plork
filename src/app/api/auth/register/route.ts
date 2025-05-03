@@ -26,16 +26,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Convert username to lowercase
+    const lowercaseUsername = username.toLowerCase();
+
     // Prevent using "me" as a username
-    if (username.toLowerCase() === 'me') {
+    if (lowercaseUsername === 'me') {
       return NextResponse.json(
         { error: 'The username "me" is reserved and cannot be used' },
         { status: 400 }
       );
     }
 
-    // Check if username is already taken
-    const existingUser = await userService.getUserByUsername(username);
+    // Check if username is already taken (case-insensitive)
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: lowercaseUsername
+        }
+      }
+    });
     if (existingUser) {
       return NextResponse.json(
         { error: 'Username already taken' },
@@ -59,7 +68,7 @@ export async function POST(req: NextRequest) {
     const protocol = req.nextUrl.protocol === 'https:' ? 'https' : 'http';
     const baseUrl = getBaseUrl(protocol);
     const user = await userService.createUser({
-      username,
+      username: lowercaseUsername,
       displayName,
       email,
       password,

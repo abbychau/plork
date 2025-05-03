@@ -11,7 +11,7 @@
     "stop:pm2": "pm2 stop plork-activitypub",
     "restart:pm2": "pm2 restart plork-activitypub",
     "lint": "next lint",
-    "lint:modified": "eslint --fix src/components/avatar-upload.tsx src/app/explore/page.tsx src/components/hashtag-text.tsx src/app/notifications/page.tsx src/app/settings/page.tsx src/components/theme-toggle.tsx src/components/tag-cloud.tsx src/app/api/users/avatar/route.ts"
+    "lint:fix": "next lint --fix"
   },
   "dependencies": {
     "@digitalbazaar/http-digest-header": "^2.0.0",
@@ -41,6 +41,7 @@
     "crypto-ld": "^7.0.0",
     "dotenv": "^16.5.0",
     "emoji-picker-react": "^4.12.2",
+    "firebase": "^11.6.1",
     "jsonld": "^8.3.3",
     "lucide-react": "^0.487.0",
     "minio": "^8.0.5",

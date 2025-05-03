@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Globe, Mailbox, Code, Info, ArrowRight } from 'lucide-react';
 import LoginPopover from '@/components/login-popover';
-import RegisterPopover from '@/components/register-popover';
 import logo from '@/app/favicon.svg';
 
 export default function Home() {
@@ -23,17 +22,12 @@ export default function Home() {
             <Image src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
             <span className="font-bold text-xl">Plork</span>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center">
             <LoginPopover>
-              <Button id="login-trigger" variant="ghost" size="sm" className="hover:text-primary transition-colors">
-                Login
+              <Button id="login-trigger" size="sm" className="bg-primary hover:bg-primary/90 text-white transition-colors">
+                Sign In
               </Button>
             </LoginPopover>
-            <RegisterPopover>
-              <Button id="register-trigger" size="sm" className="bg-primary hover:bg-primary/90 text-white transition-colors">
-                Sign Up
-              </Button>
-            </RegisterPopover>
           </div>
         </div>
       </header>

@@ -36,7 +36,9 @@ export default function RegisterPopover({ children, className }: RegisterPopover
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // Convert username to lowercase as it's typed
+    const processedValue = name === 'username' ? value.toLowerCase() : value;
+    setFormData((prev) => ({ ...prev, [name]: processedValue }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

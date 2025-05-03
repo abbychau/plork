@@ -1,8 +1,22 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import AppLayout from '@/components/app-layout';
+import { Compass, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import PersistentAppLayout from '@/components/persistent-app-layout';
+import PostList from '@/components/post-list';
+
+// Loading skeleton for the explore page
+function ExploreLoadingSkeleton() {
+  return (
+    <div className="h-full w-full flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Loading explore page...</p>
+      </div>
+    </div>
+  );
+}
 
 // Client component that uses search params
 function ExploreContent() {
@@ -22,16 +36,25 @@ function ExploreContent() {
   // Get the title based on the active tab and tag parameter
   const getTitle = () => {
     if (tagParam) {
-      return `#${tagParam}`;
+      return (
+        <>
+          <Compass className="inline-block mr-2 mb-1" />
+          #{tagParam}
+        </>
+      );
     }
 
-    return 'Explore';
+    return (
+      <>
+        <Compass className="inline-block mr-2 mb-1" />
+        Explore
+      </>
+    );
   };
 
   // Handle tab change
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    // No need to update an endpoint state, we'll use the getApiEndpoint function
   };
 
   // Define the tabs configuration
@@ -44,24 +67,13 @@ function ExploreContent() {
     onChange: handleTabChange
   };
 
-  // If we have a tag parameter, we're in tag filtering mode
-  if (tagParam) {
-    return (
-      <AppLayout
-        apiEndpoint={getApiEndpoint()}
-        title={getTitle()}
-        tag={tagParam}
-      />
-    );
-  }
-
-  // Otherwise, show the tabs for hot/new/users in the middle bar
   return (
-    <AppLayout
-      apiEndpoint={getApiEndpoint()} // Use the function to get the current endpoint
+    <PostList
+      apiEndpoint={getApiEndpoint()}
       title={getTitle()}
       showSearch={false}
-      tabs={tabsConfig}
+      tag={tagParam || undefined}
+      tabs={tagParam ? undefined : tabsConfig}
     />
   );
 }
@@ -69,8 +81,10 @@ function ExploreContent() {
 // Main page component with Suspense boundary
 export default function ExplorePage() {
   return (
-    <Suspense fallback={<div className="p-4">Loading explore page...</div>}>
-      <ExploreContent />
-    </Suspense>
+    <PersistentAppLayout>
+      <Suspense fallback={<ExploreLoadingSkeleton />}>
+        <ExploreContent />
+      </Suspense>
+    </PersistentAppLayout>
   );
 }

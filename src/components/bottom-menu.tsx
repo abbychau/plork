@@ -25,6 +25,7 @@ import {
   Laptop,
   Menu,
   Home,
+  Palette,
 } from 'lucide-react';
 
 
@@ -80,6 +81,19 @@ export default function BottomMenu() {
               <DropdownMenuItem onClick={() => setTheme('system')} className="flex items-center gap-2 cursor-pointer">
                 <Laptop className="h-4 w-4" />
                 <span>System</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setTheme('monokaipro')} className="flex items-center gap-2 cursor-pointer">
+                <Palette className="h-4 w-4" />
+                <span>Monokai Pro (System)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('monokaipro-light')} className="flex items-center gap-2 cursor-pointer">
+                <Palette className="h-4 w-4" />
+                <span>Monokai Pro Light</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('monokaipro-dark')} className="flex items-center gap-2 cursor-pointer">
+                <Palette className="h-4 w-4" />
+                <span>Monokai Pro Dark</span>
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>

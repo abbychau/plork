@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
@@ -37,10 +37,17 @@ interface NavProps {
 
 export default function AppNav({ isCollapsed }: NavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
   const { pinnedUsers } = usePinnedUsers();
   const { unreadCounts } = useUnreadCounts(pinnedUsers.map(user => user.username));
   const { unreadCount: timelineUnreadCount } = useTimelineUnread();
+
+  // Handle navigation with client-side routing to preserve layout
+  const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    router.push(href);
+  };
 
   const navItems = [
     {
@@ -119,6 +126,7 @@ export default function AppNav({ isCollapsed }: NavProps) {
                   <div className="relative">
                     <Link
                       href={item.href}
+                      onClick={(e) => handleNavigation(e, item.href)}
                       className={cn(
                         buttonVariants({ variant: item.active ? 'default' : 'ghost', size: 'icon' }),
                         "h-9 w-9",
@@ -151,6 +159,7 @@ export default function AppNav({ isCollapsed }: NavProps) {
               <div key={index} className="relative w-full">
                 <Link
                   href={item.href}
+                  onClick={(e) => handleNavigation(e, item.href)}
                   className={cn(
                     buttonVariants({ variant: item.active ? 'default' : 'ghost', size: 'sm' }),
                     item.active && "dark:bg-muted dark:text-white dark:hover:bg-muted dark:hover:text-white",
@@ -186,6 +195,7 @@ export default function AppNav({ isCollapsed }: NavProps) {
                     <TooltipTrigger asChild>
                       <Link
                         href={item.href}
+                        onClick={(e) => handleNavigation(e, item.href)}
                         className={cn(
                           buttonVariants({ variant: item.active ? 'default' : 'ghost', size: 'icon' }),
                           "h-9 w-9",
@@ -204,6 +214,7 @@ export default function AppNav({ isCollapsed }: NavProps) {
                   <Link
                     key={index}
                     href={item.href}
+                    onClick={(e) => handleNavigation(e, item.href)}
                     className={cn(
                       buttonVariants({ variant: item.active ? 'default' : 'ghost', size: 'sm' }),
                       item.active && "dark:bg-muted dark:text-white dark:hover:bg-muted dark:hover:text-white",
