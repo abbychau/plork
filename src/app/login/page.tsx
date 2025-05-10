@@ -28,9 +28,9 @@ export default function LoginPage() {
       // Wait for login to complete and get the user data
       const result = await login(usernameOrEmail, password);
 
-      // If login was successful and we have a user, redirect to home page
+      // If login was successful and we have a user, redirect to timeline
       if (result && result.user) {
-        router.push('/');
+        router.push('/timeline');
       }
     } catch {
       setError('Invalid username/email or password');

@@ -200,7 +200,7 @@ export default function EnhancedPostEditor({
     <Card className='py-0'>
       <form onSubmit={handleSubmit}>
         <div {...getRootProps()} className="relative">
-          <CardContent className={`p-4 ${isDragActive ? 'bg-muted/50' : ''}`}>
+          <CardContent className={`p-4 ${isDragActive ? 'bg-muted/50' : ''} w-full`}>
             {isDragActive && (
               <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-md flex items-center justify-center z-10">
                 <p className="text-primary font-medium">Drop image here</p>
@@ -227,11 +227,12 @@ export default function EnhancedPostEditor({
                   }
                 }}
                 placeholder={placeholder}
-                className="w-full resize-none border-0 bg-transparent p-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[600px] font-mono text-xs"
+                className="w-full resize-none border-0 bg-transparent p-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 max-h-[600px] font-mono text-xs mobile-textarea"
+                style={{ fontSize: isCompact ? '16px' : '14px', width: '100%' }}
                 minRows={3}
                 disabled={isLoading || isUploading}
-                maxRows={100}
-                
+                maxRows={isCompact ? 6 : 100} // Limit rows on mobile to prevent excessive height
+
               />
             )}
 
@@ -244,8 +245,8 @@ export default function EnhancedPostEditor({
             )}
           </CardContent>
 
-          <CardFooter className="flex justify-between px-4 pb-3">
-            <div className="flex space-x-2">
+          <CardFooter className="flex flex-col sm:flex-row sm:justify-between px-4 pb-3 gap-2 card-footer w-full">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Button
                 type="button"
                 variant="ghost"
@@ -253,16 +254,9 @@ export default function EnhancedPostEditor({
                 onClick={() => setIsPreview(!isPreview)}
                 disabled={isLoading || isUploading}
                 title={isPreview ? 'Edit' : 'Preview'}
+                className="p-2"
               >
-                {isPreview ? (
-                  <>
-                    {!isCompact ? <><Edit className="h-4 w-4" />Edit</> : <Edit className="h-4 w-4" />}
-                  </>
-                ) : (
-                  <>
-                    {!isCompact ? <><Eye className="h-4 w-4" />Preview</> : <Eye className="h-4 w-4" />}
-                  </>
-                )}
+                {isPreview ? <Edit className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
 
               <Button
@@ -272,8 +266,9 @@ export default function EnhancedPostEditor({
                 onClick={() => document.getElementById('file-upload')?.click()}
                 disabled={isLoading || isUploading}
                 title="Upload Image"
+                className="p-2"
               >
-                {isCompact ? <Image className="h-4 w-4" aria-hidden="true" /> : <><Image className="h-4 w-4" aria-hidden="true" /> Upload Image</>}
+                <Image className="h-4 w-4" aria-hidden="true" />
               </Button>
               <input
                 id="file-upload"
@@ -291,13 +286,13 @@ export default function EnhancedPostEditor({
 
               <CustomEmojiPicker
                 onEmojiSelect={handleEmojiSelect}
-                compact={isCompact}
+                compact={true}
                 disabled={isLoading || isUploading}
                 onEmojiUploaded={onEmojiUploaded}
               />
-            </div>
 
-            <div className="flex space-x-2">
+              <div className="flex-grow"></div>
+
               {mode === 'edit' && onCancel && (
                 <Button
                   type="button"
@@ -306,22 +301,25 @@ export default function EnhancedPostEditor({
                   onClick={onCancel}
                   disabled={isLoading || isUploading}
                   title="Cancel"
+                  className="p-2"
                 >
-                  {isCompact ? <X className="h-4 w-4" /> : 'Cancel'}
+                  <X className="h-4 w-4" />
                 </Button>
               )}
+
               <Button
                 type="submit"
                 size="sm"
                 disabled={isLoading || isUploading || !content.trim()}
+                className="ml-auto"
               >
                 {isLoading ? (
-                  isCompact ? <span className="animate-pulse">...</span> : 'Submitting...'
+                  <span className="animate-pulse">...</span>
                 ) : (
                   mode === 'create' ? (
-                    isCompact ? <Send className="h-4 w-4" /> : submitLabel
+                    <Send className="h-4 w-4" />
                   ) : (
-                    isCompact ? <Save className="h-4 w-4" /> : 'Save'
+                    <Save className="h-4 w-4" />
                   )
                 )}
               </Button>

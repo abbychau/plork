@@ -61,16 +61,39 @@ export default function CustomEmojiPicker({
       const pickerWidth = 320;
       const spaceAbove = rect.top;
       const spaceBelow = window.innerHeight - rect.bottom;
+      const isMobile = window.innerWidth < 640;
 
-      let top = rect.bottom + 10;
-      if (spaceBelow < pickerHeight + 10 && spaceAbove > spaceBelow) {
-        top = rect.top - pickerHeight - 10;
+      // For mobile, center the picker horizontally
+      if (isMobile) {
+        const left = Math.max(10, (window.innerWidth - pickerWidth) / 2);
+        let top = rect.bottom + 10;
+
+        // If there's not enough space below, position it above
+        if (spaceBelow < pickerHeight + 10 && spaceAbove > spaceBelow) {
+          top = rect.top - pickerHeight - 10;
+        }
+
+        // If it would go off the top of the screen, position it at the top
+        if (top < 10) {
+          top = 10;
+        }
+
+        setPosition({
+          top: top,
+          left: left
+        });
+      } else {
+        // Desktop positioning
+        let top = rect.bottom + 10;
+        if (spaceBelow < pickerHeight + 10 && spaceAbove > spaceBelow) {
+          top = rect.top - pickerHeight - 10;
+        }
+
+        setPosition({
+          top: Math.max(10, Math.min(top, window.innerHeight - pickerHeight - 10)),
+          left: Math.max(10, Math.min(rect.left, window.innerWidth - pickerWidth - 10)),
+        });
       }
-
-      setPosition({
-        top: Math.max(10, Math.min(top, window.innerHeight - pickerHeight - 10)),
-        left: Math.max(10, Math.min(rect.left, window.innerWidth - pickerWidth - 10)),
-      });
     }
   }, []);
 
@@ -139,7 +162,7 @@ export default function CustomEmojiPicker({
   }, [isOpen, fetchEmojis, fetchAllEmojis]);
 
   // Filter emojis based on search query
-  const filteredAllEmojis = allEmojis.filter(emoji => 
+  const filteredAllEmojis = allEmojis.filter(emoji =>
     emoji.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emoji.originalName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emoji.creatorUsername.toLowerCase().includes(searchQuery.toLowerCase())
@@ -232,8 +255,8 @@ export default function CustomEmojiPicker({
       fetchEmojis(); // Refresh the list
     } catch (err) {
       console.error('Error deleting emoji:', err);
-      toast({ 
-        title: 'Error', 
+      toast({
+        title: 'Error',
         description: err instanceof Error ? err.message : 'Failed to remove emoji',
         variant: 'destructive'
       });
@@ -260,7 +283,7 @@ export default function CustomEmojiPicker({
       {isOpen && typeof document !== 'undefined' && createPortal(
         <div
           ref={pickerRef}
-          className="fixed bg-background border rounded-lg shadow-lg z-[100000] w-[320px] h-[400px] flex flex-col"
+          className="fixed bg-background border rounded-lg shadow-lg z-[100000] w-[90vw] sm:w-[320px] h-[400px] max-w-[320px] flex flex-col"
           style={{
             top: `${position.top}px`,
             left: `${position.left}px`,

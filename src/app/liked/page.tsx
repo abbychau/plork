@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Heart } from '@mynaui/icons-react';
-import PersistentAppLayout from '@/components/persistent-app-layout';
+import ResponsiveAppLayout from '@/components/responsive-app-layout';
 import PostList from '@/components/post-list';
 
 // Loading skeleton for the liked posts page
@@ -20,7 +20,10 @@ function LikedPostsLoadingSkeleton() {
 
 export default function LikedPostsPage() {
   return (
-    <PersistentAppLayout>
+    <ResponsiveAppLayout
+      title="Liked Posts"
+      apiEndpoint="/api/posts/liked"
+    >
       <Suspense fallback={<LikedPostsLoadingSkeleton />}>
         <PostList
           title={
@@ -32,6 +35,6 @@ export default function LikedPostsPage() {
           apiEndpoint="/api/posts/liked"
         />
       </Suspense>
-    </PersistentAppLayout>
+    </ResponsiveAppLayout>
   );
 }

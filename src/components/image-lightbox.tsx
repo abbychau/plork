@@ -39,7 +39,7 @@ export default function ImageLightbox({ src, alt, className = '' }: ImageLightbo
           />
         )}
       </DialogTrigger>
-      <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[90vw] max-h-[90vh] w-auto" closeButton={false}>
+      <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[90vw] max-h-[90vh] w-auto image-lightbox-dialog" closeButton={false}>
         <DialogTitle>
           <VisuallyHidden>{alt || 'Image'}</VisuallyHidden>
         </DialogTitle>

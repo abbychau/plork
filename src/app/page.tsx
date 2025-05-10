@@ -5,8 +5,9 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Mailbox, Code, Info, ArrowRight } from 'lucide-react';
+import { Globe, Mailbox, Code, Info, ArrowRight, User } from 'lucide-react';
 import LoginPopover from '@/components/login-popover';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 import logo from '@/app/favicon.svg';
 
 export default function Home() {
@@ -22,9 +23,11 @@ export default function Home() {
             <Image src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
             <span className="font-bold text-xl">Plork</span>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-2">
+            <SimpleThemeToggle />
             <LoginPopover>
-              <Button id="login-trigger" size="sm" className="bg-primary hover:bg-primary/90 text-white transition-colors">
+              <Button id="login-trigger" size="sm" className="bg-primary hover:bg-primary/90 transition-colors flex items-center gap-2">
+                <User className="h-4 w-4" />
                 Sign In
               </Button>
             </LoginPopover>

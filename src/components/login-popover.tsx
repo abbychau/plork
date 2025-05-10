@@ -38,10 +38,10 @@ export default function LoginPopover({ children, className }: LoginPopoverProps)
       // Wait for login to complete and get the user data
       const result = await login(usernameOrEmail, password);
 
-      // If login was successful and we have a user, close the popover and refresh
+      // If login was successful and we have a user, close the popover and redirect to timeline
       if (result && result.user) {
         setOpen(false);
-        router.refresh();
+        router.push('/timeline');
       }
     } catch (err) {
       setError('Invalid username/email or password');
@@ -73,8 +73,14 @@ export default function LoginPopover({ children, className }: LoginPopoverProps)
               <p className="text-sm text-center text-muted-foreground mb-2">
                 Choose a sign in method:
               </p>
-              <GoogleLoginButton onSuccess={() => setOpen(false)} />
-              <GithubLoginButton onSuccess={() => setOpen(false)} />
+              <GoogleLoginButton onSuccess={() => {
+                setOpen(false);
+                router.push('/timeline');
+              }} />
+              <GithubLoginButton onSuccess={() => {
+                setOpen(false);
+                router.push('/timeline');
+              }} />
               <p className="text-xs text-center text-muted-foreground mt-2">
                 By signing in, you agree to our Terms of Service and Privacy Policy.
                 If you don't have an account, one will be created for you.

@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { Hash, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import PersistentAppLayout from '@/components/persistent-app-layout';
+import ResponsiveAppLayout from '@/components/responsive-app-layout';
 import PostList from '@/components/post-list';
 import TagsPageContent from '@/components/tags-page-content';
 
@@ -24,16 +24,33 @@ function TagsContent() {
   const searchParams = useSearchParams();
   const tagParam = searchParams.get('tag');
 
-  // Determine the API endpoint based on the tag parameter
-  const getApiEndpoint = () => {
-    if (tagParam) {
-      return `/api/posts/hashtag?tag=${encodeURIComponent(tagParam)}`;
-    }
-    // Return a default endpoint that returns an empty array when no tag is selected
-    return '/api/posts/empty';
-  };
+  if (!tagParam) {
+    return <TagsPageContent selectedTag={tagParam || undefined} />;
+  }
 
-  // Get the title based on the tag parameter
+  return (
+    <PostList
+      apiEndpoint={`/api/posts/hashtag?tag=${encodeURIComponent(tagParam)}`}
+      title={
+        <>
+          <Hash className="inline-block mr-2 mb-1" />
+          #{tagParam}
+        </>
+      }
+      showSearch={true}
+      tag={tagParam}
+      isTagsPage={true}
+      searchQuery={tagParam}
+    />
+  );
+}
+
+// Wrapper component that uses search params
+function TagsPageWrapper() {
+  const searchParams = useSearchParams();
+  const tagParam = searchParams.get('tag');
+
+  // Get the title for the responsive layout
   const getTitle = () => {
     if (tagParam) {
       return (
@@ -51,29 +68,33 @@ function TagsContent() {
     );
   };
 
-  if (!tagParam) {
-    return <TagsPageContent />;
-  }
+  // Get the API endpoint for the responsive layout
+  const getApiEndpoint = () => {
+    if (tagParam) {
+      return `/api/posts/hashtag?tag=${encodeURIComponent(tagParam)}`;
+    }
+    return '/api/posts/empty';
+  };
 
   return (
-    <PostList
-      apiEndpoint={getApiEndpoint()}
+    <ResponsiveAppLayout
       title={getTitle()}
-      showSearch={true}
+      apiEndpoint={getApiEndpoint()}
+      showSearch={!!tagParam}
       tag={tagParam || undefined}
       isTagsPage={true}
       searchQuery={tagParam || ''}
-    />
+    >
+      <TagsContent />
+    </ResponsiveAppLayout>
   );
 }
 
 // Main page component with Suspense boundary
 export default function TagsPage() {
   return (
-    <PersistentAppLayout>
-      <Suspense fallback={<TagsLoadingSkeleton />}>
-        <TagsContent />
-      </Suspense>
-    </PersistentAppLayout>
+    <Suspense fallback={<TagsLoadingSkeleton />}>
+      <TagsPageWrapper />
+    </Suspense>
   );
 }

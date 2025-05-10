@@ -19,13 +19,13 @@ export default function GithubLoginButton({ className, onSuccess }: GithubLoginB
     setIsLoading(true);
     try {
       await loginWithGithub();
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       } else {
-        // Otherwise, refresh the page
-        router.refresh();
+        // Navigate to timeline instead of just refreshing
+        router.push('/timeline');
       }
     } catch (error) {
       console.error('GitHub login error:', error);

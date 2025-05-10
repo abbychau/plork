@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth-context';
-import PersistentAppLayout from '@/components/persistent-app-layout';
+import ResponsiveAppLayout from '@/components/responsive-app-layout';
 import PostList from '@/components/post-list';
 import UserProfilePopover from '@/components/user-profile-popover';
 import { usePinnedUsers } from '@/lib/pinned-users-context';
@@ -154,10 +154,13 @@ export default function UserProfilePage() {
   }
 
   return (
-    <PersistentAppLayout>
+    <ResponsiveAppLayout
+      title={`@${username}`}
+      apiEndpoint={`/api/posts?username=${username}`}
+    >
       <Suspense fallback={<UserProfileLoadingSkeleton />}>
         <UserProfileContent />
       </Suspense>
-    </PersistentAppLayout>
+    </ResponsiveAppLayout>
   );
 }

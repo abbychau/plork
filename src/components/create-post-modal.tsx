@@ -105,7 +105,7 @@ export default function CreatePostModal({ triggerClassName, compact, children, c
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] mobile-post-dialog w-full">
         <DialogHeader>
           <DialogTitle>Create a New Post</DialogTitle>
         </DialogHeader>

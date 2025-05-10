@@ -98,7 +98,7 @@ export default function YouTubePreview({ url, title = 'YouTube Video' }: YouTube
         </span>
       </DialogTrigger>
 
-      <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[90vw] max-h-[90vh] w-auto" closeButton={false}>
+      <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[90vw] max-h-[90vh] w-auto youtube-preview-dialog" closeButton={false}>
         <DialogTitle>
           <VisuallyHidden>{title}</VisuallyHidden>
         </DialogTitle>

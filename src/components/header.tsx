@@ -9,6 +9,7 @@ import NotificationDropdown from '@/components/notification-dropdown';
 import SearchBar from '@/components/search-bar';
 import { Plus, Search } from 'lucide-react';
 import CreatePostModal from '@/components/create-post-modal';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 import { Suspense } from 'react';
 import logo from '@/app/favicon.svg';
 
@@ -69,11 +70,13 @@ export default function Header() {
                     <Plus className="h-4 w-4" />
                     Write</Button>
                 </CreatePostModal>
+                <SimpleThemeToggle />
                 <NotificationDropdown />
                 <PersonalPortfolioPopover />
               </div>
             ) : (
               <div className="flex items-center space-x-2">
+                <SimpleThemeToggle />
                 <Link href="/login">
                   <Button variant="ghost">Login</Button>
                 </Link>

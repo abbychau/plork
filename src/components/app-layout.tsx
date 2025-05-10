@@ -45,6 +45,7 @@ export default function AppLayout({
   isTagsPage = false,
 }: AppLayoutProps) {
   const { user } = useAuth();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Safely access localStorage (handles cases where it might be unavailable)
   const safeLocalStorage = {
@@ -179,6 +180,7 @@ export default function AppLayout({
                   searchQuery={searchQuery}
                   tabs={tabs}
                   isTagsPage={isTagsPage}
+                  refreshKey={refreshKey}
                 />
               )}
             </ScrollArea>

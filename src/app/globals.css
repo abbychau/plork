@@ -310,3 +310,84 @@
   background-position: 0 0;
   background-repeat: repeat;
 }
+
+/* Safe area insets for iOS devices */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0);
+}
+
+.px-safe {
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+.py-safe {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Mobile dialog positioning to avoid keyboard overlap */
+@media (max-width: 640px) {
+  [data-slot="dialog-content"] {
+    top: 30% !important;
+    transform: translate(-50%, -30%) !important;
+    width: calc(100% - 2rem) !important;
+    max-width: 100% !important;
+    padding: 1rem !important;
+  }
+
+  /* Specific styling for the create post dialog on mobile */
+  .mobile-post-dialog {
+    top: 22% !important;
+    transform: translate(0,0) !important;
+    padding-bottom: 80px; /* Add extra padding at the bottom to ensure content is visible above keyboard */
+    max-height: 80vh; /* Limit height to ensure it doesn't extend beyond the viewport */
+    overflow-y: auto; /* Allow scrolling if content is too tall */
+    width: calc(100% - 1rem) !important;
+    max-width: 100% !important;
+  }
+
+  /* Ensure textarea is visible and not covered by keyboard */
+  .mobile-textarea {
+    font-size: 16px !important; /* Prevent iOS zoom on focus */
+    max-height: 120px !important; /* Limit height on mobile */
+    width: 100% !important;
+  }
+
+  /* Adjust footer buttons to be more accessible on mobile */
+  .mobile-post-dialog .card-footer {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--background);
+    z-index: 10;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    width: 100% !important;
+  }
+
+  /* Fix for YouTube player and lightbox in mobile */
+  .youtube-preview-dialog,
+  .image-lightbox-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    padding: 0 !important;
+  }
+
+  /* Ensure content inside dialogs doesn't overflow */
+  [data-slot="dialog-content"] > div {
+    max-width: 100%;
+    width: 100%;
+  }
+}

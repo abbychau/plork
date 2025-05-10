@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react';
 import { Compass, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import PersistentAppLayout from '@/components/persistent-app-layout';
+import ResponsiveAppLayout from '@/components/responsive-app-layout';
 import PostList from '@/components/post-list';
 
 // Loading skeleton for the explore page
@@ -78,13 +78,29 @@ function ExploreContent() {
   );
 }
 
+// Wrapper component for the layout that uses search params
+function ExplorePageContent() {
+  const searchParams = useSearchParams();
+  const tagParam = searchParams.get('tag');
+
+  return (
+    <ResponsiveAppLayout
+      title={tagParam ? `#${tagParam}` : "Explore"}
+      apiEndpoint={tagParam
+        ? `/api/posts/hashtag?tag=${encodeURIComponent(tagParam)}`
+        : "/api/posts/explore?type=hot"
+      }
+    >
+      <ExploreContent />
+    </ResponsiveAppLayout>
+  );
+}
+
 // Main page component with Suspense boundary
 export default function ExplorePage() {
   return (
-    <PersistentAppLayout>
-      <Suspense fallback={<ExploreLoadingSkeleton />}>
-        <ExploreContent />
-      </Suspense>
-    </PersistentAppLayout>
+    <Suspense fallback={<ExploreLoadingSkeleton />}>
+      <ExplorePageContent />
+    </Suspense>
   );
 }

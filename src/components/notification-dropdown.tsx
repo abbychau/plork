@@ -36,7 +36,11 @@ interface Notification {
   };
 }
 
-export default function NotificationDropdown() {
+interface NotificationDropdownProps {
+  className?: string;
+}
+
+export default function NotificationDropdown({ className }: NotificationDropdownProps) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -145,7 +149,7 @@ export default function NotificationDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className={`relative ${className || ''}`}>
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">

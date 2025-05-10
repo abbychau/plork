@@ -107,7 +107,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
 
       // Add the new comment to the list
       setComments([...comments, comment]);
-      
+
       // Scroll to bottom after a short delay to ensure the new comment is rendered
       setTimeout(scrollToBottom, 100);
 
@@ -299,8 +299,8 @@ export default function CommentSection({ postId, initialComments, compact = fals
             </div>
           )}
 
-          <div className="flex gap-4">
-            <Avatar className="h-10 w-10 mt-1 border border-muted hidden xl:block">
+          <div className="flex gap-2">
+            <Avatar className="h-8 w-8 mt-1 border border-muted hidden sm:block">
               <AvatarImage src={user.profileImage} alt={user.username} />
               <AvatarFallback>
                 {user.displayName?.[0] || user.username[0]}
@@ -314,7 +314,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
                 isLoading={isSubmitting}
                 onCreateSubmit={handleSubmitComment}
                 submitLabel="Post Comment"
-                compact={compact}
+                compact={true}
                 onEmojiUploaded={refreshEmojis}
               />
             </div>

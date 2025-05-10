@@ -5,13 +5,23 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Inbox, Code, Globe, Mail, MessageSquare, Users, Key, Mailbox } from 'lucide-react';
+import { Inbox, Code, Globe, Mail, MessageSquare, Users, Key, Mailbox, Home, ArrowLeft } from 'lucide-react';
 import logo from '@/app/favicon.svg';
 
 export default function AboutPage() {
   return (
     <ScrollArea className="h-full">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Navigation */}
+        <div className="mb-6">
+          <Link href="/">
+            <Button variant="outline" size="sm" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
+
         {/* Hero Section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 p-4">
           <div className="md:w-1/2">

@@ -3,6 +3,7 @@
 import { useAuth } from '@/lib/auth-context';
 import { useTheme } from '@/lib/theme-context';
 import { Button } from '@/components/ui/button';
+import { useCompactMode } from '@/hooks/use-compact-mode';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +33,10 @@ import {
 export default function BottomMenu() {
   const { user, logout } = useAuth();
   const { setTheme } = useTheme();
-  if (!user) return null;
+  const isCompact = useCompactMode();
+
+  // Don't show the bottom menu on mobile as we have the tab navigation
+  if (!user || isCompact) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50">

@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { Timer, Loader2 } from 'lucide-react';
-import PersistentAppLayout from '@/components/persistent-app-layout';
+import ResponsiveAppLayout from '@/components/responsive-app-layout';
 import PostList from '@/components/post-list';
 
 // Loading skeleton for the timeline page
@@ -19,7 +19,10 @@ function TimelineLoadingSkeleton() {
 
 export default function TimelinePage() {
   return (
-    <PersistentAppLayout>
+    <ResponsiveAppLayout
+      title="Timeline"
+      apiEndpoint="/api/posts"
+    >
       <Suspense fallback={<TimelineLoadingSkeleton />}>
         <PostList
           title={
@@ -31,6 +34,6 @@ export default function TimelinePage() {
           apiEndpoint="/api/posts"
         />
       </Suspense>
-    </PersistentAppLayout>
+    </ResponsiveAppLayout>
   );
 }

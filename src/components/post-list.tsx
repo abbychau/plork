@@ -13,7 +13,7 @@ import { useAuth } from '@/lib/auth-context';
 import { usePinnedUsers } from '@/lib/pinned-users-context';
 import { usePost, Post } from '@/lib/post-context';
 import { useInfiniteScroll } from '@/hooks';
-import { Search, Plus, X, MessageSquare } from 'lucide-react';
+import { Search, Plus, X, MessageSquare, RefreshCw } from 'lucide-react';
 import { Heart } from '@mynaui/icons-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,8 @@ interface PostListProps {
   showUserInfo?: boolean;
   showCommentCount?: boolean;
   showLikeCount?: boolean;
+  refreshKey?: number; // Added to force re-render when refreshing
+  hideTitleInMobile?: boolean; // Added to hide title in mobile view
 }
 
 export default function PostList({
@@ -54,6 +56,8 @@ export default function PostList({
   showUserInfo = true,
   showCommentCount = true,
   showLikeCount = true,
+  refreshKey = 0, // Default value for refreshKey
+  hideTitleInMobile = false, // Default value for hideTitleInMobile
 }: PostListProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -76,7 +80,7 @@ export default function PostList({
   const isLoadingRef = useRef(false);
   const initialMountRef = useRef(false);
   const currentApiEndpointRef = useRef(apiEndpoint);
-  const apiEndpointChangeTimerRef = useRef<number | null>(null);
+  const apiEndpointChangeTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [hasNewPosts, setHasNewPosts] = useState(false);
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -84,12 +88,13 @@ export default function PostList({
   // We still need isLoading state for API calls
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Function to load more posts
   const loadMorePosts = useCallback(async () => {
     // Prevent duplicate API calls
-    if (isLoadingMore || nextOffset === null || isLoadingRef.current || !isMountedRef.current) return false;
+    if ((isLoadingMore && offset > 0) || nextOffset === null || isLoadingRef.current || !isMountedRef.current) return false;
 
     // Set both state and ref to prevent race conditions
     setIsLoadingMore(true);
@@ -203,7 +208,7 @@ export default function PostList({
       isMountedRef.current = false;
       // Clear any pending timers
       if (apiEndpointChangeTimerRef.current) {
-        cancelAnimationFrame(apiEndpointChangeTimerRef.current);
+        clearTimeout(apiEndpointChangeTimerRef.current);
       }
       if (searchTimerRef.current) {
         clearTimeout(searchTimerRef.current);
@@ -211,17 +216,23 @@ export default function PostList({
     };
   }, []);
 
-  // Reload posts when apiEndpoint changes (e.g., when tab changes in explore page or tag changes in tags page)
+  // Reload posts when apiEndpoint changes or when refreshKey changes
   useEffect(() => {
-    // Skip if it's the same endpoint or component is not mounted
-    if (apiEndpoint === currentApiEndpointRef.current || !isMountedRef.current) return;
+    // Skip if component is not mounted
+    if (!isMountedRef.current) return;
 
-    console.log('API endpoint changed:', apiEndpoint);
-    currentApiEndpointRef.current = apiEndpoint;
+    // If apiEndpoint changed, update the ref
+    if (apiEndpoint !== currentApiEndpointRef.current) {
+      console.log('API endpoint changed:', apiEndpoint);
+      currentApiEndpointRef.current = apiEndpoint;
+    } else {
+      // If refreshKey changed but endpoint didn't, log refresh
+      console.log('Refreshing posts with key:', refreshKey);
+    }
 
     // Clear any pending timers
     if (apiEndpointChangeTimerRef.current) {
-      cancelAnimationFrame(apiEndpointChangeTimerRef.current);
+      clearTimeout(apiEndpointChangeTimerRef.current);
     }
 
     // Reset posts and loading state
@@ -229,21 +240,23 @@ export default function PostList({
     setOffset(0);
     setNextOffset(0);
     isLoadingRef.current = false;
+    setIsLoadingMore(false);
 
     // Load posts after state is updated in the next render cycle
-    apiEndpointChangeTimerRef.current = requestAnimationFrame(() => {
+    // Use setTimeout instead of requestAnimationFrame to ensure state updates have been applied
+    apiEndpointChangeTimerRef.current = window.setTimeout(() => {
       if (isMountedRef.current && !isLoadingRef.current) {
         loadMorePosts();
       }
       apiEndpointChangeTimerRef.current = null;
-    });
+    }, 50);
 
     return () => {
       if (apiEndpointChangeTimerRef.current) {
-        cancelAnimationFrame(apiEndpointChangeTimerRef.current);
+        window.clearTimeout(apiEndpointChangeTimerRef.current);
       }
     };
-  }, [apiEndpoint]);
+  }, [apiEndpoint, refreshKey]); // Added refreshKey to dependencies
 
   // Function to check for new posts
   const checkForNewPosts = async () => {
@@ -456,6 +469,32 @@ export default function PostList({
     }
   };
 
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    if (isRefreshing || !isMountedRef.current) return;
+
+    setIsRefreshing(true);
+
+    try {
+      // Reset posts and loading state
+      setPosts([]);
+      setOffset(0);
+      setNextOffset(0);
+      isLoadingRef.current = false;
+      setIsLoadingMore(false);
+
+      // Wait a moment to ensure state is updated
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Load posts
+      await loadMorePosts();
+    } catch (error) {
+      console.error('Error refreshing posts:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   // Clear search
   const handleClearSearch = () => {
     if (!isMountedRef.current) return;
@@ -481,27 +520,41 @@ export default function PostList({
   return (
     <div className="flex flex-col h-full">
       <div className="sticky top-0 z-10 bg-background">
-        <div className="flex items-center justify-between px-4 py-2 h-[52px]">
-          <h1 className="text-xl font-bold">{title}</h1>
+        <div className={`flex items-center justify-between px-4 py-2 ${hideTitleInMobile ? 'h-[40px] sm:h-[52px]' : 'h-[52px]'}`}>
+          <h1 className={`text-xl font-bold ${hideTitleInMobile ? 'hidden sm:block' : ''}`}>{title}</h1>
 
-          {tabs ? (
-            <Tabs defaultValue={tabs.defaultValue} className="ml-auto">
-              <TabsList className="bg-muted">
-                {tabs.items.map((item) => (
-                  <TabsTrigger
-                    key={item.value}
-                    value={item.value}
-                    onClick={() => tabs.onChange && tabs.onChange(item.value)}
-                    className="text-zinc-600 dark:text-zinc-200"
-                  >
-                    {item.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          ) : (
-            <div className="ml-auto" />
-          )}
+          <div className="flex items-center gap-2">
+            {/* Refresh button - visible on desktop and in mobile when title is hidden */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={hideTitleInMobile ? 'flex' : 'hidden md:flex'}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="sr-only">Refresh</span>
+            </Button>
+
+            {tabs ? (
+              <Tabs defaultValue={tabs.defaultValue}>
+                <TabsList className="bg-muted">
+                  {tabs.items.map((item) => (
+                    <TabsTrigger
+                      key={item.value}
+                      value={item.value}
+                      onClick={() => tabs.onChange && tabs.onChange(item.value)}
+                      className="text-zinc-600 dark:text-zinc-200"
+                    >
+                      {item.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            ) : (
+              <div />
+            )}
+          </div>
         </div>
 
         <Separator />
@@ -579,9 +632,10 @@ export default function PostList({
             <Button
               variant="outline"
               size="sm"
-              className="w-full text-primary"
+              className="w-full text-primary flex items-center justify-center gap-2"
               onClick={loadNewPosts}
             >
+              <RefreshCw className="h-3 w-3" />
               Load new posts
             </Button>
           </div>
@@ -617,7 +671,15 @@ export default function PostList({
               className={`flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent ${
                 selectedPostId === post.id ? 'bg-muted' : ''
               }`}
-              onClick={() => setSelectedPostId(post.id)}
+              onClick={() => {
+                setSelectedPostId(post.id);
+                // Dispatch a custom event for mobile layout
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('postSelected', {
+                    detail: { postId: post.id }
+                  }));
+                }
+              }}
             >
               <div className="flex w-full flex-col gap-1">
                 <div className="flex items-center">

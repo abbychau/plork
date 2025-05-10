@@ -14,6 +14,7 @@ import NotificationDropdown from '@/components/notification-dropdown';
 import CreatePostModal from '@/components/create-post-modal';
 import PersonalPortfolioPopover from '@/components/personal-portfolio-popover';
 import FindUsersModal from '@/components/find-users-modal';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 import {
   Tooltip,
   TooltipContent,
@@ -342,13 +343,18 @@ export default function AppNav({ isCollapsed }: NavProps) {
           <div className="flex flex-col gap-2">
             {!isCollapsed && (
               <div className="flex items-center justify-between">
-                <NotificationDropdown />
+                <div className="flex items-center space-x-1">
+                  <SimpleThemeToggle />
+                  <NotificationDropdown />
+                </div>
                 <CreatePostModal compact triggerClassName="h-8 w-8" />
               </div>
             )}
 
             {isCollapsed && (
-              <div className="mb-2">
+              <div className="mb-2 flex flex-col gap-2 items-center">
+                <SimpleThemeToggle className="h-9 w-9" />
+                <NotificationDropdown className="h-9 w-9" />
                 <CreatePostModal compact triggerClassName="h-9 w-9" />
               </div>
             )}
