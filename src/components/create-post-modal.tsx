@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -30,6 +30,14 @@ export default function CreatePostModal({ triggerClassName, compact, children, c
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [createdPost, setCreatedPost] = useState<any>(null);
+  
+  // Store the callback in a ref to prevent it from being lost on re-renders
+  const onPostCreatedRef = useRef(onPostCreated);
+  
+  // Update the ref when the callback changes
+  useEffect(() => {
+    onPostCreatedRef.current = onPostCreated;
+  }, [onPostCreated]);
 
   const handleSubmit = async (content: string) => {
     setError('');
@@ -57,10 +65,22 @@ export default function CreatePostModal({ triggerClassName, compact, children, c
       // Close the modal
       setIsOpen(false);
 
-      // Call the onPostCreated callback if provided
-      if (onPostCreated) {
-        onPostCreated(responseData);
-      }
+      console.log('Post creation successful. onPostCreated callback:', onPostCreatedRef.current);
+      
+      // Handle the callback at the end of the current execution to ensure it gets called
+      setTimeout(() => {
+        if (typeof onPostCreatedRef.current === 'function') {
+          try {
+            console.log('Calling onPostCreated with post data:', responseData);
+            onPostCreatedRef.current(responseData);
+            console.log('onPostCreated callback completed');
+          } catch (callbackError) {
+            console.error('Error in onPostCreated callback:', callbackError);
+          }
+        } else {
+          console.warn('onPostCreated is not a function:', onPostCreatedRef.current);
+        }
+      }, 0);
 
       // Refresh the page or specific components based on the current path
       if (pathname === '/' || pathname.startsWith('/users/')) {
@@ -74,15 +94,15 @@ export default function CreatePostModal({ triggerClassName, compact, children, c
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create post');
-      console.error(err);
+      console.error('Error creating post:', err);
 
       toast({
         title: "Error",
         description: err instanceof Error ? err.message : 'Failed to create post',
         variant: "destructive",
       });
-
-      throw err; // Re-throw to let the PostEditor component handle the error state
+      
+      // Don't re-throw the error
       setCreatedPost(null);
     } finally {
       setIsLoading(false);

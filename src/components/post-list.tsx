@@ -40,7 +40,6 @@ interface PostListProps {
   showCommentCount?: boolean;
   showLikeCount?: boolean;
   refreshKey?: number; // Added to force re-render when refreshing
-  hideTitleInMobile?: boolean; // Added to hide title in mobile view
 }
 
 export default function PostList({
@@ -57,7 +56,6 @@ export default function PostList({
   showCommentCount = true,
   showLikeCount = true,
   refreshKey = 0, // Default value for refreshKey
-  hideTitleInMobile = false, // Default value for hideTitleInMobile
 }: PostListProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -520,15 +518,15 @@ export default function PostList({
   return (
     <div className="flex flex-col h-full">
       <div className="sticky top-0 z-10 bg-background">
-        <div className={`flex items-center justify-between px-4 py-2 ${hideTitleInMobile ? 'h-[40px] sm:h-[52px]' : 'h-[52px]'}`}>
-          <h1 className={`text-xl font-bold ${hideTitleInMobile ? 'hidden sm:block' : ''}`}>{title}</h1>
+        <div className="md:flex items-center justify-between px-4 py-2 h-[52px] hidden">
+          <h1 className="text-xl font-bold">{title}</h1>
 
           <div className="flex items-center gap-2">
-            {/* Refresh button - visible on desktop and in mobile when title is hidden */}
+            {/* Refresh button - only visible on desktop */}
             <Button
               variant="ghost"
               size="icon"
-              className={hideTitleInMobile ? 'flex' : 'hidden md:flex'}
+              className="hidden md:flex"
               onClick={handleRefresh}
               disabled={isRefreshing}
             >
@@ -642,8 +640,15 @@ export default function PostList({
         )}
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-2 p-4 pt-2">
+      <ScrollArea
+        className="flex-1"
+        style={{
+          overscrollBehavior: 'none',
+          overscrollBehaviorY: 'none',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
+        <div className="flex flex-col gap-2 p-4 pt-2 min-h-[100vh]">
           {!user && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <p className="text-muted-foreground mb-4">Please log in to view your timeline</p>

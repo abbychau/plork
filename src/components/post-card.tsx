@@ -54,9 +54,30 @@ export default function PostCard({
   const handleEdit = () => {
     router.push(`/posts/${post.id}/edit`);
   };
-
   const handleComment = () => {
     router.push(`/posts/${post.id}#comments`);
+  };
+
+  const handleDelete = async () => {
+    if (!user || user.id !== post.authorId) {
+      console.error('You are not authorized to delete this post');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/posts/${post.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+
+      // Refresh the page or update the UI after successful deletion
+      router.refresh();
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
   };
 
   return (
@@ -115,9 +136,7 @@ export default function PostCard({
         {showLikeCount && (
           <span>{post.likes?.length || 0} likes</span>
         )}
-      </div>
-
-      <div className="mt-4">
+      </div>      <div className="mt-4">
         <PostInteractionButtons
           postId={post.id}
           authorId={post.authorId}
@@ -127,6 +146,7 @@ export default function PostCard({
           onLike={handleLike}
           onEdit={user?.id === post.authorId ? handleEdit : undefined}
           onComment={handleComment}
+          onDelete={user?.id === post.authorId ? handleDelete : undefined}
         />
       </div>
     </div>

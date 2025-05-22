@@ -34,7 +34,7 @@ interface UserProfilePopoverProps {
 }
 
 export default function UserProfilePopover({ username, children, onPin }: UserProfilePopoverProps) {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { addPinnedUser, removePinnedUser } = usePinnedUsers();
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -62,7 +62,7 @@ export default function UserProfilePopover({ username, children, onPin }: UserPr
       setUserData(data);
 
       // Check if current user is following this user
-      if (currentUser) {
+      if (!authLoading && currentUser) {
         const followResponse = await fetch(`/api/users/${username}/follow-status`);
         if (followResponse.ok) {
           const { isFollowing } = await followResponse.json();
