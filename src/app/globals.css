@@ -127,6 +127,11 @@
   textarea {
     @apply outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0;
   }
+  /* Prevent scroll chaining for all scrollable areas */
+  * {
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+  }
 }
 
 @layer base {
@@ -341,8 +346,8 @@
 /* Mobile dialog positioning to avoid keyboard overlap */
 @media (max-width: 640px) {
   [data-slot="dialog-content"] {
-    top: 30% !important;
-    transform: translate(-50%, -30%) !important;
+    top: 50% !important;
+    transform: translate(0,0) !important;
     width: calc(100% - 2rem) !important;
     max-width: 100% !important;
     padding: 1rem !important;

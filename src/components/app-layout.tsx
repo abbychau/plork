@@ -131,7 +131,7 @@ export default function AppLayout({
   }, [defaultLayout]);
 
   return (
-    <Suspense>
+    <Suspense fallback={<div className="h-full w-full">Loading...</div>}>
     <PostProvider>
       <TooltipProvider delayDuration={0}>
         <ResizablePanelGroup

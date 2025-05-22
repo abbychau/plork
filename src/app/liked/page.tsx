@@ -21,7 +21,7 @@ function LikedPostsLoadingSkeleton() {
 export default function LikedPostsPage() {
   return (
     <ResponsiveAppLayout
-      title="Liked Posts"
+      title="Liked"
       apiEndpoint="/api/posts/liked"
     >
       <Suspense fallback={<LikedPostsLoadingSkeleton />}>
@@ -29,7 +29,7 @@ export default function LikedPostsPage() {
           title={
             <>
               <Heart className="inline-block mr-2 mb-1" />
-              Liked Posts
+              Liked
             </>
           }
           apiEndpoint="/api/posts/liked"

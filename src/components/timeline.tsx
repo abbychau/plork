@@ -350,6 +350,40 @@ export default function Timeline() {
     }
   };
 
+  const handleDeletePost = async (postId: string) => {
+    if (!user) return;
+
+    try {
+      // Send DELETE request to the API
+      const response = await fetch(`/api/posts/${postId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove post from the UI
+        setPosts(posts.filter(post => post.id !== postId));
+        toast({
+          title: "Post deleted",
+          description: "Your post has been successfully deleted"
+        });
+      } else {
+        console.error('Failed to delete post');
+        toast({
+          title: "Delete failed",
+          description: "Could not delete your post",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast({
+        title: "Delete failed",
+        description: "An error occurred while deleting your post",
+        variant: "destructive"
+      });
+    }
+  };
+
   // This function is no longer needed as we're using EnhancedPostEditor
 
   if (!user) {
@@ -388,9 +422,10 @@ export default function Timeline() {
           <p className="mb-6 text-muted-foreground">Follow some users or create your first post to get started!</p>
           <CreatePostModal
             onPostCreated={(newPost) => {
-              // Add the new post to the list
+              console.log('Timeline: New post created callback executed:', newPost);
+              // Add the new post to the beginning of the list
               if (newPost) {
-                setPosts([newPost]);
+                setPosts(prevPosts => [newPost, ...prevPosts]);
                 // Update the last post ID for checking new posts
                 setLastPostId(newPost.id);
               }
@@ -415,6 +450,7 @@ export default function Timeline() {
             </h2>
             <CreatePostModal
               onPostCreated={(newPost) => {
+                console.log('Timeline header: New post created callback executed:', newPost);
                 // Add the new post to the top of the list
                 if (newPost) {
                   setPosts(prevPosts => [newPost, ...prevPosts]);
@@ -508,6 +544,16 @@ export default function Timeline() {
                           setSelectedPostId(post.id);
                           setCommentSidebarOpen(true);
                         }}
+                        onDelete={
+                          ()=>{
+                            console.log("Delete post clicked");
+                            if(!user || user.id !== post.author.id){
+                              console.error("You are not authorized to delete this post");
+                              return;
+                            }
+                            handleDeletePost(post.id)
+                          }
+                        }
                       />
                     </div>
                   </div>

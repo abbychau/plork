@@ -91,3 +91,52 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ postId: s
     );
   }
 }
+
+// DELETE /api/posts/[postId] - Delete a post
+export async function DELETE(_req: NextRequest, props: { params: Promise<{ postId: string }> }) {
+  const params = await props.params;
+  try {
+    // Get the postId from the URL
+    const { postId } = params;
+
+    // Check authentication
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('userId')?.value;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    // Get the post
+    const post = await postService.getPostById(postId);
+
+    if (!post) {
+      return NextResponse.json(
+        { error: 'Post not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if the user is the author of the post
+    if (post.authorId !== userId) {
+      return NextResponse.json(
+        { error: 'Not authorized to delete this post' },
+        { status: 403 }
+      );
+    }
+
+    // Delete the post
+    await postService.deletePost(postId);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete post' },
+      { status: 500 }
+    );
+  }
+}

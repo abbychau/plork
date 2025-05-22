@@ -11,11 +11,12 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import PostList from '@/components/post-list';
 import PostDisplay from '@/components/post-display';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Compass, User, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Home, Compass, User, MessageSquare, ArrowLeft, RefreshCw, FileText, Hash, Bell } from 'lucide-react';
 import { Heart } from '@mynaui/icons-react';
 import CreatePostModal from '@/components/create-post-modal';
 import NotificationDropdown from '@/components/notification-dropdown';
 import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface MobileAppLayoutProps {
   children?: ReactNode;
@@ -48,11 +49,21 @@ export default function MobileAppLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Update refreshKey when tab changes to force reload of posts
-  useEffect(() => {
+  // Handle refresh
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+
+    setIsRefreshing(true);
+    // Increment refresh key to force re-render of PostList
     setRefreshKey(prev => prev + 1);
-  }, [activeTab]);
+
+    // Reset refreshing state after a delay to show animation
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 1000);
+  };
 
   // Determine which tab should be active based on the current path
   useEffect(() => {
@@ -145,10 +156,41 @@ export default function MobileAppLayout({
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               ) : (
-                <h1 className="text-lg font-semibold">{title || "Plork"}</h1>
+                <h1 className="text-lg font-semibold pl-1 flex items-center">
+                  {title && typeof title === 'string' && title.startsWith('@') ? (
+                    <Avatar className="h-9 w-9 mr-4">
+                      <AvatarImage src={user?.profileImage} alt={user?.username} />
+                      <AvatarFallback className="text-xs">
+                        {user?.displayName?.[0] || user?.username?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <>
+                      {title === "Timeline" && <Home className="h-4 w-4 mr-2" />}
+                      {title === "Explore" && <Compass className="h-4 w-4 mr-2" />}
+                      {title === "Tags" && <Hash className="h-4 w-4 mr-2" />}
+                      {title === "My Posts" && <FileText className="h-4 w-4 mr-2" />}
+                      {title === "Liked" && <Heart className="h-4 w-4 mr-2" />}
+                      {title === "Responded" && <MessageSquare className="h-4 w-4 mr-2" />}
+                      {title === "Notifications" && <Bell className="h-4 w-4 mr-2" />}
+                    </>
+                  )}
+                  {title || "Plork"}
+                </h1>
               )}
             </div>
             <div className="flex items-center gap-2">
+              {!selectedPost && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span className="sr-only">Refresh</span>
+                </Button>
+              )}
               <SimpleThemeToggle />
               <NotificationDropdown />
               <CreatePostModal compact triggerClassName="h-8 w-8" />
@@ -184,7 +226,6 @@ export default function MobileAppLayout({
                           } : undefined}
                           isTagsPage={isTagsPage}
                           refreshKey={refreshKey}
-                          hideTitleInMobile={true}
                         />
                       </div>
                     </ScrollArea>

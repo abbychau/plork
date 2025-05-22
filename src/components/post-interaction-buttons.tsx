@@ -12,7 +12,8 @@ import {
   Edit,
   Heart,
   HeartSolid,
-  MessageDots
+  MessageDots,
+  Trash,
 } from '@mynaui/icons-react';
 
 interface PostInteractionButtonsProps {
@@ -25,6 +26,7 @@ interface PostInteractionButtonsProps {
   onEdit?: () => void;
   onComment?: () => void;
   hideViewFullPost?: boolean;
+  onDelete?: () => void;
 }
 
 export default function PostInteractionButtons({
@@ -35,7 +37,8 @@ export default function PostInteractionButtons({
   commentsCount,
   onLike,
   onEdit,
-  onComment
+  onComment,
+  onDelete
 }: PostInteractionButtonsProps) {
 
   const { user } = useAuth();
@@ -63,7 +66,6 @@ export default function PostInteractionButtons({
       });
     }
   };
-
   return (
     <div className="flex justify-between items-center w-full text-sm">
       {/* Left side - Comment and Like counts */}
@@ -126,6 +128,19 @@ export default function PostInteractionButtons({
           >
             <Edit className="w-4 h-4" />
             <span className="sr-only">Edit</span>
+          </Button>
+        )}
+        
+        {isAuthor && onDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-foreground hover:text-destructive cursor-pointer"
+            onClick={onDelete}
+            title="Delete post"
+          >
+            <Trash className="w-4 h-4" />
+            <span className="sr-only">Delete</span>
           </Button>
         )}
       </div>
