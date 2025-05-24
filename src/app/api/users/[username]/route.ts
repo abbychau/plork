@@ -2,7 +2,7 @@
  * User (Actor) endpoint for ActivityPub
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { userService, followService, postService } from '@/lib/db';
+import { userService, followService, postService, prisma } from '@/lib/db';
 import { createActorObject } from '@/lib/activitypub';
 
 export async function GET(
@@ -41,9 +41,15 @@ export async function GET(
   // Get followers and following counts
   const followers = await followService.getFollowers(user.id);
   const following = await followService.getFollowing(user.id);
-
   // Get post count
   const posts = await postService.getUserPosts(user.id);
+
+  // Get comments count (replies made by this user)
+  const repliesCount = await prisma.comment.count({
+    where: {
+      authorId: user.id
+    }
+  });
 
   // Return user data (without sensitive information)
   return NextResponse.json({
@@ -56,5 +62,6 @@ export async function GET(
     followersCount: followers.length,
     followingCount: following.length,
     postsCount: posts.length,
+    repliesCount: repliesCount,
   });
 }

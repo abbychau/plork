@@ -29,6 +29,7 @@ export default function PersonalPortfolioPopover({ isCollapsed = false }: Person
     followersCount: number;
     followingCount: number;
     postsCount: number;
+    repliesCount: number;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -54,6 +55,7 @@ export default function PersonalPortfolioPopover({ isCollapsed = false }: Person
         followersCount: data.followersCount || 0,
         followingCount: data.followingCount || 0,
         postsCount: data.postsCount || 0,
+        repliesCount: data.repliesCount || 0,
       });
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -121,10 +123,14 @@ export default function PersonalPortfolioPopover({ isCollapsed = false }: Person
               </div>
 
               {userData && (
-                <div className="flex gap-4 mt-4 text-sm">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
                   <div>
                     <span className="font-medium">{userData.postsCount}</span>{' '}
                     <span className="text-muted-foreground">Posts</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">{userData.repliesCount}</span>{' '}
+                    <span className="text-muted-foreground">Replies</span>
                   </div>
                   <div>
                     <span className="font-medium">{userData.followersCount}</span>{' '}

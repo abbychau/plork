@@ -2,6 +2,7 @@
 
 import { Hash } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import ResponsiveAppLayout from '@/components/responsive-app-layout';
 import PostList from '@/components/post-list';
 import TagsPageContent from '@/components/tags-page-content';
@@ -67,7 +68,11 @@ function TagsPageWrapper() {
   );
 }
 
-// Main page component without Suspense boundary since ResponsiveAppLayout provides it
+// Main page component with Suspense boundary for useSearchParams
 export default function TagsPage() {
-  return <TagsPageWrapper />;
+  return (
+    <Suspense fallback={<div className="p-4">Loading tags...</div>}>
+      <TagsPageWrapper />
+    </Suspense>
+  );
 }

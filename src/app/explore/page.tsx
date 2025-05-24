@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Compass } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import ResponsiveAppLayout from '@/components/responsive-app-layout';
@@ -84,7 +84,11 @@ function ExplorePageContent() {
   );
 }
 
-// Main page component without Suspense boundary since ResponsiveAppLayout provides it
+// Main page component with Suspense boundary for useSearchParams
 export default function ExplorePage() {
-  return <ExplorePageContent />;
+  return (
+    <Suspense fallback={<div className="p-4">Loading explore content...</div>}>
+      <ExplorePageContent />
+    </Suspense>
+  );
 }

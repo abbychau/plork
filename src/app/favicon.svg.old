@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#0F172A"/>
+  
+  <!-- Letter P -->
+  <path d="M160 140C160 134.477 164.477 130 170 130H256C300.183 130 336 165.817 336 210C336 254.183 300.183 290 256 290H200V372C200 377.523 195.523 382 190 382H170C164.477 382 160 377.523 160 372V140Z" fill="white"/>
+  
+  <!-- Inner part of P -->
+  <path d="M200 170V250H256C277.539 250 295 232.539 295 210C295 187.461 277.539 170 256 170H200Z" fill="#0F172A"/>
+  
+  <!-- Stylized wave/ripple for "lork" -->
+  <path d="M240 310C280 310 320 290 360 290C400 290 440 310 480 310" stroke="white" stroke-width="30" stroke-linecap="round"/>
+  <path d="M240 350C280 350 320 330 360 330C400 330 440 350 480 350" stroke="white" stroke-width="20" stroke-linecap="round"/>
+</svg>

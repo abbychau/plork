@@ -25,6 +25,7 @@ interface UserData {
   followersCount: number;
   followingCount: number;
   postsCount?: number;
+  repliesCount?: number;
 }
 
 interface UserProfilePopoverProps {
@@ -208,10 +209,14 @@ export default function UserProfilePopover({ username, children, onPin }: UserPr
                 </div>
               </div>
 
-              <div className="flex gap-4 mt-4 text-sm">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-sm">
                 <div>
                   <span className="font-medium">{userData.postsCount || 0}</span>{' '}
                   <span className="text-muted-foreground">Posts</span>
+                </div>
+                <div>
+                  <span className="font-medium">{userData.repliesCount || 0}</span>{' '}
+                  <span className="text-muted-foreground">Replies</span>
                 </div>
                 <div>
                   <span className="font-medium">{userData.followersCount}</span>{' '}

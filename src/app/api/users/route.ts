@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
           id, username, displayName, profileImage, summary, actorUrl,
           (SELECT COUNT(*) FROM Follow WHERE followingId = User.id) as followersCount,
           (SELECT COUNT(*) FROM Follow WHERE followerId = User.id) as followingCount,
-          (SELECT COUNT(*) FROM Post WHERE authorId = User.id) as postsCount
+          (SELECT COUNT(*) FROM Post WHERE authorId = User.id) as postsCount,
+          (SELECT COUNT(*) FROM Comment WHERE authorId = User.id) as repliesCount
         FROM User
         WHERE
           LOWER(username) LIKE ${'%' + search.toLowerCase() + '%'} OR
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
       `;
 
       // Convert BigInt values to numbers before returning
-      const serializedUsers = users.map(user => ({
+      const serializedUsers = (users as any[]).map(user => ({
         id: user.id,
         username: user.username,
         displayName: user.displayName,
@@ -40,7 +41,8 @@ export async function GET(req: NextRequest) {
         actorUrl: user.actorUrl,
         followersCount: Number(user.followersCount),
         followingCount: Number(user.followingCount),
-        postsCount: Number(user.postsCount)
+        postsCount: Number(user.postsCount),
+        repliesCount: Number(user.repliesCount || 0)
       }));
 
       return NextResponse.json(serializedUsers);
@@ -60,6 +62,7 @@ export async function GET(req: NextRequest) {
               followers: true,
               following: true,
               posts: true,
+              comments: true,
             },
           },
         },
@@ -81,6 +84,7 @@ export async function GET(req: NextRequest) {
         followersCount: user._count.followers,
         followingCount: user._count.following,
         postsCount: user._count.posts,
+        repliesCount: user._count.comments,
       }));
 
       return NextResponse.json(formattedUsers);

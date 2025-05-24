@@ -3,6 +3,17 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
+
+interface UserSearchResult {
+  id: bigint;
+  username: string;
+  displayName: string;
+  profileImage: string | null;
+  followersCount: bigint;
+  followingCount: bigint;
+  postsCount: bigint;
+}
 
 // GET /api/users/search?q=xxx - Search for users by username or display name
 export async function GET(request: NextRequest) {
@@ -17,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     // Search for users by username or display name
     // For SQLite, we need to use a raw query for case-insensitive search
-    const users = await prisma.$queryRaw`
+    const users = await prisma.$queryRaw<UserSearchResult[]>`
       SELECT
         id, username, displayName, profileImage,
         (SELECT COUNT(*) FROM Follow WHERE followingId = User.id) as followersCount,
