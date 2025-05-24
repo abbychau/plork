@@ -89,10 +89,29 @@ export default function PostList({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Function to load more posts
-  const loadMorePosts = useCallback(async () => {
+  // Generic function to load posts with flexible parameters
+  const loadPosts = useCallback(async (options: {
+    useCurrentOffset?: boolean;  // Whether to use the current offset state or override
+    forceOffset?: number;        // Override the current offset
+    append?: boolean;            // Append to existing posts or replace them
+    customTag?: string;          // Override the current tag
+    customQuery?: string;        // Override the current search query
+    logPrefix?: string;          // Custom log prefix for debugging
+  } = {}) => {
+    const {
+      useCurrentOffset = true,
+      forceOffset,
+      append = true,
+      customTag = tag,
+      customQuery = searchQuery,
+      logPrefix = 'Loading'
+    } = options;
+    
+    // Calculate effective offset
+    const effectiveOffset = useCurrentOffset ? offset : (forceOffset !== undefined ? forceOffset : 0);
+    
     // Prevent duplicate API calls
-    if ((isLoadingMore && offset > 0) || nextOffset === null || isLoadingRef.current || !isMountedRef.current) return false;
+    if ((isLoadingMore && effectiveOffset > 0) || nextOffset === null || isLoadingRef.current || !isMountedRef.current) return false;
 
     // Set both state and ref to prevent race conditions
     setIsLoadingMore(true);
@@ -100,25 +119,25 @@ export default function PostList({
 
     // Get the current API endpoint from ref - this ensures we're using the most up-to-date endpoint
     const currentEndpoint = currentApiEndpointRef.current;
-    console.log('Loading more posts from:', currentEndpoint, 'with offset:', offset);
+    console.log(`${logPrefix} posts from:`, currentEndpoint, 'with offset:', effectiveOffset);
 
     try {
       // If we have a search query, use the search endpoint instead
-      const baseEndpoint = searchQuery
+      const baseEndpoint = customQuery
         ? '/api/posts/search'
         : currentEndpoint;
 
       // Check if the endpoint already has query parameters
       let url = baseEndpoint.includes('?')
-        ? `${baseEndpoint}&offset=${offset}`
-        : `${baseEndpoint}?offset=${offset}`;
+        ? `${baseEndpoint}&offset=${effectiveOffset}`
+        : `${baseEndpoint}?offset=${effectiveOffset}`;
 
-      if (tag) {
-        url += `&tag=${encodeURIComponent(tag)}`;
+      if (customTag) {
+        url += `&tag=${encodeURIComponent(customTag)}`;
       }
 
-      if (searchQuery) {
-        url += `&q=${encodeURIComponent(searchQuery)}`;
+      if (customQuery) {
+        url += `&q=${encodeURIComponent(customQuery)}`;
       }
 
       console.log('Fetching from URL:', url);
@@ -134,8 +153,7 @@ export default function PostList({
       }
 
       const data = await response.json();
-      console.log('API response:', data);
-
+      
       // Handle different API response formats
       if (Array.isArray(data)) {
         // If the response is an array of posts
@@ -144,14 +162,20 @@ export default function PostList({
           return false;
         }
 
-        // Filter out duplicates before adding new posts
-        setPosts(prevPosts => {
-          const existingIds = new Set(prevPosts.map(p => p.id));
-          const uniqueNewPosts = data.filter(post => !existingIds.has(post.id));
-          return [...prevPosts, ...uniqueNewPosts];
-        });
-        setOffset(prevOffset => prevOffset + data.length);
-        setNextOffset(data.length < 10 ? null : offset + data.length);
+        if (append) {
+          // Filter out duplicates before adding new posts
+          setPosts(prevPosts => {
+            const existingIds = new Set(prevPosts.map(p => p.id));
+            const uniqueNewPosts = data.filter(post => !existingIds.has(post.id));
+            return [...prevPosts, ...uniqueNewPosts];
+          });
+        } else {
+          // Replace existing posts
+          setPosts(data);
+        }
+        
+        setOffset(append ? prevOffset => prevOffset + data.length : data.length);
+        setNextOffset(data.length < 10 ? null : (append ? effectiveOffset + data.length : data.length));
       } else if (data.posts && Array.isArray(data.posts)) {
         // If the response has a posts array
         if (data.posts.length === 0) {
@@ -159,13 +183,19 @@ export default function PostList({
           return false;
         }
 
-        // Filter out duplicates before adding new posts
-        setPosts(prevPosts => {
-          const existingIds = new Set(prevPosts.map(p => p.id));
-          const uniqueNewPosts = data.posts.filter((post: { id: string }) => !existingIds.has(post.id));
-          return [...prevPosts, ...uniqueNewPosts];
-        });
-        setOffset(prevOffset => prevOffset + data.posts.length);
+        if (append) {
+          // Filter out duplicates before adding new posts
+          setPosts(prevPosts => {
+            const existingIds = new Set(prevPosts.map(p => p.id));
+            const uniqueNewPosts = data.posts.filter((post: { id: string }) => !existingIds.has(post.id));
+            return [...prevPosts, ...uniqueNewPosts];
+          });
+        } else {
+          // Replace existing posts
+          setPosts(data.posts);
+        }
+        
+        setOffset(append ? prevOffset => prevOffset + data.posts.length : data.posts.length);
         setNextOffset(data.nextOffset);
       } else {
         console.error('Unexpected API response format:', data);
@@ -175,7 +205,7 @@ export default function PostList({
 
       return true;
     } catch (error) {
-      console.error('Error loading more posts:', error);
+      console.error('Error loading posts:', error);
       return false;
     } finally {
       // Only update state if component is still mounted
@@ -185,6 +215,15 @@ export default function PostList({
       }
     }
   }, [apiEndpoint, isLoadingMore, nextOffset, offset, searchQuery, tag]);
+
+  // Function to load more posts (for compatibility and infinite scroll)
+  const loadMorePosts = useCallback(() => {
+    return loadPosts({ 
+      useCurrentOffset: true, 
+      append: true,
+      logPrefix: 'Loading more'
+    });
+  }, [loadPosts]);
 
   // Set up infinite scrolling
   useInfiniteScroll(loadMorePosts, loaderRef, { disabled: isLoadingMore });
@@ -198,12 +237,46 @@ export default function PostList({
       initialMountRef.current = true;
       console.log('Component mounted, loading initial posts');
       if (posts.length === 0 && nextOffset !== null && !isLoadingRef.current) {
-        loadMorePosts();
+        loadPosts({
+          useCurrentOffset: true,
+          append: true,
+          logPrefix: 'Initial load'
+        });
       }
     }
+    
+    // Listen for direct post list refresh events
+    const handleDirectRefresh = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail || {};
+      
+      // If we have a new post that was just created, add it to the top of the list
+      if (detail.newPost && detail.source === 'create-post') {
+        console.log('Adding new post to list directly:', detail.newPost.id);
+        setPosts(prevPosts => {
+          // Add the new post to the top of the list and avoid duplicates
+          const newPostId = detail.newPost.id;
+          const existingPost = prevPosts.find(p => p.id === newPostId);
+          if (existingPost) {
+            return prevPosts;
+          }
+          return [detail.newPost, ...prevPosts];
+        });
+      }
+      
+      // If a post was deleted, remove it from the list
+      if (detail.deletedPostId) {
+        console.log('Removing deleted post from list directly:', detail.deletedPostId);
+        setPosts(prevPosts => prevPosts.filter(post => post.id !== detail.deletedPostId));
+      }
+    };
+    
+    window.addEventListener('refreshPostList', handleDirectRefresh);
 
     return () => {
       isMountedRef.current = false;
+      // Remove event listener
+      window.removeEventListener('refreshPostList', handleDirectRefresh);
       // Clear any pending timers
       if (apiEndpointChangeTimerRef.current) {
         clearTimeout(apiEndpointChangeTimerRef.current);
@@ -239,12 +312,20 @@ export default function PostList({
     setNextOffset(0);
     isLoadingRef.current = false;
     setIsLoadingMore(false);
+    
+    // Clear any "new posts" indicator
+    setHasNewPosts(false);
 
     // Load posts after state is updated in the next render cycle
     // Use setTimeout instead of requestAnimationFrame to ensure state updates have been applied
-    apiEndpointChangeTimerRef.current = window.setTimeout(() => {
+    apiEndpointChangeTimerRef.current = setTimeout(() => {
       if (isMountedRef.current && !isLoadingRef.current) {
-        loadMorePosts();
+        loadPosts({
+          useCurrentOffset: false,
+          forceOffset: 0,
+          append: false,
+          logPrefix: 'Refreshing posts'
+        });
       }
       apiEndpointChangeTimerRef.current = null;
     }, 50);
@@ -381,7 +462,12 @@ export default function PostList({
         setOffset(0);
         setNextOffset(0);
         isLoadingRef.current = false; // Reset loading state
-        loadMorePosts();
+        loadPosts({
+          useCurrentOffset: false,
+          forceOffset: 0,
+          append: false,
+          logPrefix: 'Searching'
+        });
       }
       searchTimerRef.current = null;
     }, 300);
@@ -462,7 +548,12 @@ export default function PostList({
         setOffset(0);
         setNextOffset(0);
         isLoadingRef.current = false; // Reset loading state
-        loadMorePosts();
+        loadPosts({
+          useCurrentOffset: false,
+          forceOffset: 0,
+          append: false,
+          logPrefix: 'Searching'
+        });
       }
     }
   };
@@ -484,8 +575,13 @@ export default function PostList({
       // Wait a moment to ensure state is updated
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      // Load posts
-      await loadMorePosts();
+      // Use loadPosts with forceOffset:0 and append:false to refresh posts
+      await loadPosts({
+        useCurrentOffset: false,
+        forceOffset: 0,
+        append: false,
+        logPrefix: 'Refreshing'
+      });
     } catch (error) {
       console.error('Error refreshing posts:', error);
     } finally {
@@ -511,7 +607,12 @@ export default function PostList({
       setOffset(0);
       setNextOffset(0);
       isLoadingRef.current = false; // Reset loading state
-      loadMorePosts();
+      loadPosts({
+        useCurrentOffset: false,
+        forceOffset: 0,
+        append: false,
+        logPrefix: 'Cleared search'
+      });
     }
   };
 

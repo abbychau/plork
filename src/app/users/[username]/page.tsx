@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
 
 import { useAuth } from '@/lib/auth-context';
@@ -136,31 +135,17 @@ function UserProfileContent() {
   );
 }
 
-// Main page component with Suspense boundary
+// Main page component without Suspense boundary since ResponsiveAppLayout provides it
 export default function UserProfilePage() {
   const params = useParams();
   const username = params.username as string;
-
-  // Loading skeleton for the user profile page
-  function UserProfileLoadingSkeleton() {
-    return (
-      <div className="h-full w-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading user profile...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <ResponsiveAppLayout
       title={`@${username}`}
       apiEndpoint={`/api/posts?username=${username}`}
     >
-      <Suspense fallback={<UserProfileLoadingSkeleton />}>
-        <UserProfileContent />
-      </Suspense>
+      <UserProfileContent />
     </ResponsiveAppLayout>
   );
 }

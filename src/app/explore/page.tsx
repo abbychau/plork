@@ -1,22 +1,10 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import { Compass, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { Compass } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import ResponsiveAppLayout from '@/components/responsive-app-layout';
 import PostList from '@/components/post-list';
-
-// Loading skeleton for the explore page
-function ExploreLoadingSkeleton() {
-  return (
-    <div className="h-full w-full flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Loading explore page...</p>
-      </div>
-    </div>
-  );
-}
 
 // Client component that uses search params
 function ExploreContent() {
@@ -96,11 +84,7 @@ function ExplorePageContent() {
   );
 }
 
-// Main page component with Suspense boundary
+// Main page component without Suspense boundary since ResponsiveAppLayout provides it
 export default function ExplorePage() {
-  return (
-    <Suspense fallback={<ExploreLoadingSkeleton />}>
-      <ExplorePageContent />
-    </Suspense>
-  );
+  return <ExplorePageContent />;
 }

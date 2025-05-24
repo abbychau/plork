@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/lib/auth-context';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ export default function CreatePostModal({ triggerClassName, compact, children, c
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -69,6 +71,7 @@ export default function CreatePostModal({ triggerClassName, compact, children, c
       
       // Handle the callback at the end of the current execution to ensure it gets called
       setTimeout(() => {
+        // Call the onPostCreated callback if provided
         if (typeof onPostCreatedRef.current === 'function') {
           try {
             console.log('Calling onPostCreated with post data:', responseData);
@@ -80,10 +83,23 @@ export default function CreatePostModal({ triggerClassName, compact, children, c
         } else {
           console.warn('onPostCreated is not a function:', onPostCreatedRef.current);
         }
+        
+        // Always trigger a refresh for timeline or user posts page
+        // This ensures the list refreshes regardless of whether onPostCreated was provided
+        if (pathname === '/timeline' || pathname.startsWith('/users/')) {
+          console.log('Dispatching refreshPostList event for pathname:', pathname);
+          // Pass the new post data in the event so it can be used to add the post without a full refresh
+          window.dispatchEvent(new CustomEvent('refreshPostList', {
+            detail: {
+              newPost: responseData,
+              source: 'create-post'
+            }
+          }));
+        }
       }, 0);
 
       // Refresh the page or specific components based on the current path
-      if (pathname === '/' || pathname.startsWith('/users/')) {
+      if (pathname === '/' || pathname.startsWith('/users/') || pathname === '/timeline') {
         // If on timeline or user profile, refresh to show the new post
         router.refresh();
       }

@@ -90,6 +90,23 @@ export default function MobileAppLayout({
     const handlePostSelected = (e: CustomEvent) => {
       setSelectedPost(e.detail.postId);
     };
+    
+    // Custom event listener for refreshing post list
+    const handleRefreshPostList = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail || {};
+      
+      console.log('Refreshing mobile post list due to custom event:', detail.source);
+      
+      if (detail.newPost || detail.deletedPostId) {
+        console.log('Post change detected from event:', 
+          detail.newPost ? 'New post created' : 'Post deleted', 
+          detail.newPost?.id || detail.deletedPostId);
+      }
+      
+      // Always increment the refresh key to trigger a reload
+      setRefreshKey(prevKey => prevKey + 1);
+    };
 
     // Check if localStorage is available (client-side only)
     if (typeof window !== 'undefined') {
@@ -100,12 +117,14 @@ export default function MobileAppLayout({
 
       window.addEventListener('storage', handleStorageChange);
       window.addEventListener('postSelected' as any, handlePostSelected);
+      window.addEventListener('refreshPostList', handleRefreshPostList);
     }
 
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('storage', handleStorageChange);
         window.removeEventListener('postSelected' as any, handlePostSelected);
+        window.removeEventListener('refreshPostList', handleRefreshPostList);
       }
     };
   }, []);

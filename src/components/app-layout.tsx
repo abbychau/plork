@@ -119,23 +119,37 @@ export default function AppLayout({
 
     markTimelineAsRead();
   }, [user, apiEndpoint]);
-
-  // Track if layout has been loaded from localStorage
-  const [layoutLoaded, setLayoutLoaded] = useState(false);
-
-  // Update layoutLoaded flag when layout is loaded from localStorage
+  
+  // Listen for refresh post list event
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setLayoutLoaded(true);
-    }
-  }, [defaultLayout]);
+    const handleRefreshPostList = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail || {};
+      
+      console.log('Refreshing post list due to custom event:', detail.source);
+      
+      if (detail.newPost || detail.deletedPostId) {
+        console.log('Post change detected from event:', 
+          detail.newPost ? 'New post created' : 'Post deleted', 
+          detail.newPost?.id || detail.deletedPostId);
+      }
+      
+      // Always increment the refresh key to trigger a reload
+      setRefreshKey(prevKey => prevKey + 1);
+    };
+
+    window.addEventListener('refreshPostList', handleRefreshPostList);
+    
+    return () => {
+      window.removeEventListener('refreshPostList', handleRefreshPostList);
+    };
+  }, []);
 
   return (
     <Suspense fallback={<div className="h-full w-full">Loading...</div>}>
     <PostProvider>
       <TooltipProvider delayDuration={0}>
         <ResizablePanelGroup
-          key={layoutLoaded ? 'loaded' : 'initial'}
           direction="horizontal"
           onLayout={(sizes: number[]) => {
             safeLocalStorage.setItem('react-resizable-panels:layout:plork', JSON.stringify(sizes));

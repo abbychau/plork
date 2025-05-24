@@ -21,7 +21,6 @@
 - Ensure edit boxes and post buttons are fully visible in narrow views
 - Fix 'create a new post' modal being covered by keyboard on mobile
 - Fix iPhone's bottom home bar overlapping with the app's mobile navigation bar
-- Implement pull-to-refresh functionality for mobile view
 
 # Navigation & Layout
 - Implement Nav component with isCollapsed prop and links array for navbar styling

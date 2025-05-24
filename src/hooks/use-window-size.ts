@@ -8,10 +8,11 @@ interface WindowSize {
 }
 
 export function useWindowSize(): WindowSize {
-  // Initialize with undefined to handle SSR
+  // if query string has isMobile=true, set width and height to 375x667
+  const isMobile = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('isMobile') === 'true';
   const [windowSize, setWindowSize] = useState<WindowSize>({
-    width: typeof window !== 'undefined' ? window.innerWidth : 0,
-    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+    width: isMobile ? 375 : 1280,
+    height: isMobile ? 667 : 800,
   });
 
   useEffect(() => {

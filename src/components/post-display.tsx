@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -21,7 +22,8 @@ import type { CustomEmoji } from '@/components/custom-emoji-picker'; // Import t
 
 export default function PostDisplay() {
   const { user } = useAuth();
-  const { selectedPost, isLoading, error, fetchPost } = usePost();
+  const router = useRouter();
+  const { selectedPost, isLoading, error, fetchPost, setSelectedPost, setSelectedPostId } = usePost();
   const { addPinnedUser } = usePinnedUsers();
   const [isEditing, setIsEditing] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -118,6 +120,46 @@ export default function PostDisplay() {
     setIsEditing(false);
   };
 
+  // Handle delete post
+  const handleDeletePost = async () => {
+    if (!selectedPost || !user || user.id !== selectedPost.author.id) return;
+
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/posts/${selectedPost.id}`, {
+        method: 'DELETE',
+        credentials: 'include', // Include cookies in the request
+      });
+
+      if (response.ok) {
+        // Store the post ID before clearing it
+        const deletedPostId = selectedPost.id;
+        
+        // Clear the selected post to show default view
+        setSelectedPost(null);
+        setSelectedPostId(null);
+        
+        // Trigger a refresh of the post list with deletion information
+        if (typeof window !== 'undefined') {
+          console.log('Dispatching refreshPostList event for deleted post:', deletedPostId);
+          window.dispatchEvent(new CustomEvent('refreshPostList', {
+            detail: {
+              deletedPostId: deletedPostId,
+              source: 'post-display-delete'
+            }
+          }));
+        }
+      } else {
+        console.error('Failed to delete post');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
+  };
+
   // Update isLiked when selectedPost changes
   useState(() => {
     setIsLiked(checkIfLiked());
@@ -151,6 +193,7 @@ export default function PostDisplay() {
                       commentsSection.scrollIntoView({ behavior: 'smooth' });
                     }
                   }}
+                  onDelete={user && user.id === selectedPost.author.id ? handleDeletePost : undefined}
                 />
                 <Separator orientation="vertical" className="mx-1 h-6" />
                 <Link
@@ -244,7 +287,7 @@ export default function PostDisplay() {
                   <MarkdownContent content={selectedPost.content} userEmojis={userEmojis} />
                 )}
 
-                <PostTags post={selectedPost} className="mt-3" />
+                <PostTags hashtags={selectedPost.hashtags} className="mt-3" />
               </div>
             </div>
 

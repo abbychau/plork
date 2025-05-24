@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -129,11 +129,7 @@ function SearchContent() {
   );
 }
 
-// Main page component with Suspense boundary
+// Main page component without Suspense boundary since AppLayout provides it
 export default function SearchPage() {
-  return (
-    <Suspense fallback={<div className="p-4">Loading search results...</div>}>
-      <SearchContent />
-    </Suspense>
-  );
+  return <SearchContent />;
 }

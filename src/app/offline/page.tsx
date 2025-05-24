@@ -8,10 +8,12 @@ import Link from "next/link";
 
 export default function OfflinePage() {
   const [isOnline, setIsOnline] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     // Check initial online status
     setIsOnline(navigator.onLine);
+    setIsInitialized(true);
 
     // Add event listeners for online/offline events
     const handleOnline = () => setIsOnline(true);
@@ -35,17 +37,21 @@ export default function OfflinePage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center justify-center mb-4">
-            {isOnline ? (
+            {!isInitialized ? (
+              <WifiOff className="h-12 w-12 text-muted-foreground" />
+            ) : isOnline ? (
               <Wifi className="h-12 w-12 text-primary" />
             ) : (
               <WifiOff className="h-12 w-12 text-muted-foreground" />
             )}
           </div>
           <CardTitle className="text-center text-xl">
-            {isOnline ? "You're back online!" : "You're offline"}
+            {!isInitialized ? "Checking connection..." : isOnline ? "You're back online!" : "You're offline"}
           </CardTitle>
           <CardDescription className="text-center">
-            {isOnline 
+            {!isInitialized 
+              ? "Please wait while we check your connection status."
+              : isOnline 
               ? "Your internet connection has been restored."
               : "Please check your internet connection and try again."}
           </CardDescription>

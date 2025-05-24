@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { has } from 'lodash';
 
 interface PostTagsProps {
-  hashtags: string | null;
+  hashtags: string[] | null | undefined;
   className?: string;
   limit?: number;
 }
@@ -13,10 +14,13 @@ interface PostTagsProps {
 export default function PostTags({ hashtags, className = '', limit }: PostTagsProps) {
   const [showAllTags, setShowAllTags] = useState(false);
 
-  if (!hashtags) return null;
-
-  // Split the comma-separated hashtags
-  const tags = hashtags.split(',');
+  if (!hashtags || hashtags.length === 0) return null;
+  //assert that hashtags is an array
+  if (!Array.isArray(hashtags)) {
+    const htString = hashtags as string;
+    hashtags = htString.split(',').map((tag) => tag.trim());
+  }
+  const tags = hashtags;
 
   // Apply limit if specified and not showing all tags
   const displayTags = (limit && !showAllTags) ? tags.slice(0, limit) : tags;

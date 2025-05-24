@@ -27,6 +27,7 @@ export interface Post {
   comments?: Comment[];
   likes?: PostLike[];
   activityId: string;
+  hashtags?: string[];
 }
 
 export interface PostLike {

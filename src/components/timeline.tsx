@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import MarkdownContent from '@/components/markdown-content';
 import { useAuth } from '@/lib/auth-context';
+import { usePost } from '@/lib/post-context';
 import TagCloud from '@/components/tag-cloud';
 import { formatDistanceToNow } from '@/lib/utils';
 import EnhancedPostEditor from '@/components/enhanced-post-editor';
@@ -33,6 +34,7 @@ interface Post {
 export default function Timeline() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { selectedPostId, setSelectedPost, setSelectedPostId } = usePost();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,7 +42,6 @@ export default function Timeline() {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [commentSidebarOpen, setCommentSidebarOpen] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [hasNewPosts, setHasNewPosts] = useState(false);
   const [checkingNewPosts, setCheckingNewPosts] = useState(false);
   const [lastPostId, setLastPostId] = useState<string | null>(null);
@@ -357,11 +358,19 @@ export default function Timeline() {
       // Send DELETE request to the API
       const response = await fetch(`/api/posts/${postId}`, {
         method: 'DELETE',
+        credentials: 'include', // Include cookies in the request
       });
 
       if (response.ok) {
         // Remove post from the UI
         setPosts(posts.filter(post => post.id !== postId));
+        
+        // Clear selected post if it matches the deleted one
+        if (selectedPostId === postId) {
+          setSelectedPost(null);
+          setSelectedPostId(null);
+        }
+        
         toast({
           title: "Post deleted",
           description: "Your post has been successfully deleted"

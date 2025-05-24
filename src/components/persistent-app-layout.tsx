@@ -53,13 +53,11 @@ export default function PersistentAppLayout({ children }: PersistentAppLayoutPro
   // Initialize state with values from the static instance
   const [isCollapsed, setIsCollapsed] = useState(layoutState.isCollapsed);
   const [defaultLayout, setDefaultLayout] = useState(layoutState.defaultLayout);
-  const [isClient, setIsClient] = useState(false);
 
   // Load saved layout from localStorage after initial render
   useEffect(() => {
     // Only run on client side
     if (typeof window === 'undefined') return;
-    setIsClient(true);
 
     // Only load from localStorage if we haven't initialized yet
     if (!layoutState.isInitialized) {
@@ -87,32 +85,10 @@ export default function PersistentAppLayout({ children }: PersistentAppLayoutPro
     }
   }, []);
 
-  // Track if layout has been loaded from localStorage
-  const [layoutLoaded, setLayoutLoaded] = useState(layoutState.isInitialized);
-
-  // Update layoutLoaded flag when layout is loaded from localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setLayoutLoaded(true);
-    }
-  }, [defaultLayout]);
-
-  if (!isClient) {
-    return (
-      <div className="h-full w-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading app...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <PostProvider>
       <TooltipProvider delayDuration={0}>
         <ResizablePanelGroup
-          key={layoutLoaded ? 'loaded' : 'initial'}
           direction="horizontal"
           onLayout={(sizes: number[]) => {
             safeLocalStorage.setItem('react-resizable-panels:layout:plork', JSON.stringify(sizes));

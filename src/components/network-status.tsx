@@ -9,6 +9,7 @@ export default function NetworkStatus() {
   const [isOnline, setIsOnline] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     // Only run on client
@@ -16,6 +17,7 @@ export default function NetworkStatus() {
 
     // Set initial state
     setIsOnline(navigator.onLine);
+    setIsInitialized(true);
     
     // After first render, set initialLoad to false
     setTimeout(() => setInitialLoad(false), 1000);
@@ -41,8 +43,8 @@ export default function NetworkStatus() {
     };
   }, []);
 
-  // Don't show anything on initial load
-  if (initialLoad) return null;
+  // Don't show anything on initial load or before initialization
+  if (initialLoad || !isInitialized) return null;
 
   // Don't render if online and toast not showing
   if (isOnline && !showToast) return null;

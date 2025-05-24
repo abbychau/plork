@@ -28,9 +28,15 @@ export function ThemeProvider({
   storageKey = 'plork-theme',
   ...props
 }: ThemeProviderProps) {
+  // Initialize with defaultTheme to prevent hydration mismatch
+  // The actual saved theme will be loaded in useEffect
   const [theme, setTheme] = useState<Theme>(defaultTheme);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     const savedTheme = localStorage.getItem(storageKey) as Theme | null;
 
     if (savedTheme) {
@@ -38,9 +44,14 @@ export function ThemeProvider({
     } else {
       setTheme(defaultTheme);
     }
+    
+    setIsInitialized(true);
   }, [defaultTheme, storageKey]);
 
   useEffect(() => {
+    // Only apply theme changes after initialization to prevent hydration mismatch
+    if (!isInitialized) return;
+    
     const root = window.document.documentElement;
 
     // Remove all theme classes
@@ -78,12 +89,14 @@ export function ThemeProvider({
     }
 
     root.classList.add(theme);
-  }, [theme]);
+  }, [theme, isInitialized]);
 
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(storageKey, theme);
+      }
       setTheme(theme);
     },
   };

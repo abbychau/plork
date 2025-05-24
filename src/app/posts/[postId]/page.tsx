@@ -137,6 +137,57 @@ function PostDetailContent() {
     setEditContent(post?.content || '');
   };
 
+  const handleDeletePost = async () => {
+    if (!user || !post || user.id !== post.author.id) return;
+
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/posts/${post.id}`, {
+        method: 'DELETE',
+        credentials: 'include', // Include cookies in the request
+      });
+
+      if (response.ok) {
+        const deletedPostId = post.id;
+        
+        // Trigger a refresh of the post list with deletion information
+        if (typeof window !== 'undefined') {
+          console.log('Dispatching refreshPostList event for deleted post:', deletedPostId);
+          window.dispatchEvent(new CustomEvent('refreshPostList', {
+            detail: {
+              deletedPostId: deletedPostId,
+              source: 'post-page-delete'
+            }
+          }));
+        }
+        
+        // Redirect to timeline after successful deletion
+        router.push('/timeline');
+        toast({
+          title: "Post deleted",
+          description: "Your post has been successfully deleted"
+        });
+      } else {
+        console.error('Failed to delete post');
+        toast({
+          title: "Delete failed",
+          description: "Could not delete your post",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast({
+        title: "Delete failed",
+        description: "An error occurred while deleting your post",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleLike = async () => {
     if (!user || !post) {
       router.push('/login');
@@ -356,6 +407,7 @@ function PostDetailContent() {
               commentsCount={post.comments?.length || 0}
               onLike={() => handleLike()}
               onEdit={user && user.id === post.author.id && !isEditing ? handleEditPost : undefined}
+              onDelete={user && user.id === post.author.id ? handleDeletePost : undefined}
               hideViewFullPost={true}
             />
           </div>

@@ -67,6 +67,7 @@ export default function PostCard({
     try {
       const response = await fetch(`/api/posts/${post.id}`, {
         method: 'DELETE',
+        credentials: 'include', // Include cookies in the request
       });
 
       if (!response.ok) {
@@ -79,7 +80,8 @@ export default function PostCard({
       console.error('Error deleting post:', error);
     }
   };
-
+  console.log(user);
+  console.log(post.authorId);
   return (
     <div className="bg-card rounded-lg border p-4">
       {showUserInfo && (
@@ -148,6 +150,7 @@ export default function PostCard({
           onComment={handleComment}
           onDelete={user?.id === post.authorId ? handleDelete : undefined}
         />
+
       </div>
     </div>
   );
