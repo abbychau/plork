@@ -104,9 +104,9 @@ export default function AppNav({ isCollapsed }: NavProps) {
           "flex items-center gap-2 -mb-1.5",
           isCollapsed ? "justify-center" : "justify-start"
         )}>
-          <img src={logo.src} alt="Plork" className="h-8 w-8 inline-block mb-1" />
+          <img src={logo.src} alt="Plork" className="h-8 w-8 inline-block mb-1 dark:invert" />
           {!isCollapsed && (
-            <span className="font-bold hidden md:inline-block">
+            <span className="hidden md:inline-block font-mono -ml-1.5">
               lork
             </span>
           )}

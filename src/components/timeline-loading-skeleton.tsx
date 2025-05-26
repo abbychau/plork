@@ -73,7 +73,6 @@ export default function TimelineLoadingSkeleton() {
           <div className="h-13 flex items-center justify-center px-2 border-b border-border">
             <div className="flex items-center gap-2 -mb-1.5">
               <img src={logo.src} alt="Plork" className="h-8 w-8 inline-block mb-1" />
-              <span className="font-bold hidden md:inline-block">lork</span>
             </div>
           </div>
 

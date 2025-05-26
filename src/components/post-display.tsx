@@ -301,7 +301,7 @@ export default function PostDisplay() {
         </ScrollArea>
       ) : (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
-          <p>Select a post to view its details.</p>
+          <p className='mt-5'>Select a post to view its details.</p>
         </div>
       )}
     </div>

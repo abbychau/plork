@@ -81,7 +81,7 @@ export default function Home() {
                 <div className="w-[20%] border-r bg-muted/30 flex flex-col">
                   <div className="p-3 border-b flex items-center space-x-2">
                     <Image src={logo.src} alt="Plork" width={24} height={24} className="h-6 w-6" />
-                    <span className="font-bold text-sm">lork</span>
+                    <span className="font-mono -ml-1.5 text-sm">lork</span>
                   </div>
                   <div className="flex-1 overflow-y-auto">
                     <div className="p-2">
