@@ -23,7 +23,7 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Link href="/timeline" className="text-2xl font-mono -mb-2 mr-8">
-            <img src={logo.src} alt="Plork" className="h-8 w-8 inline-block mb-1" />
+            <img src={logo.src} alt="Plork" className="h-8 w-8 inline-block mb-1 dark:invert" />
             {//hide lork when collapsed
             }
             <span className="hidden md:inline-block font-bold">

@@ -295,7 +295,7 @@ export default function ApiDocsPage() {
     <div className="container max-w-4xl mx-auto px-4 py-8">
       <div className="flex items-center mb-4">
         <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors mr-4">
-          <img src={logo.src} alt="Plork" className="h-4 w-4 inline-block mr-1" />
+          <img src={logo.src} alt="Plork" className="h-4 w-4 inline-block mr-1 dark:invert" />
           Back to Home
         </Link>
       </div>

@@ -72,7 +72,7 @@ export default function TimelineLoadingSkeleton() {
         <div className="w-[15%] min-w-[50px] border-r border-border flex flex-col animate-fade-in">
           <div className="h-13 flex items-center justify-center px-2 border-b border-border">
             <div className="flex items-center gap-2 -mb-1.5">
-              <img src={logo.src} alt="Plork" className="h-8 w-8 inline-block mb-1" />
+              <img src={logo.src} alt="Plork" className="h-8 w-8 inline-block mb-1 dark:invert" />
             </div>
           </div>
 

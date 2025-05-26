@@ -20,8 +20,8 @@ export default function Home() {
       <header className="border-b sticky top-0 bg-background/95 backdrop-blur z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Image src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
-            <span className="font-bold text-xl">Plork</span>
+            <Image src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10 dark:invert" />
+            <span className="font-mono -ml-1.5 text-xl">Plork</span>
           </div>
           <div className="flex items-center space-x-2">
             <SimpleThemeToggle />
@@ -80,7 +80,7 @@ export default function Home() {
                 {/* Left column - Navigation */}
                 <div className="w-[20%] border-r bg-muted/30 flex flex-col">
                   <div className="p-3 border-b flex items-center space-x-2">
-                    <Image src={logo.src} alt="Plork" width={24} height={24} className="h-6 w-6" />
+                    <Image src={logo.src} alt="Plork" width={24} height={24} className="h-6 w-6 dark:invert" />
                     <span className="font-mono -ml-1.5 text-sm">lork</span>
                   </div>
                   <div className="flex-1 overflow-y-auto">

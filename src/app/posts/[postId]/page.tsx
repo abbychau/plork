@@ -285,7 +285,7 @@ function PostDetailContent() {
     return (
       <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
         <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
-          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
+          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10 dark:invert" />
           <Skeleton className="h-9 w-32" />
         </div>
 
@@ -315,7 +315,7 @@ function PostDetailContent() {
     return (
       <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
         <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
-          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
+          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10 dark:invert" />
         </div>
 
         <Card className="shadow-sm border-muted max-w-5xl m-auto">
@@ -334,7 +334,7 @@ function PostDetailContent() {
   return (
     <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
       <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
-        <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
+        <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10 dark:invert" />
 
         <Button
           variant="outline"
@@ -392,7 +392,7 @@ function PostDetailContent() {
               <MarkdownContent content={post.content} className="text-lg" />
               {post.hashtags && (
                 <div className="mt-4">
-                  <PostTags hashtags={post.hashtags} />
+                  <PostTags hashtags={post.hashtags.split(',')} />
                 </div>
               )}
             </div>
@@ -434,7 +434,7 @@ export default function PostDetailPage() {
     <Suspense fallback={
       <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
         <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
-          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10" />
+          <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10 dark:invert" />
           <Skeleton className="h-9 w-32" />
         </div>
 

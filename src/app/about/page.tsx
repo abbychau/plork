@@ -26,7 +26,7 @@ export default function AboutPage() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 p-4">
           <div className="md:w-1/2">
             <div className="flex items-center gap-3 mb-4">
-              <Image src={logo} alt="Plork Logo" width={48} height={48} />
+              <Image src={logo.src} alt="Plork Logo" width={48} height={48} className="dark:invert" />
               <h1 className="text-4xl font-bold">Plork</h1>
             </div>
             <h2 className="text-2xl font-semibold mb-4">A modern social platform with a classic feel</h2>
