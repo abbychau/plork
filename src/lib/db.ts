@@ -48,11 +48,11 @@ export const userService = {
     const { privateKey, publicKey } = generateKeyPair();
 
     // Create ActivityPub URLs
-    const actorUrl = `${baseUrl}/users/${username}`;
-    const inboxUrl = `${actorUrl}/inbox`;
-    const outboxUrl = `${actorUrl}/outbox`;
-    const followersUrl = `${actorUrl}/followers`;
-    const followingUrl = `${actorUrl}/following`;
+    const actorUrl = `${baseUrl}/api/users/${username}`;
+    const inboxUrl = `${baseUrl}/api/users/${username}/inbox`;
+    const outboxUrl = `${baseUrl}/api/users/${username}/outbox`;
+    const followersUrl = `${baseUrl}/api/users/${username}/followers`;
+    const followingUrl = `${baseUrl}/api/users/${username}/following`;
 
     // Create user in database
     return prisma.user.create({

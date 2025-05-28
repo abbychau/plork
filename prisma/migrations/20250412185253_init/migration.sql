@@ -140,3 +140,5 @@ CREATE UNIQUE INDEX "OutboxItem_activityId_key" ON "OutboxItem"("activityId");
 
 -- CreateIndex
 CREATE INDEX "OutboxItem_userId_idx" ON "OutboxItem"("userId");
+
+PRAGMA journal_mode=WAL;

@@ -78,7 +78,7 @@ export default function MarkdownContent({ content, className = '', userEmojis = 
   };
 
   return (
-    <div className={`prose dark:prose-invert max-w-none overflow-x-hidden ${className}`}>
+    <div className={`prose dark:prose-invert overflow-x-hidden ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -197,7 +197,7 @@ export default function MarkdownContent({ content, className = '', userEmojis = 
             const isInline = props.inline || true;
             return (
               isInline ?
-                <code {...props} className="bg-muted p-1 py-0.5 rounded text-sm break-all" /> :
+                <code {...props} className="bg-muted p-1 py-0.5 rounded text-sm break-all max-w-prose" /> :
                 <code {...props} className="block bg-muted p-4 rounded-md overflow-x-auto text-sm break-all max-w-1" />
             );
           },

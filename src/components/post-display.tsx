@@ -137,11 +137,11 @@ export default function PostDisplay() {
       if (response.ok) {
         // Store the post ID before clearing it
         const deletedPostId = selectedPost.id;
-        
+
         // Clear the selected post to show default view
         setSelectedPost(null);
         setSelectedPostId(null);
-        
+
         // Trigger a refresh of the post list with deletion information
         if (typeof window !== 'undefined') {
           console.log('Dispatching refreshPostList event for deleted post:', deletedPostId);
@@ -230,27 +230,10 @@ export default function PostDisplay() {
         <ScrollArea className="flex-1">
           <div className="flex flex-col p-4 overflow-x-hidden">
             <div className="flex items-start gap-4 mb-4">
-              <UserProfilePopover
-                username={selectedPost.author.username}
-                onPin={() => addPinnedUser({
-                  id: selectedPost.author.id,
-                  username: selectedPost.author.username,
-                  displayName: selectedPost.author.displayName,
-                  profileImage: selectedPost.author.profileImage
-                })}
-              >
-                <div className="cursor-pointer">
-                  <Avatar className="h-12 w-12 mt-1.5">
-                    <AvatarImage src={selectedPost.author.profileImage} alt={selectedPost.author.username} />
-                    <AvatarFallback>
-                      {selectedPost.author.displayName?.[0] || selectedPost.author.username[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-              </UserProfilePopover>
+
 
               <div className="flex-1">
-                <div className="flex flex-col">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
                   <UserProfilePopover
                     username={selectedPost.author.username}
                     onPin={() => addPinnedUser({
@@ -260,19 +243,30 @@ export default function PostDisplay() {
                       profileImage: selectedPost.author.profileImage
                     })}
                   >
-                    <div className="font-semibold cursor-pointer hover:underline">
-                      {selectedPost.author.displayName || selectedPost.author.username}
+                    <div className="cursor-pointer flex items-center gap-2">
+                      <Avatar className="h-12 w-12 mt-1.5 mr-2 flex-shrink-0">
+                        <AvatarImage src={selectedPost.author.profileImage} alt={selectedPost.author.username} />
+                        <AvatarFallback>
+                          {selectedPost.author.displayName?.[0] || selectedPost.author.username[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <strong>
+                          {selectedPost.author.displayName || selectedPost.author.username}
+                        </strong>
+
+                      </div>
                     </div>
                   </UserProfilePopover>
-                  <span className="text-xs text-muted-foreground">
-                    @{selectedPost.author.username}
-                  </span>
+                        <span className="text-xs text-muted-foreground">
+                          @{selectedPost.author.username}
+                          <span className="text-muted-foreground text-xs ml-1 mr-1">·</span>
+                          {formatDistanceToNow(new Date(selectedPost.createdAt))}
+                        </span>
                 </div>
 
-                <div className="text-xs text-muted-foreground mt-1">
-                  {formatDistanceToNow(new Date(selectedPost.createdAt))} ago
-                </div>
 
+                <div className="flex items-center gap-2 mx-1">
                 {isEditing ? (
                   <EnhancedPostEditor
                     mode="edit"
@@ -288,6 +282,7 @@ export default function PostDisplay() {
                 )}
 
                 <PostTags hashtags={selectedPost.hashtags} className="mt-3" />
+                </div>
               </div>
             </div>
 

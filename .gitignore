@@ -45,3 +45,4 @@ next-env.d.ts
 prisma/dev.db
 public/uploads
 reference
+prisma/dev.db*

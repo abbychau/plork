@@ -774,7 +774,7 @@ export default function PostList({
           {posts.map((post, index) => (
             <button
               key={`${post.id}-${index}`}
-              className={`flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent ${
+              className={`flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent break-all ${
                 selectedPostId === post.id ? 'bg-muted' : ''
               }`}
               onClick={() => {

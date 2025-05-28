@@ -18,6 +18,7 @@ import PostTags from '@/components/post-tags';
 import { formatDistanceToNow } from '@/lib/utils';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import logo from '@/app/favicon.svg';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 
 interface Like {
   id: string;
@@ -435,7 +436,7 @@ export default function PostDetailPage() {
       <div className="container mx-auto px-4 py-8 h-full overflow-y-scroll w-full">
         <div className="mb-4 flex items-center justify-between max-w-5xl m-auto">
           <img src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10 dark:invert" />
-          <Skeleton className="h-9 w-32" />
+          <SimpleThemeToggle className='absolute right-4 top-4' />
         </div>
 
         <Card className="shadow-sm border-muted max-w-5xl m-auto">

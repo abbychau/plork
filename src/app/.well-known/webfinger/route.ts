@@ -1,5 +1,6 @@
 /**
  * WebFinger endpoint for ActivityPub discovery
+ * This handles /.well-known/webfinger requests directly
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { userService } from '@/lib/db';
@@ -56,8 +57,17 @@ export async function GET(req: NextRequest) {
         type: 'application/activity+json',
         href: user.actorUrl,
       },
+      {
+        type: 'text/html',
+        rel: 'http://webfinger.net/rel/profile-page',
+        href: `https://${domain}/users/${username}`,
+      }
     ],
   };
   
-  return NextResponse.json(response);
+  return NextResponse.json(response, {
+    headers: {
+      'Content-Type': 'application/jrd+json; charset=utf-8',
+    },
+  });
 }

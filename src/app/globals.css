@@ -336,6 +336,9 @@
   @apply border-border my-6;
 }
 
+.prose p {
+  word-break: break-all;
+}
 /* Emoji picker styles */
 .emoji-picker-container {
   position: relative;

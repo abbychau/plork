@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Inbox, Code, Globe, Mail, MessageSquare, Users, Key, Mailbox, Home, ArrowLeft } from 'lucide-react';
 import logo from '@/app/favicon.svg';
+import { SimpleThemeToggle } from '@/components/simple-theme-toggle';
 
 export default function AboutPage() {
   return (
@@ -20,6 +21,7 @@ export default function AboutPage() {
               Back to Home
             </Button>
           </Link>
+          <SimpleThemeToggle className='absolute right-4 top-4' />
         </div>
 
         {/* Hero Section */}
@@ -31,14 +33,21 @@ export default function AboutPage() {
             </div>
             <h2 className="text-2xl font-semibold mb-4">A modern social platform with a classic feel</h2>
             <p className="text-lg mb-6 text-muted-foreground">
-              Plork combines the familiar mailbox-style interface with powerful open standards to create a seamless social experience that connects with the wider Fediverse.
+              Plork combines the familiarity of email with the power of modern social networking. Our mailbox-inspired design makes it easy to connect, share, and discover content in a clean, organized way.
             </p>
           </div>
         </div>
 
         {/* Features Section */}
-        <Tabs defaultValue="mailbox" className="mb-12">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="story" className="mb-12">
+          <TabsList className="grid w-full grid-cols-4">
+
+            <TabsTrigger value="story" className="gap-2">
+              <Home className="h-4 w-4" />
+              Story
+            </TabsTrigger>
+              
+
             <TabsTrigger value="mailbox" className="gap-2">
               <Mailbox className="h-4 w-4" />
               Mailbox Design
@@ -52,6 +61,53 @@ export default function AboutPage() {
               ActivityPub
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="story" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>The Story</CardTitle>
+                <CardDescription>
+                  How Plork was born from the need for a better social platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-1 gap-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2"></h3>
+                    <p className="text-muted-foreground mb-4 font-serif">
+I had been working on social platforms for some years. The reason why nearly all of them created a suggested feed is not only they want to make money and keep you on the platform by providing some juicy content, but also, it is nearly algorithmically impossible to show you all the content that is posted by people you follow. 
+              <br />
+              <br />
+              For example, if you follow 100 people and each of them posts 10 times a day. Then when ever you request the API for your feed for 10 posts, the server has to fetch through all these 100 people's posts and then sort them by time, likes, comments, etc. This is not only a lot of work for the server, but also it is not possible to show you all the posts in a single request. 
+              <br /><br />
+              This method is called the "pull scheme". The time complexity of this is O(n*m) , where n is the number of people you follow and m is the number of posts needed.
+              <br /><br />
+              So here comes the "push scheme", it is much faster and being adopted by many social platforms like mastodon and Twitter(X). The idea is to push the posts to the people who follow you, so when you create a post, it is sent to all your followers immediately. This way, when you request your feed, you already have all the posts that are posted by people you follow. 
+              <br /><br />
+              However, you can see that publishing a post is much more expensive, and "Follow" is also expensive because the backend has to rearrange the existing timeline to include the new follower's posts. What will happen if someone needs to follow and unfollow just because he misclicked a button?
+              <br /><br />
+              Suggested feeds are a way to solve this problem, because the feed is no longer determined. It can have a pool of posts to push to you based on your interests(which is deduced by a graph algorithm). Now not only the server can care less about if 100% of the posts from your friends are shown, but also it can make money by showing you ads and sponsored posts.
+
+              <br /><br />
+              And I started to think of "newsgroups". For those who don't know, newsgroups are a way to share information and discuss topics in a decentralized manner. They were popular before the rise of social media platforms. Newsgroups are distributed by email, and you essentially subscribe and be liable for the storage and the cpu to sort the posts. Which is to me, a perfect stance for a social platform.
+              <br /><br />
+
+              However, newsgroups are not very user-friendly because there is a huge waste of space because the space complexity of the overall system is O(n*m) as well. So I thought, it would be great if we can have a social platform that is like a mailbox.
+
+              <br /><br />
+
+              How can we make this platform financially sustainable if we cannot pollute and rearrange your timeline? Simple, we can still put ads in the post list for free users. and also, we can charge you according to your inbox size for power users. Just like all the email providers do. 
+
+              <br /><br />
+              So the story of Plork is born.
+              
+
+                    </p>
+                  </div>
+                </div>
+                </CardContent>
+                </Card>
+          </TabsContent>
 
           <TabsContent value="mailbox" className="mt-6">
             <Card>

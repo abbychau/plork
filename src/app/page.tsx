@@ -21,7 +21,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Image src={logo.src} alt="Plork" width={40} height={40} className="h-10 w-10 dark:invert" />
-            <span className="font-mono -ml-1.5 text-xl">Plork</span>
+            <span className="font-mono -ml-1.5 text-xl">lork</span>
           </div>
           <div className="flex items-center space-x-2">
             <SimpleThemeToggle />
@@ -54,7 +54,7 @@ export default function Home() {
                   Fediverse-ready<br /><span className="text-foreground">social platform</span>
                 </h1>
                 <p className="max-w-[600px] text-gray-500 text-lg md:text-xl dark:text-gray-400 animate-fade-in-up animation-delay-100">
-                  A modern, mailbox-style ActivityPub-compatible social network that seamlessly connects with Mastodon, Pleroma, and the entire Fediverse ecosystem. Take control of your social experience.
+                  Plork is a mailbox-style ActivityPub-compatible social network that offer you a way to view your timeline and follows like you would on Gmail or Outlook. We spend time designing fully controllable user timeline and inboxes that are easy to manage and customize.
                 </p>
               </div>
               <div className="flex flex-wrap gap-4 pt-4 animate-fade-in-up animation-delay-200">
@@ -70,18 +70,13 @@ export default function Home() {
 
             {/* 3-column mailbox-like interface mockup */}
             <div className="relative w-full md:w-1/2 h-[400px] rounded-lg overflow-hidden shadow-2xl animate-fade-in-up animation-delay-300 border border-border/40 bg-card/50 backdrop-blur-sm">
-              <div className="absolute top-0 right-0 z-10 m-2">
-                <Badge variant="outline" className="bg-background/80 backdrop-blur-sm">
-                  <Mailbox className="h-3 w-3 mr-1" />
-                  Mailbox Design
-                </Badge>
-              </div>
+              
               <div className="flex h-full">
                 {/* Left column - Navigation */}
                 <div className="w-[20%] border-r bg-muted/30 flex flex-col">
                   <div className="p-3 border-b flex items-center space-x-2">
                     <Image src={logo.src} alt="Plork" width={24} height={24} className="h-6 w-6 dark:invert" />
-                    <span className="font-mono -ml-1.5 text-sm">lork</span>
+                    <span className="font-mono -ml-1.5 text-sm">review</span>
                   </div>
                   <div className="flex-1 overflow-y-auto">
                     <div className="p-2">
@@ -239,7 +234,7 @@ export default function Home() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground text-sm">
-                      A clean, organized three-column layout inspired by email clients for intuitive navigation and content management.
+                      A three-column layout inspired by email clients for intuitive navigation and content management.
                     </p>
                   </CardContent>
                 </Card>
@@ -257,6 +252,11 @@ export default function Home() {
                     <p className="text-muted-foreground text-sm">
                       Build integrations and automate your social experience with our comprehensive API and key management system.
                     </p>
+                    <p>
+                      <Link href="/api-docs" className="text-primary hover:underline">
+                        Explore the API
+                      </Link>
+                    </p>
                   </CardContent>
                 </Card>
 
@@ -272,6 +272,11 @@ export default function Home() {
                   <CardContent>
                     <p className="text-muted-foreground text-sm">
                       Connect with users across the decentralized social web including Mastodon, Pleroma, and the entire Fediverse.
+                    </p>
+                    <p>
+                      <Link href="/activitypub" className="text-primary hover:underline">
+                        Learn more about ActivityPub
+                      </Link>
                     </p>
                   </CardContent>
                 </Card>

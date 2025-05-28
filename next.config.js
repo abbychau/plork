@@ -11,6 +11,7 @@ console.log(`Using port: ${port}`);
 console.log(`Using domain: ${domainName}`);
 
 const nextConfig = {
+
   // Ignore TypeScript type errors during build
   typescript: {
     // This setting allows the build to continue even with TypeScript errors

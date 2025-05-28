@@ -205,24 +205,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
         <div className="space-y-3 mb-8">
           {comments.map((comment) => (
             <div key={comment.id} className="group flex gap-4 pb-3 border-b last:border-b-0">
-              <UserProfilePopover
-                username={comment.author.username}
-                onPin={() => addPinnedUser({
-                  id: comment.author.id,
-                  username: comment.author.username,
-                  displayName: comment.author.displayName,
-                  profileImage: comment.author.profileImage
-                })}
-              >
-                <div className="cursor-pointer">
-                  <Avatar className="h-10 w-10 border border-muted hover:border-primary transition-colors">
-                    <AvatarImage src={comment.author.profileImage} alt={comment.author.username} />
-                    <AvatarFallback>
-                      {comment.author.displayName?.[0] || comment.author.username[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-              </UserProfilePopover>
+
 
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -235,31 +218,40 @@ export default function CommentSection({ postId, initialComments, compact = fals
                       profileImage: comment.author.profileImage
                     })}
                   >
-                    <span className="font-semibold hover:underline cursor-pointer">
-                      {comment.author.displayName || comment.author.username}
-                    </span>
+
+                    <div className="cursor-pointer flex items-center gap-2">
+                      <Avatar className="h-10 w-10 border border-muted hover:border-primary transition-colors">
+                        <AvatarImage src={comment.author.profileImage} alt={comment.author.username} />
+                        <AvatarFallback>
+                          {comment.author.displayName?.[0] || comment.author.username[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-semibold hover:underline cursor-pointer">
+                        {comment.author.displayName || comment.author.username}
+                      </span>
+                    </div>
                   </UserProfilePopover>
-                  <span className="text-muted-foreground text-sm">@{comment.author.username}</span>
-                  <span className="text-muted-foreground text-sm">·</span>
-                  <span className="text-muted-foreground text-sm" title={new Date(comment.createdAt).toLocaleString()}>
+                  <span className="text-muted-foreground text-xs">@{comment.author.username}</span>
+                  <span className="text-muted-foreground text-xs">·</span>
+                  <span className="text-muted-foreground text-xs" title={new Date(comment.createdAt).toLocaleString()}>
                     {formatDistanceToNow(new Date(comment.createdAt))}
                   </span>
                   {user && user.id === comment.author.id && (
-                      <div className="flex items-center gap-3 ml-2">
-                        <button
-                          className="text-xs font-medium text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-colors duration-200 py-1"
-                          onClick={() => handleEditComment(comment)}
-                        >
-                          <Edit className="w-3 h-3" />
-                        </button>
-                        <button
-                          className="text-xs font-medium text-muted-foreground hover:text-destructive flex items-center gap-1.5 transition-colors duration-200 py-1"
-                          onClick={() => setCommentToDelete(comment.id)}
-                        >
-                          <Trash className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-3 ml-2">
+                      <button
+                        className="text-xs font-medium text-muted-foreground hover:text-primary flex items-center gap-1.5 transition-colors duration-200 py-1"
+                        onClick={() => handleEditComment(comment)}
+                      >
+                        <Edit className="w-3 h-3" />
+                      </button>
+                      <button
+                        className="text-xs font-medium text-muted-foreground hover:text-destructive flex items-center gap-1.5 transition-colors duration-200 py-1"
+                        onClick={() => setCommentToDelete(comment.id)}
+                      >
+                        <Trash className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {editingCommentId === comment.id ? (
@@ -275,7 +267,7 @@ export default function CommentSection({ postId, initialComments, compact = fals
                     />
                   </div>
                 ) : (
-                  <div className="mt-2">
+                  <div className="m-2">
                     <MarkdownContent content={comment.content} userEmojis={localUserEmojis} />
 
                   </div>
