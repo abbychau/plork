@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 
-// GET /api/posts/liked/new?latestId=xxx - Get new liked posts since the latest post ID
 export async function GET(request: NextRequest) {
   try {
     // Check authentication

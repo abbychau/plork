@@ -401,7 +401,7 @@ export default function PostList({
       // Construct URL with proper separator
       let newPostsUrl = baseEndpoint.includes('?')
         ? `${baseEndpoint}&new=true&latestId=${latestPostId}`
-        : `${baseEndpoint}/new?latestId=${latestPostId}`;
+        : `${baseEndpoint}/check-new?latestId=${latestPostId}`;
 
       // Add search query if present
       if (searchQuery) {

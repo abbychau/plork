@@ -4,7 +4,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-// GET /api/posts/search/new?latestId=xxx&q=xxx - Get new search results since the latest post ID
 export async function GET(request: NextRequest) {
   try {
     // Get query parameters

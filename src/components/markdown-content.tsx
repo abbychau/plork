@@ -2,6 +2,7 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import HashtagText from './hashtag-text';
 import ImageLightbox from './image-lightbox';
 import YouTubePreview from './youtube-preview';
@@ -80,7 +81,7 @@ export default function MarkdownContent({ content, className = '', userEmojis = 
   return (
     <div className={`prose dark:prose-invert overflow-x-hidden ${className}`}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
           a: ({ node, ...props }) => {
             const href = props.href || '';
