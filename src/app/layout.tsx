@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 import DynamicTitle from "@/components/dynamic-title";
 import BottomMenu from "@/components/bottom-menu";
 import PWAInstallPrompt from "@/components/pwa-install-prompt";
+import AutoPushNotificationModal from "@/components/auto-push-notification-modal";
 import NetworkStatus from "@/components/network-status";
 import faviconSVG from "./favicon.svg";
 
@@ -70,6 +71,7 @@ export default function RootLayout({
               <BottomMenu />
               <Toaster />
               <PWAInstallPrompt />
+              <AutoPushNotificationModal />
               <NetworkStatus />
             </div>
             </PinnedUsersProviderWithAuth>

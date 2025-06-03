@@ -87,6 +87,7 @@ export default function PostList({
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generic function to load posts with flexible parameters
@@ -560,7 +561,6 @@ export default function PostList({
 
   // Handle manual refresh
   const handleRefresh = async () => {
-    if (isRefreshing || !isMountedRef.current) return;
 
     setIsRefreshing(true);
 

@@ -126,27 +126,62 @@ self.addEventListener('fetch', (event) => {
 
 // Handle push notifications
 self.addEventListener('push', (event) => {
-  const data = event.data.json();
+  console.log('Push event received:', event);
+  
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      console.error('Error parsing push data:', e);
+      data = {
+        title: 'New Notification',
+        body: 'You have a new notification from Plork'
+      };
+    }
+  } else {
+    data = {
+      title: 'New Notification',
+      body: 'You have a new notification from Plork'
+    };
+  }
   
   const options = {
-    body: data.body,
+    body: data.body || 'You have a new notification',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
+    tag: 'plork-notification',
+    renotify: true,
     data: {
       url: data.url || '/'
     }
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(data.title || 'Plork', options)
   );
 });
 
 // Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
+  console.log('Notification clicked:', event);
   event.notification.close();
   
   event.waitUntil(
-    clients.openWindow(event.notification.data.url)
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      const url = event.notification.data.url || '/';
+      
+      // Check if there's already a window/tab open
+      for (const client of clientList) {
+        if (client.url === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      
+      // If no window is open, open a new one
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
   );
 });

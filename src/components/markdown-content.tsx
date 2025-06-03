@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import HashtagText from './hashtag-text';
+import MentionText from './mention-text';
 import ImageLightbox from './image-lightbox';
 import YouTubePreview from './youtube-preview';
 import { isYouTubeLink } from '@/lib/utils';
@@ -17,6 +18,72 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import React from 'react';
+
+// Helper function to process text with mentions, hashtags, and emojis
+function processTextWithSpecialElements(
+  text: string, 
+  emojiMap: Map<string, CustomEmoji>, 
+  handleAddEmojiClick: (emoji: CustomEmoji) => void
+): React.ReactNode[] {
+  // First, split by mentions and hashtags while preserving the special elements
+  const mentionHashtagRegex = /(@[a-zA-Z0-9_-]+|#[\w\u0080-\uFFFF]+)/g;
+  const segments = text.split(mentionHashtagRegex);
+
+  const processedElements: React.ReactNode[] = [];
+
+  segments.forEach((segment, segmentIndex) => {
+    if (!segment) return;
+
+    // Check if this segment is a mention
+    if (segment.match(/^@[a-zA-Z0-9_-]+$/)) {
+      processedElements.push(
+        <MentionText key={`mention-${segmentIndex}`} text={segment} />
+      );
+      return;
+    }
+
+    // Check if this segment is a hashtag
+    if (segment.match(/^#[\w\u0080-\uFFFF]+$/)) {
+      processedElements.push(
+        <HashtagText key={`hashtag-${segmentIndex}`} text={segment} />
+      );
+      return;
+    }
+
+    // For regular text segments, process emojis
+    const emojiSegments = segment.split(/(:[a-zA-Z0-9_-]+:)/g).filter(Boolean);
+    
+    emojiSegments.forEach((emojiSegment, emojiIndex) => {
+      if (emojiMap.has(emojiSegment)) {
+        const emoji = emojiMap.get(emojiSegment)!;
+        processedElements.push(
+          <Button
+            key={`emoji-${segmentIndex}-${emojiIndex}`}
+            variant="ghost"
+            size="icon"
+            className="inline-block w-10 h-10 p-0 m-0 align-text-bottom hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            title={`Add :${emoji.name}: to your collection?`}
+            onClick={() => handleAddEmojiClick(emoji)}
+          >
+            <img
+              src={emoji.imageUrl}
+              alt={emojiSegment}
+              title={`:${emoji.name}: (Original: ${emoji.originalName})`}
+              className="custom-emoji-image w-full h-full object-contain align-text-bottom cursor-pointer"
+            />
+          </Button>
+        );
+      } else if (emojiSegment) {
+        // Regular text
+        processedElements.push(
+          <span key={`text-${segmentIndex}-${emojiIndex}`}>{emojiSegment}</span>
+        );
+      }
+    });
+  });
+
+  return processedElements;
+}
 
 interface MarkdownContentProps {
   content: string;
@@ -147,43 +214,11 @@ export default function MarkdownContent({ content, className = '', userEmojis = 
               return <>{children}</>;
             }
 
-            // If children is a simple string, process it for emojis and hashtags
+            // If children is a simple string, process it for mentions, hashtags, and emojis
             if (typeof children === 'string') {
-              // Check for hashtags first
-              if (children.includes('#')) {
-                return (
-                  <p {...props} className="my-2">
-                    <HashtagText text={children} />
-                  </p>
-                );
-              }
-
-              // Process emojis
-              const segments = children.split(/(:[a-zA-Z0-9_-]+:)/g).filter(Boolean);
-              const processedChildren = segments.map((segment, index) => {
-                if (emojiMap.has(segment)) {
-                  const emoji = emojiMap.get(segment)!;
-                  return (
-                    <Button
-                      key={`${emoji.id}-${index}`}
-                      variant="ghost"
-                      size="icon"
-                      className="inline-block w-10 h-10 p-0 m-0 align-text-bottom hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                      title={`Add :${emoji.name}: to your collection?`}
-                      onClick={() => handleAddEmojiClick(emoji)}
-                    >
-                      <img
-                        src={emoji.imageUrl}
-                        alt={segment}
-                        title={`:${emoji.name}: (Original: ${emoji.originalName})`}
-                        className="custom-emoji-image w-full h-full object-contain align-text-bottom cursor-pointer"
-                      />
-                    </Button>
-                  );
-                }
-                return segment;
-              });
-
+              // Process text that contains mentions, hashtags, or emojis
+              const processedChildren = processTextWithSpecialElements(children, emojiMap, handleAddEmojiClick);
+              
               return (
                 <p {...props} className="my-2">
                   {processedChildren}

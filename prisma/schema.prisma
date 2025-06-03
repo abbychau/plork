@@ -49,6 +49,7 @@ model User {
   apiKeys       ApiKey[]
   createdEmojis CustomEmoji[] @relation("CreatedEmojis") // Emojis created by this user
   emojiCollection UserEmojiCollection[] @relation("EmojiCollection") // User's personal emoji collection
+  pushSubscriptions PushSubscription[] // User's push notification subscriptions
 }
 
 model Post {
@@ -253,4 +254,23 @@ model ApiKey {
 
   @@index([userId])
   @@index([key])
+}
+
+model PushSubscription {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  endpoint      String    // Push service endpoint URL
+  p256dhKey     String    // User's public key for encryption
+  authKey       String    // Authentication secret
+  userAgent     String?   // Browser/device identifier
+  active        Boolean   @default(true) // Whether the subscription is active
+
+  // Relationships
+  userId        String    // User who owns this subscription
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint]) // User can have multiple subscriptions but not duplicate endpoints
+  @@index([userId])
+  @@index([active])
 }

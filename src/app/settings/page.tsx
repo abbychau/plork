@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import AvatarUpload from '@/components/avatar-upload';
+import NotificationSettings from '@/components/notification-settings';
 import {
   Tabs,
   TabsContent,
@@ -267,6 +268,7 @@ export default function SettingsPage() {
               <TabsList className="mb-6">
                 <TabsTrigger value="profile">Profile</TabsTrigger>
                 <TabsTrigger value="account">Account</TabsTrigger>
+                <TabsTrigger value="notifications">Notifications</TabsTrigger>
                 <TabsTrigger value="appearance">Appearance</TabsTrigger>
                 <TabsTrigger value="api-keys">API Keys</TabsTrigger>
               </TabsList>
@@ -386,6 +388,10 @@ export default function SettingsPage() {
                     </div>
                   </form>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="notifications">
+                <NotificationSettings />
               </TabsContent>
 
               <TabsContent value="appearance">

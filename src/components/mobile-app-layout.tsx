@@ -219,9 +219,7 @@ export default function MobileAppLayout({
           {/* Main Content - with padding to ensure content isn't hidden under fixed bars */}
           <div className="flex-1 overflow-hidden">
             {selectedPost ? (
-              <ScrollArea className="h-full pb-[calc(3.5rem+env(safe-area-inset-bottom,0))]">
                 <PostDisplay />
-              </ScrollArea>
             ) : (
               <>
                 {children || (

@@ -182,7 +182,7 @@ export default function AppLayout({
           <ResizableHandle withHandle />
 
           <ResizablePanel defaultSize={defaultLayout[1]} minSize={30} className="overflow-hidden">
-            <ScrollArea className="h-full">
+            
               {children || (
                 <PostList
                   initialPosts={initialPosts}
@@ -197,7 +197,7 @@ export default function AppLayout({
                   refreshKey={refreshKey}
                 />
               )}
-            </ScrollArea>
+            
           </ResizablePanel>
 
           <ResizableHandle withHandle />

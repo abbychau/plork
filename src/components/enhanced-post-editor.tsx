@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import MarkdownContent from '@/components/markdown-content';
 import CustomEmojiPicker from '@/components/custom-emoji-picker'; // Changed import
+import MentionAutocomplete from '@/components/mention-autocomplete';
 import { useCompactMode } from '@/hooks/use-compact-mode';
 
 // Import Lucide icons
@@ -78,6 +79,34 @@ export default function EnhancedPostEditor({
       setContent((prev) => `${prev}${emojiName}`);
     }
   }, [content, setContent]);
+
+  // Handle mention selection
+  const handleMention = useCallback((username: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const cursorPos = textarea.selectionStart;
+    const textBefore = content.substring(0, cursorPos);
+    const textAfter = content.substring(cursorPos);
+
+    // Find the last @ symbol before cursor
+    const lastAtIndex = textBefore.lastIndexOf('@');
+    if (lastAtIndex === -1) return;
+
+    // Replace from @ to cursor with @username
+    const beforeMention = content.substring(0, lastAtIndex);
+    const mention = `@${username} `;
+    const newContent = `${beforeMention}${mention}${textAfter}`;
+
+    setContent(newContent);
+
+    // Focus and set cursor position after the inserted mention
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = lastAtIndex + mention.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  }, [content]);
 
   // Update content when initialContent changes (for edit mode)
   useEffect(() => {
@@ -243,6 +272,13 @@ export default function EnhancedPostEditor({
                 Uploading image...
               </div>
             )}
+
+            {/* Mention Autocomplete */}
+            <MentionAutocomplete
+              textareaRef={textareaRef}
+              content={content}
+              onMention={handleMention}
+            />
           </CardContent>
 
           <CardFooter className="flex flex-col sm:flex-row sm:justify-between px-4 pb-3 gap-2 card-footer w-full">

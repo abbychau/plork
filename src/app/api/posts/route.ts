@@ -3,7 +3,8 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { userService, postService } from '@/lib/db';
+import { userService, postService, prisma } from '@/lib/db';
+import { createNotification } from '@/lib/notifications';
 // import { generateActivityId, createNoteObject, createCreateActivity } from '@/lib/activitypub';
 import crypto from 'crypto';
 import { getBaseUrl } from '@/lib/config';
@@ -103,6 +104,35 @@ export async function POST(req: NextRequest) {
       authorId: userId,
       activityId,
     });
+
+    // Check for mentions in the post content and create notifications
+    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+    const mentions = content.match(mentionRegex);
+
+    if (mentions) {
+      const uniqueMentions = [...new Set(mentions)];
+
+      for (const mention of uniqueMentions) {
+        const username = (mention as string).substring(1); // Remove the @ symbol
+
+        // Skip if the mentioned user is the post author
+        if (username === user.username) continue;
+
+        // Find the mentioned user
+        const mentionedUser = await userService.getUserByUsername(username);
+
+        if (mentionedUser) {
+          // Create a notification for the mentioned user
+          await createNotification({
+            type: 'mention',
+            userId: mentionedUser.id, // recipient
+            actorId: userId, // who performed the action
+            postId: post.id,
+            message: 'mentioned you in a post',
+          });
+        }
+      }
+    }
 
     // Return the created post
     return NextResponse.json(post);

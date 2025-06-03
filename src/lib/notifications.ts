@@ -2,6 +2,7 @@
  * Notification system for the SNS application
  */
 import { prisma } from './db';
+import { sendPushNotificationToUser } from './web-push';
 
 export type NotificationType = 'like' | 'comment' | 'follow' | 'mention' | 'share';
 
@@ -15,12 +16,12 @@ interface NotificationData {
 }
 
 /**
- * Create a new notification
+ * Create a new notification and send push notification
  */
 export async function createNotification(data: NotificationData) {
   const { type, userId, actorId, postId, commentId, message } = data;
   
-  return prisma.notification.create({
+  const notification = await prisma.notification.create({
     data: {
       type,
       userId,
@@ -37,6 +38,40 @@ export async function createNotification(data: NotificationData) {
       comment: true,
     },
   });
+
+  // Send push notification asynchronously
+  try {
+    const pushPayload = {
+      title: `${notification.actor.displayName || notification.actor.username}`,
+      body: message,
+      url: getPushNotificationUrl(notification),
+    };
+
+    // Don't await this to avoid blocking the main flow
+    sendPushNotificationToUser(userId, pushPayload).catch(error => {
+      console.error('Failed to send push notification:', error);
+    });
+  } catch (error) {
+    console.error('Error preparing push notification:', error);
+  }
+
+  return notification;
+}
+
+/**
+ * Get the URL for a push notification based on its type
+ */
+function getPushNotificationUrl(notification: any): string {
+  switch (notification.type) {
+    case 'like':
+    case 'comment':
+    case 'mention':
+      return notification.post ? `/posts/${notification.post.id}` : '/';
+    case 'follow':
+      return `/users/${notification.actor.username}`;
+    default:
+      return '/notifications';
+  }
 }
 
 /**
