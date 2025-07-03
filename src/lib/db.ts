@@ -349,6 +349,43 @@ export const postService = {
     });
   },
 
+  // Delete a post with image cleanup
+  async deletePostWithImages(id: string) {
+    // First get the post to extract image URLs
+    const post = await this.getPostById(id);
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    // Import minio functions dynamically to avoid circular dependencies
+    const { extractImageUrlsFromContent, getFilePathFromUrl, deleteFile } = await import('./minio-client');
+    
+    // Extract and delete associated images
+    try {
+      const imageUrls = extractImageUrlsFromContent(post.content);
+      
+      // Delete each image from Minio
+      for (const imageUrl of imageUrls) {
+        const filePath = getFilePathFromUrl(imageUrl);
+        if (filePath) {
+          try {
+            await deleteFile(filePath);
+            console.log(`Deleted image: ${filePath}`);
+          } catch (imageError) {
+            // Log but don't fail the whole operation if image deletion fails
+            console.error(`Failed to delete image ${filePath}:`, imageError);
+          }
+        }
+      }
+    } catch (imageCleanupError) {
+      // Log but don't fail the post deletion if image cleanup fails
+      console.error('Error during image cleanup:', imageCleanupError);
+    }
+
+    // Delete the post from database
+    return this.deletePost(id);
+  },
+
   // Get posts that a user has commented on
   async getPostsWithUserComments(userId: string) {
     return prisma.post.findMany({

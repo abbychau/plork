@@ -39,11 +39,11 @@ export default function ImageLightbox({ src, alt, className = '' }: ImageLightbo
           />
         )}
       </DialogTrigger>
-      <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-[90vw] max-h-[90vh] w-auto image-lightbox-dialog" closeButton={false}>
+      <DialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-50 p-0 border-none bg-transparent shadow-none max-w-[95vw] max-h-[95vh] w-auto flex items-center justify-center image-lightbox-dialog" closeButton={false}>
         <DialogTitle>
           <VisuallyHidden>{alt || 'Image'}</VisuallyHidden>
         </DialogTitle>
-        <div className="relative flex items-center justify-center">
+        <div className="relative">
           <button
             onClick={() => setIsOpen(false)}
             className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors z-10"
@@ -55,8 +55,7 @@ export default function ImageLightbox({ src, alt, className = '' }: ImageLightbo
             <img
               src={src}
               alt={alt}
-              className="max-w-[90vw] max-h-[90vh]"
-              style={{ objectFit: 'contain' }}
+              className="max-w-[90vw] max-h-[90vh] object-contain"
               crossOrigin="anonymous"
             />
           ) : (
@@ -65,8 +64,7 @@ export default function ImageLightbox({ src, alt, className = '' }: ImageLightbo
               alt={alt}
               width={1200}
               height={800}
-              className="max-w-[90vw] max-h-[90vh]"
-              style={{ objectFit: 'contain' }}
+              className="max-w-[90vw] max-h-[90vh] object-contain"
               priority={false}
             />
           )}

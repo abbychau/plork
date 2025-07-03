@@ -128,8 +128,8 @@ export async function DELETE(_req: NextRequest, props: { params: Promise<{ postI
       );
     }
 
-    // Delete the post
-    await postService.deletePost(postId);
+    // Delete the post with image cleanup
+    await postService.deletePostWithImages(postId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
